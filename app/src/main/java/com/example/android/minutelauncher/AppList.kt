@@ -45,10 +45,9 @@ fun AppList(
     ) {
         items(installedPackages) { app ->
             Row {
-                val packageName = app.activityInfo.packageName
                 val appTitle by viewModel.getAppTitle(app)
-                val appUsage by viewModel.getUsageForApp(packageName)
-                AppCard(appTitle, appUsage) { viewModel.onEvent(Event.OpenApplication(packageName)) }
+                val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
+                AppCard(appTitle, appUsage) { viewModel.onEvent(Event.OpenApplication(app)) }
             }
         }
     }

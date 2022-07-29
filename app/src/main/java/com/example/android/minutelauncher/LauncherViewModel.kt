@@ -69,8 +69,8 @@ class LauncherViewModel @Inject constructor(
     fun onEvent(event: Event) {
         when (event) {
             is Event.OpenApplication -> {
-                sendUiEvent(UiEvent.ShowToast("test"))
-                pm.getLaunchIntentForPackage(event.packageName)?.apply {
+                sendUiEvent(UiEvent.ShowToast(getAppTitle(event.app).value))
+                pm.getLaunchIntentForPackage(event.app.activityInfo.packageName)?.apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                 }?.let {
                     sendUiEvent(UiEvent.StartActivity(it))
