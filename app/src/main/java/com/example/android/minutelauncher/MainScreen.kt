@@ -1,7 +1,9 @@
 package com.example.android.minutelauncher
 
+import android.util.Log
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.Text
@@ -30,7 +32,7 @@ enum class States {
 @Composable
 fun MainScreen() {
     val swipeableState = rememberSwipeableState(initialValue = States.HIDDEN)
-    val scrollState = rememberScrollState()
+    val scrollState = rememberLazyListState()
 
     Surface {
         Column(
@@ -74,12 +76,7 @@ fun MainScreen() {
                 }
 
                 override suspend fun onPreFling(available: Velocity): Velocity {
-                    return if (available.y < 0 && scrollState.value == 0) {
-                        swipeableState.performFling(available.y)
-                        available
-                    } else {
-                        Velocity.Zero
-                    }
+                    return  Velocity.Zero
                 }
 
                 override suspend fun onPostFling(
