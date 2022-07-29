@@ -26,7 +26,11 @@ class LauncherViewModel @Inject constructor(
     val uiEvent = _uiEvent.receiveAsFlow()
     private val currentTime = System.currentTimeMillis()
     private val startTime =
-        Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 5) }.timeInMillis
+        Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }.timeInMillis
     private val usageStatsManager = application.applicationContext.getSystemService(
         ComponentActivity.USAGE_STATS_SERVICE
     ) as UsageStatsManager
@@ -45,20 +49,10 @@ class LauncherViewModel @Inject constructor(
         it.loadLabel(pm).toString().lowercase()
     })
 
-    init {
-        logUsage()
-    }
-
     fun getUsageForApp(packageName: String) =
-        mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeVisible ?: 0)
+        mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
 
     fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
-
-    private fun logUsage() {
-        appList.forEach {
-            Log.d("APP_USAGE", "${it.packageName} used for: ${it.totalTimeVisible}")
-        }
-    }
 
     private fun sendUiEvent(event: UiEvent) {
         viewModelScope.launch {
