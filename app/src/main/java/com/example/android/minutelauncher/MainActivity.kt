@@ -1,6 +1,9 @@
 package com.example.android.minutelauncher
 
+import android.Manifest.permission.PACKAGE_USAGE_STATS
+import android.app.AppOpsManager
 import android.content.Context
+import android.content.Context.APP_OPS_SERVICE
 import android.content.Intent
 import android.content.Intent.ACTION_MAIN
 import android.content.pm.PackageManager
@@ -23,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getSystemService
 import com.example.android.minutelauncher.ui.theme.MinuteLauncherTheme
 
 @ExperimentalMaterial3Api
@@ -32,11 +36,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MinuteLauncherTheme {
-                if (!isAccessGranted(packageManager)) {
+                val mContext = LocalContext.current
+                if (!isAccessGranted(mContext)) {
                     // TODO: open dialog informing user about permission before opening settings
                     startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
                 }
-                val mContext = LocalContext.current
                 LazyColumn(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -49,15 +53,13 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun isAccessGranted(packageManager: PackageManager): Boolean {
-    return try {
-        packageManager.checkPermission(
-            android.Manifest.permission.PACKAGE_USAGE_STATS,
-            ""
-        ) == PackageManager.PERMISSION_GRANTED
-    } catch (e: Exception) {
-        false
-    }
+fun isAccessGranted(context: Context): Boolean {
+    val appOpsManager = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
+    return appOpsManager.unsafeCheckOpNoThrow(
+        "android:get_usage_stats",
+        android.os.Process.myUid(), context.packageName
+    ) == AppOpsManager.MODE_ALLOWED
+
 }
 
 fun LazyListScope.listOfApps(
