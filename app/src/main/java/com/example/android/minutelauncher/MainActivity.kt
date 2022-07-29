@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.android.minutelauncher.ui.theme.MinuteLauncherTheme
@@ -46,6 +47,7 @@ class MainActivity : ComponentActivity() {
                     // TODO: open dialog informing user about permission before opening settings
                     startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
                 }
+                WindowCompat.setDecorFitsSystemWindows(window, false)
                 AppList()
             }
         }

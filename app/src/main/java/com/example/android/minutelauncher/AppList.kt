@@ -43,6 +43,9 @@ fun AppList(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
+        item {
+            Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+        }
         items(installedPackages) { app ->
             Row {
                 val appTitle by viewModel.getAppTitle(app)
