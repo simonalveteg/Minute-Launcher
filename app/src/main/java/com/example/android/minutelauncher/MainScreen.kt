@@ -2,9 +2,7 @@ package com.example.android.minutelauncher
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.rememberSwipeableState
-import androidx.compose.material.swipeable
+import androidx.compose.material.*
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -15,8 +13,10 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
 enum class States {
@@ -64,7 +64,7 @@ fun MainScreen() {
                 }
 
                 override suspend fun onPreFling(available: Velocity): Velocity {
-                    return  Velocity.Zero
+                    return Velocity.Zero
                 }
 
                 override suspend fun onPostFling(
@@ -84,6 +84,10 @@ fun MainScreen() {
                 .swipeable(
                     state = swipeableState,
                     orientation = Orientation.Vertical,
+                    thresholds = { _, _ ->
+                        FractionalThreshold(0.25f)
+                    },
+                    velocityThreshold = 100.dp,
                     anchors = mapOf(
                         0f to States.EXPANDED,
                         maxHeight to States.HIDDEN,
