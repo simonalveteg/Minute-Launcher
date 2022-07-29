@@ -1,12 +1,8 @@
 package com.example.android.minutelauncher
 
-import android.util.Log
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material3.Text
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.material3.Surface
@@ -32,17 +28,9 @@ enum class States {
 @Composable
 fun MainScreen() {
     val swipeableState = rememberSwipeableState(initialValue = States.HIDDEN)
-    val scrollState = rememberLazyListState()
 
     Surface {
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("test")
-        }
+        FavoriteApps()
     }
 
     BoxWithConstraints {
