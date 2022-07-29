@@ -1,11 +1,13 @@
 package com.example.android.minutelauncher
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,19 +40,23 @@ fun AppList(
         }
     }
 
-    LazyColumn(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        item {
-            Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-        }
-        items(installedPackages) { app ->
-            Row {
-                val appTitle by viewModel.getAppTitle(app)
-                val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
-                AppCard(appTitle, appUsage) { viewModel.onEvent(Event.OpenApplication(app)) }
+    Surface {
+        LazyColumn(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            item {
+                Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+            }
+            items(installedPackages) { app ->
+                Row {
+                    val appTitle by viewModel.getAppTitle(app)
+                    val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
+                    AppCard(appTitle, appUsage) { viewModel.onEvent(Event.OpenApplication(app)) }
+                }
             }
         }
     }
