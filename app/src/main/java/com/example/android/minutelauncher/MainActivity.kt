@@ -43,17 +43,7 @@ class MainActivity : ComponentActivity() {
                     startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
                 }
                 LaunchedEffect(key1 = 1) {
-                    val currentTime = System.currentTimeMillis()
-                    val startTime = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 5) }.timeInMillis
-                    val usageStatsManager = mContext.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
-                    val appList = usageStatsManager.queryUsageStats(
-                        UsageStatsManager.INTERVAL_DAILY,
-                        startTime,
-                        currentTime
-                    )
-                    appList.forEach {
-                        Log.d("APP_USAGE","${it.packageName} used for: ${it.totalTimeInForeground}")
-                    }
+                    Repository(mContext)
                 }
                 LazyColumn(
                     verticalArrangement = Arrangement.Center,
