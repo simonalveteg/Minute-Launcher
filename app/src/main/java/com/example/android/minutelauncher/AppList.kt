@@ -71,6 +71,7 @@ fun AppCard(
     Column(
         modifier = Modifier
             .padding(2.dp)
+            .clickable { onClick() }
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -80,9 +81,11 @@ fun AppCard(
             textAlign = TextAlign.Center,
             overflow = TextOverflow.Clip,
             modifier = Modifier
-                .clickable { onClick() }
                 .fillMaxWidth()
         )
-        Text("${appUsage.div(60000)} min")
+        appUsage.div(60000).let { duration ->
+            if(duration > 0L) Text("$duration min")
+            else Text("")
+        }
     }
 }
