@@ -1,15 +1,15 @@
 package com.example.android.minutelauncher
 
-import android.Manifest.permission.PACKAGE_USAGE_STATS
 import android.app.AppOpsManager
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Context.APP_OPS_SERVICE
 import android.content.Intent
 import android.content.Intent.ACTION_MAIN
-import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,14 +20,15 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.getSystemService
 import com.example.android.minutelauncher.ui.theme.MinuteLauncherTheme
+import java.util.*
 
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
@@ -40,6 +41,19 @@ class MainActivity : ComponentActivity() {
                 if (!isAccessGranted(mContext)) {
                     // TODO: open dialog informing user about permission before opening settings
                     startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
+                }
+                LaunchedEffect(key1 = 1) {
+                    val currentTime = System.currentTimeMillis()
+                    val startTime = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 5) }.timeInMillis
+                    val usageStatsManager = mContext.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
+                    val appList = usageStatsManager.queryUsageStats(
+                        UsageStatsManager.INTERVAL_DAILY,
+                        startTime,
+                        currentTime
+                    )
+                    appList.forEach {
+                        Log.d("APP_USAGE","${it.packageName} used for: ${it.totalTimeInForeground}")
+                    }
                 }
                 LazyColumn(
                     verticalArrangement = Arrangement.Center,
@@ -88,7 +102,6 @@ fun LazyListScope.listOfApps(
                     }
                 goToApp(intent)
             }
-
         }
     }
 }
@@ -96,7 +109,9 @@ fun LazyListScope.listOfApps(
 @Composable
 fun AppCard(appTitle: String, onClick: () -> Unit) {
     Column(
-        modifier = Modifier.padding(2.dp).fillMaxWidth(),
+        modifier = Modifier
+            .padding(2.dp)
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -104,7 +119,9 @@ fun AppCard(appTitle: String, onClick: () -> Unit) {
             style = MaterialTheme.typography.displaySmall,
             textAlign = TextAlign.Center,
             overflow = TextOverflow.Clip,
-            modifier = Modifier.clickable { onClick() }.fillMaxWidth()
+            modifier = Modifier
+                .clickable { onClick() }
+                .fillMaxWidth()
         )
         Text("34 min")
     }
