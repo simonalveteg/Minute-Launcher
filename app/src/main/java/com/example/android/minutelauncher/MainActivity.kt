@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_MAIN
 import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -74,20 +76,26 @@ fun LazyListScope.listOfApps(
     items(installedPackages) { app ->
         Row {
             val appTitle = app.loadLabel(pm).toString()
-            Text(
-                text = appTitle,
-                style = MaterialTheme.typography.displaySmall,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .padding(2.dp)
-                    .clickable {
-                        Toast.makeText(mContext, appTitle, Toast.LENGTH_SHORT).show()
-                        val intent = pm.getLaunchIntentForPackage(app.activityInfo.packageName)?.apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-                            }
-                        goToApp(intent)
+            AppCard(appTitle) {
+                Toast.makeText(mContext, appTitle, Toast.LENGTH_SHORT).show()
+                val intent = pm
+                    .getLaunchIntentForPackage(app.activityInfo.packageName)
+                    ?.apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                     }
-            )
+                goToApp(intent)
+            }
+
         }
     }
+}
+
+@Composable
+fun AppCard(appTitle: String, onClick: () -> Unit) {
+    Text(
+        text = appTitle,
+        style = MaterialTheme.typography.displaySmall,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(2.dp).clickable { onClick() }
+    )
 }
