@@ -27,31 +27,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.android.minutelauncher.ui.theme.MinuteLauncherTheme
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
+import javax.inject.Inject
 
 @ExperimentalMaterial3Api
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MinuteLauncherTheme {
-                val mContext = LocalContext.current
-                if (!isAccessGranted(mContext)) {
+                if (!isAccessGranted(LocalContext.current)) {
                     // TODO: open dialog informing user about permission before opening settings
                     startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
                 }
-                LaunchedEffect(key1 = 1) {
-                    Repository(mContext)
-                }
-                LazyColumn(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    listOfApps(mContext = mContext, goToApp = { startActivity(it) })
-                }
+                AppList()
             }
         }
     }
@@ -64,55 +59,4 @@ fun isAccessGranted(context: Context): Boolean {
         android.os.Process.myUid(), context.packageName
     ) == AppOpsManager.MODE_ALLOWED
 
-}
-
-fun LazyListScope.listOfApps(
-    mContext: Context,
-    goToApp: (Intent?) -> Unit
-) {
-    val mainIntent = Intent().apply {
-        action = ACTION_MAIN
-        addCategory(Intent.CATEGORY_LAUNCHER)
-    }
-    val pm = mContext.packageManager
-
-    val installedPackages = pm.queryIntentActivities(mainIntent, 0).sortedBy {
-        it.loadLabel(pm).toString().lowercase()
-    }
-
-    items(installedPackages) { app ->
-        Row {
-            val appTitle = app.loadLabel(pm).toString()
-            AppCard(appTitle) {
-                Toast.makeText(mContext, appTitle, Toast.LENGTH_SHORT).show()
-                val intent = pm
-                    .getLaunchIntentForPackage(app.activityInfo.packageName)
-                    ?.apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-                    }
-                goToApp(intent)
-            }
-        }
-    }
-}
-
-@Composable
-fun AppCard(appTitle: String, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .padding(2.dp)
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = appTitle,
-            style = MaterialTheme.typography.displaySmall,
-            textAlign = TextAlign.Center,
-            overflow = TextOverflow.Clip,
-            modifier = Modifier
-                .clickable { onClick() }
-                .fillMaxWidth()
-        )
-        Text("34 min")
-    }
 }
