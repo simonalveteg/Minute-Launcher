@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.android.minutelauncher.ui.theme.MinuteLauncherTheme
@@ -92,10 +93,17 @@ fun LazyListScope.listOfApps(
 
 @Composable
 fun AppCard(appTitle: String, onClick: () -> Unit) {
-    Text(
-        text = appTitle,
-        style = MaterialTheme.typography.displaySmall,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.padding(2.dp).clickable { onClick() }
-    )
+    Column(
+        modifier = Modifier.padding(2.dp).fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = appTitle,
+            style = MaterialTheme.typography.displaySmall,
+            textAlign = TextAlign.Center,
+            overflow = TextOverflow.Clip,
+            modifier = Modifier.clickable { onClick() }.fillMaxWidth()
+        )
+        Text("34 min")
+    }
 }
