@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -77,14 +78,14 @@ fun AppCard(
     ) {
         Text(
             text = appTitle,
-            style = MaterialTheme.typography.displaySmall,
+            fontSize = 23.sp,
             textAlign = TextAlign.Center,
             overflow = TextOverflow.Clip,
             modifier = Modifier
                 .fillMaxWidth()
         )
         appUsage.div(60000).let { duration ->
-            if(duration > 0L) Text("$duration min")
+            if(duration > 0L) Text("$duration min", color = MaterialTheme.colorScheme.primary)
             else Text("")
         }
     }
