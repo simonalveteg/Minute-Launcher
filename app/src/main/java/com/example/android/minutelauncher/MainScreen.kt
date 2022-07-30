@@ -1,22 +1,24 @@
 package com.example.android.minutelauncher
 
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
-import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
 enum class States {
@@ -28,11 +30,11 @@ enum class States {
 @Composable
 fun MainScreen() {
     val swipeableState = rememberSwipeableState(initialValue = States.HIDDEN)
+    val lazyListState = rememberLazyListState()
 
     Surface {
         FavoriteApps()
     }
-
     BoxWithConstraints {
         val constraintsScope = this
         val maxHeight = with(LocalDensity.current) {
@@ -41,6 +43,8 @@ fun MainScreen() {
 
         val connection = remember {
             object : NestedScrollConnection {
+                val scrolledToTop =
+                    lazyListState.firstVisibleItemScrollOffset == 0 && lazyListState.firstVisibleItemIndex == 0
 
                 override fun onPreScroll(
                     available: Offset,
@@ -59,11 +63,13 @@ fun MainScreen() {
                     available: Offset,
                     source: NestedScrollSource
                 ): Offset {
-                    val delta = available.y
-                    return swipeableState.performDrag(delta).toOffset()
+                    return if (consumed.y == 0f) swipeableState.performDrag(available.y).toOffset() else Offset.Zero
                 }
 
                 override suspend fun onPreFling(available: Velocity): Velocity {
+                    if (available.y > 0 && scrolledToTop) {
+                        swipeableState.performFling(velocity = available.y)
+                    }
                     return Velocity.Zero
                 }
 
@@ -84,10 +90,6 @@ fun MainScreen() {
                 .swipeable(
                     state = swipeableState,
                     orientation = Orientation.Vertical,
-                    thresholds = { _, _ ->
-                        FractionalThreshold(0.25f)
-                    },
-                    velocityThreshold = 100.dp,
                     anchors = mapOf(
                         0f to States.EXPANDED,
                         maxHeight to States.HIDDEN,
@@ -101,7 +103,7 @@ fun MainScreen() {
                     )
                 }
         ) {
-            AppList()
+            AppList(lazyListState)
         }
     }
 }

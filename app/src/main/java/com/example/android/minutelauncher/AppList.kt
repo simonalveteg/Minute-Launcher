@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun AppList(
+    listState: LazyListState,
     viewModel: LauncherViewModel = hiltViewModel()
 ) {
     val mContext = LocalContext.current
@@ -43,6 +45,7 @@ fun AppList(
 
     Surface {
         LazyColumn(
+            state = listState,
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
