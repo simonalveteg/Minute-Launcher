@@ -12,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -33,77 +34,78 @@ fun MainScreen() {
     val lazyListState = rememberLazyListState()
 
     Surface {
-        FavoriteApps()
-    }
-    BoxWithConstraints {
-        val constraintsScope = this
-        val maxHeight = with(LocalDensity.current) {
-            constraintsScope.maxHeight.toPx()
-        }
-
-        val connection = remember {
-            object : NestedScrollConnection {
-                val scrolledToTop =
-                    lazyListState.firstVisibleItemScrollOffset == 0 && lazyListState.firstVisibleItemIndex == 0
-
-                override fun onPreScroll(
-                    available: Offset,
-                    source: NestedScrollSource
-                ): Offset {
-                    val delta = available.y
-                    return if (delta < 0) {
-                        swipeableState.performDrag(delta).toOffset()
-                    } else {
-                        Offset.Zero
-                    }
-                }
-
-                override fun onPostScroll(
-                    consumed: Offset,
-                    available: Offset,
-                    source: NestedScrollSource
-                ): Offset {
-                    return if (consumed.y == 0f) swipeableState.performDrag(available.y).toOffset() else Offset.Zero
-                }
-
-                override suspend fun onPreFling(available: Velocity): Velocity {
-                    if (available.y > 0 && scrolledToTop) {
-                        swipeableState.performFling(velocity = available.y)
-                    }
-                    return Velocity.Zero
-                }
-
-                override suspend fun onPostFling(
-                    consumed: Velocity,
-                    available: Velocity
-                ): Velocity {
-                    swipeableState.performFling(velocity = available.y)
-                    return super.onPostFling(consumed, available)
-                }
-
-                private fun Float.toOffset() = Offset(0f, this)
+        BoxWithConstraints {
+            val constraintsScope = this
+            val maxHeight = with(LocalDensity.current) {
+                constraintsScope.maxHeight.toPx()
             }
-        }
 
-        Box(
-            Modifier
-                .swipeable(
-                    state = swipeableState,
-                    orientation = Orientation.Vertical,
-                    anchors = mapOf(
-                        0f to States.EXPANDED,
-                        maxHeight to States.HIDDEN,
-                    )
-                )
-                .nestedScroll(connection)
-                .offset {
-                    IntOffset(
-                        0,
-                        swipeableState.offset.value.roundToInt()
-                    )
+            val connection = remember {
+                object : NestedScrollConnection {
+                    val scrolledToTop =
+                        lazyListState.firstVisibleItemScrollOffset == 0 && lazyListState.firstVisibleItemIndex == 0
+
+                    override fun onPreScroll(
+                        available: Offset,
+                        source: NestedScrollSource
+                    ): Offset {
+                        val delta = available.y
+                        return if (delta < 0) {
+                            swipeableState.performDrag(delta).toOffset()
+                        } else Offset.Zero
+                    }
+
+                    override fun onPostScroll(
+                        consumed: Offset,
+                        available: Offset,
+                        source: NestedScrollSource
+                    ): Offset {
+                        return if (consumed.y == 0f) swipeableState.performDrag(available.y)
+                            .toOffset() else Offset.Zero
+                    }
+
+                    override suspend fun onPreFling(available: Velocity): Velocity {
+                        if (available.y > 0 && scrolledToTop) {
+                            swipeableState.performFling(velocity = available.y)
+                        }
+                        return Velocity.Zero
+                    }
+
+                    override suspend fun onPostFling(
+                        consumed: Velocity,
+                        available: Velocity
+                    ): Velocity {
+                        swipeableState.performFling(velocity = available.y)
+                        return super.onPostFling(consumed, available)
+                    }
+
+                    private fun Float.toOffset() = Offset(0f, this)
                 }
-        ) {
-            AppList(lazyListState)
+            }
+            Box(
+                Modifier
+                    .alpha(swipeableState.offset.value / maxHeight)
+            ) {
+                FavoriteApps()
+            }
+            Box(
+                Modifier
+                    .swipeable(
+                        state = swipeableState,
+                        orientation = Orientation.Vertical,
+                        anchors = mapOf(
+                            0f to States.EXPANDED,
+                            maxHeight to States.HIDDEN,
+                        )
+                    )
+                    .nestedScroll(connection)
+                    .offset {
+                        IntOffset(0, swipeableState.offset.value.roundToInt())
+                    }
+            ) {
+
+                AppList(lazyListState)
+            }
         }
     }
 }
