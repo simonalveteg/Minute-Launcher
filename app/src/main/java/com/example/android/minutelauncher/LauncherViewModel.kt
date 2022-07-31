@@ -9,10 +9,12 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.*
@@ -44,10 +46,15 @@ class LauncherViewModel @Inject constructor(
         addCategory(Intent.CATEGORY_LAUNCHER)
     }
 
+    val searchTerm = mutableStateOf("")
+
     private val pm = application.applicationContext.packageManager
-    var installedPackages by mutableStateOf(pm.queryIntentActivities(mainIntent, 0).sortedBy {
+    private var installedPackages = pm.queryIntentActivities(mainIntent, 0).sortedBy {
         it.loadLabel(pm).toString().lowercase()
-    })
+    }
+    var applicationList by mutableStateOf(installedPackages)
+        private set
+
 
     fun getUsageForApp(packageName: String) =
         mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
@@ -70,6 +77,15 @@ class LauncherViewModel @Inject constructor(
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                 }?.let {
                     sendUiEvent(UiEvent.StartActivity(it))
+                }
+            }
+            is Event.UpdateSearch -> {
+                searchTerm.value = event.searchTerm
+                applicationList = installedPackages.filter {
+                    it.loadLabel(pm).toString()
+                        .replace(" ", "")
+                        .replace("-", "")
+                        .contains(searchTerm.value, true)
                 }
             }
         }
