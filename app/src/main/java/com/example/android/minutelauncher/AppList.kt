@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -29,7 +30,7 @@ fun AppList(
     viewModel: LauncherViewModel = hiltViewModel()
 ) {
     val mContext = LocalContext.current
-    val installedPackages = viewModel.applicationList
+    val apps = viewModel.applicationList
     val searchText = viewModel.searchTerm
 
     LaunchedEffect(key1 = true) {
@@ -56,6 +57,9 @@ fun AppList(
                     onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = {
+                        viewModel.onEvent(Event.OpenApplication(apps.first()))
+                    }),
                     colors = TextFieldDefaults.outlinedTextFieldColors(),
                     placeholder = {
                         Text(
@@ -78,7 +82,7 @@ fun AppList(
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                 }
-                items(installedPackages) { app ->
+                items(apps) { app ->
                     Row {
                         val appTitle by viewModel.getAppTitle(app)
                         val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
