@@ -1,6 +1,7 @@
 package com.example.android.minutelauncher
 
 import android.app.Application
+import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Intent
 import android.content.pm.ResolveInfo
@@ -24,21 +25,12 @@ class LauncherViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
-    private val currentTime = System.currentTimeMillis()
-    private val startTime =
-        Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-        }.timeInMillis
-    private val usageStatsManager = application.applicationContext.getSystemService(
-        ComponentActivity.USAGE_STATS_SERVICE
-    ) as UsageStatsManager
-    private val appList = usageStatsManager.queryUsageStats(
-        UsageStatsManager.INTERVAL_DAILY,
-        startTime,
-        currentTime
-    )
+    private val usageStatsManager by lazy {
+        application.applicationContext.getSystemService(
+            ComponentActivity.USAGE_STATS_SERVICE
+        ) as UsageStatsManager
+    }
+    private val appList by lazy { queryUsageStats() }
     private val mainIntent = Intent().apply {
         action = Intent.ACTION_MAIN
         addCategory(Intent.CATEGORY_LAUNCHER)
@@ -52,6 +44,24 @@ class LauncherViewModel @Inject constructor(
     }
     var applicationList by mutableStateOf(installedPackages)
         private set
+
+    val favoriteApps = mutableListOf<ResolveInfo>()
+
+    private fun queryUsageStats(): MutableList<UsageStats> {
+        val currentTime = System.currentTimeMillis()
+        val startTime = Calendar.getInstance()
+            .apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+            }.timeInMillis
+        return usageStatsManager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY,
+            startTime,
+            currentTime
+        )
+    }
+
 
     fun getUsageForApp(packageName: String) =
         mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
@@ -79,7 +89,7 @@ class LauncherViewModel @Inject constructor(
     fun onEvent(event: Event) {
         when (event) {
             is Event.OpenApplication -> {
-                Log.d("VIEWMODEL","Open application")
+                Log.d("VIEWMODEL", "Open application")
                 sendUiEvent(UiEvent.ShowToast(getAppTitle(event.app).value))
                 pm.getLaunchIntentForPackage(event.app.activityInfo.packageName)?.apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
@@ -89,11 +99,11 @@ class LauncherViewModel @Inject constructor(
                 updateSearch("")
             }
             is Event.UpdateSearch -> {
-                Log.d("VIEWMODEL","Update search")
+                Log.d("VIEWMODEL", "Update search")
                 updateSearch(event.searchTerm)
             }
             is Event.CloseAppsList -> {
-                Log.d("VIEWMODEL","Close apps list")
+                Log.d("VIEWMODEL", "Close apps list")
                 updateSearch("")
                 sendUiEvent(UiEvent.HideAppsList)
             }
