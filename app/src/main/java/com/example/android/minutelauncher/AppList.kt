@@ -1,6 +1,7 @@
 package com.example.android.minutelauncher
 
-import android.widget.Toast
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,11 +12,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,21 +28,12 @@ fun AppList(
     listState: LazyListState,
     viewModel: LauncherViewModel = hiltViewModel()
 ) {
-    val mContext = LocalContext.current
     val apps = viewModel.applicationList
     val searchText = viewModel.searchTerm
 
-    LaunchedEffect(key1 = true) {
-        viewModel.uiEvent.collect { event ->
-            when (event) {
-                is UiEvent.ShowToast -> {
-                    Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-                }
-                is UiEvent.StartActivity -> {
-                    mContext.startActivity(event.intent)
-                }
-            }
-        }
+    BackHandler(true) {
+        Log.d("NAV","back pressed")
+        viewModel.onEvent(Event.CloseAppsList)
     }
 
     Surface {
