@@ -8,6 +8,7 @@ import android.content.pm.ResolveInfo
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -45,7 +46,7 @@ class LauncherViewModel @Inject constructor(
     var applicationList by mutableStateOf(installedPackages)
         private set
 
-    val favoriteApps = mutableListOf<ResolveInfo>()
+    val favoriteApps = mutableStateListOf<ResolveInfo>()
 
     private fun queryUsageStats(): MutableList<UsageStats> {
         val currentTime = System.currentTimeMillis()

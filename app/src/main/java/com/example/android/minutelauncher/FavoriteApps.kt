@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,6 +19,7 @@ fun FavoriteApps(
     viewModel: LauncherViewModel = hiltViewModel()
 ) {
     val totalUsage by viewModel.getTotalUsage()
+    val favorites = viewModel.favoriteApps
 
     LazyColumn(
         modifier = Modifier
@@ -28,10 +30,8 @@ fun FavoriteApps(
         item {
             Text(totalUsage.toTimeUsed())
         }
-        item {
-            (1..5).forEach {
-                Text("App $it", modifier = Modifier.padding(16.dp), fontSize = 23.sp)
-            }
+        items(favorites) { app ->
+            Text(viewModel.getAppTitle(app).value, modifier = Modifier.padding(16.dp), fontSize = 23.sp)
         }
     }
 }
