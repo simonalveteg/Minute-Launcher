@@ -54,6 +54,8 @@ class LauncherViewModel @Inject constructor(
 
     fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
 
+    fun getTotalUsage() = mutableStateOf(appList.sumOf { it.totalTimeInForeground })
+
     private fun sendUiEvent(event: UiEvent) {
         viewModelScope.launch {
             _uiEvent.send(event)

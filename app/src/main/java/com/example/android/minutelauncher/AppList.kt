@@ -87,9 +87,6 @@ fun AppCard(
             modifier = Modifier
                 .fillMaxWidth()
         )
-        appUsage.div(60000).let { duration ->
-            if(duration > 0L) Text("$duration min", color = MaterialTheme.colorScheme.primary)
-            else Text("")
-        }
+        Text(appUsage.toTimeUsed(), color = MaterialTheme.colorScheme.primary)
     }
 }
