@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
+import androidx.navigation.compose.rememberNavController
 import com.example.android.minutelauncher.ui.theme.MinuteLauncherTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -22,12 +23,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MinuteLauncherTheme {
+                val navController = rememberNavController()
                 if (!isAccessGranted(LocalContext.current)) {
                     // TODO: open dialog informing user about permission before opening settings
                     startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
                 }
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                MainScreen()
+                LauncherNavHost(navController)
             }
         }
     }
@@ -39,5 +41,4 @@ fun isAccessGranted(context: Context): Boolean {
         "android:get_usage_stats",
         android.os.Process.myUid(), context.packageName
     ) == AppOpsManager.MODE_ALLOWED
-
 }
