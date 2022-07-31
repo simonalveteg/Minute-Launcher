@@ -62,6 +62,9 @@ class LauncherViewModel @Inject constructor(
         )
     }
 
+    private fun toggleFavorite(app: ResolveInfo) {
+        if (!favoriteApps.remove(app)) favoriteApps.add(app)
+    }
 
     fun getUsageForApp(packageName: String) =
         mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
@@ -107,6 +110,7 @@ class LauncherViewModel @Inject constructor(
                 updateSearch("")
                 sendUiEvent(UiEvent.HideAppsList)
             }
+            is Event.ToggleFavorite -> toggleFavorite(event.app)
         }
     }
 }
