@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,7 +30,8 @@ fun AppList(
     viewModel: LauncherViewModel = hiltViewModel()
 ) {
     val mContext = LocalContext.current
-    val installedPackages = viewModel.installedPackages
+    val apps = viewModel.applicationList
+    val searchText = viewModel.searchTerm
 
     LaunchedEffect(key1 = true) {
         viewModel.uiEvent.collect { event ->
@@ -53,10 +53,13 @@ fun AppList(
                     .statusBarsPadding()
             ) {
                 TextField(
-                    value = "",
-                    onValueChange = {},
+                    value = searchText.value,
+                    onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = {
+                        viewModel.onEvent(Event.OpenApplication(apps.first()))
+                    }),
                     colors = TextFieldDefaults.outlinedTextFieldColors(),
                     placeholder = {
                         Text(
@@ -70,7 +73,7 @@ fun AppList(
             }
             LazyColumn(
                 state = listState,
-                verticalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxSize()
@@ -79,7 +82,7 @@ fun AppList(
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                 }
-                items(installedPackages) { app ->
+                items(apps) { app ->
                     Row {
                         val appTitle by viewModel.getAppTitle(app)
                         val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
