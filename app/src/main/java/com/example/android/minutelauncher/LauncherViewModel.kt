@@ -9,12 +9,10 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.*
@@ -55,7 +53,6 @@ class LauncherViewModel @Inject constructor(
     var applicationList by mutableStateOf(installedPackages)
         private set
 
-
     fun getUsageForApp(packageName: String) =
         mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
 
@@ -88,6 +85,7 @@ class LauncherViewModel @Inject constructor(
                         .contains(searchTerm.value, true)
                 }
             }
+            is Event.CloseAppsList -> sendUiEvent(UiEvent.HideAppsList)
         }
     }
 }

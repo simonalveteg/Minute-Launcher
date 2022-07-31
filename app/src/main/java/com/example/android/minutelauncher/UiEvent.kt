@@ -9,4 +9,5 @@ sealed class UiEvent {
     data class StartActivity(
         val intent: Intent
     ): UiEvent()
+    object HideAppsList: UiEvent()
 }

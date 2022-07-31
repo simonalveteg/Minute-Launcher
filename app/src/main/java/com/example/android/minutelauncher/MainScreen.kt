@@ -1,5 +1,8 @@
 package com.example.android.minutelauncher
 
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -10,6 +13,7 @@ import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -17,9 +21,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlin.math.roundToInt
 
 enum class States {
@@ -29,9 +35,30 @@ enum class States {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    viewModel: LauncherViewModel = hiltViewModel()
+) {
+    val mContext = LocalContext.current
     val swipeableState = rememberSwipeableState(initialValue = States.HIDDEN)
     val lazyListState = rememberLazyListState()
+
+    LaunchedEffect(key1 = true) {
+        viewModel.uiEvent.collect { event ->
+            Log.d("MAIN_SCREEN", "event: $event")
+            when(event) {
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
+                }
+                is UiEvent.StartActivity -> {
+                    mContext.startActivity(event.intent)
+                }
+                else -> {
+                    Log.d("SCREEN","back pressed")
+                    swipeableState.animateTo(States.HIDDEN)
+                }
+            }
+        }
+    }
 
     Surface {
         BoxWithConstraints {
