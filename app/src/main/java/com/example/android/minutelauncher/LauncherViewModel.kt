@@ -110,7 +110,10 @@ class LauncherViewModel @Inject constructor(
                 updateSearch("")
                 sendUiEvent(UiEvent.HideAppsList)
             }
-            is Event.ToggleFavorite -> toggleFavorite(event.app)
+            is Event.ToggleFavorite -> {
+                Log.d("VIEWMODEL", "Favorite toggled: ${event.app}")
+                toggleFavorite(event.app)
+            }
         }
     }
 }
