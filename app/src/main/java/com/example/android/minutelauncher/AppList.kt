@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -45,7 +46,7 @@ fun AppList(
                 TextField(
                     value = searchText.value,
                     onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().clearFocusOnKeyboardDismiss(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = {
                         viewModel.onEvent(Event.OpenApplication(apps.first()))
@@ -58,7 +59,8 @@ fun AppList(
                             modifier = Modifier.fillMaxWidth()
                         )
                     },
-                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+
                 )
             }
             LazyColumn(
