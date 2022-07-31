@@ -66,6 +66,16 @@ class LauncherViewModel @Inject constructor(
         }
     }
 
+    private fun updateSearch(text: String) {
+        searchTerm.value = text
+        applicationList = installedPackages.filter {
+            it.loadLabel(pm).toString()
+                .replace(" ", "")
+                .replace("-", "")
+                .contains(searchTerm.value, true)
+        }
+    }
+
     fun onEvent(event: Event) {
         when (event) {
             is Event.OpenApplication -> {
@@ -75,17 +85,15 @@ class LauncherViewModel @Inject constructor(
                 }?.let {
                     sendUiEvent(UiEvent.StartActivity(it))
                 }
+                updateSearch("")
             }
             is Event.UpdateSearch -> {
-                searchTerm.value = event.searchTerm
-                applicationList = installedPackages.filter {
-                    it.loadLabel(pm).toString()
-                        .replace(" ", "")
-                        .replace("-", "")
-                        .contains(searchTerm.value, true)
-                }
+                updateSearch(event.searchTerm)
             }
-            is Event.CloseAppsList -> sendUiEvent(UiEvent.HideAppsList)
+            is Event.CloseAppsList -> {
+                updateSearch("")
+                sendUiEvent(UiEvent.HideAppsList)
+            }
         }
     }
 }
