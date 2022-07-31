@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -18,10 +19,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun AppList(
+    listState: LazyListState,
     viewModel: LauncherViewModel = hiltViewModel()
 ) {
     val mContext = LocalContext.current
@@ -42,6 +45,7 @@ fun AppList(
 
     Surface {
         LazyColumn(
+            state = listState,
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -77,15 +81,12 @@ fun AppCard(
     ) {
         Text(
             text = appTitle,
-            style = MaterialTheme.typography.displaySmall,
+            fontSize = 23.sp,
             textAlign = TextAlign.Center,
             overflow = TextOverflow.Clip,
             modifier = Modifier
                 .fillMaxWidth()
         )
-        appUsage.div(60000).let { duration ->
-            if(duration > 0L) Text("$duration min")
-            else Text("")
-        }
+        Text(appUsage.toTimeUsed(), color = MaterialTheme.colorScheme.primary)
     }
 }
