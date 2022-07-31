@@ -31,7 +31,13 @@ fun FavoriteApps(
             Text(totalUsage.toTimeUsed())
         }
         items(favorites) { app ->
-            Text(viewModel.getAppTitle(app).value, modifier = Modifier.padding(16.dp), fontSize = 23.sp)
+            val appTitle by viewModel.getAppTitle(app)
+            val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
+            AppCard(
+                appTitle,
+                appUsage,
+                { viewModel.onEvent(Event.ToggleFavorite(app)) }
+            ) { viewModel.onEvent(Event.OpenApplication(app)) }
         }
     }
 }
