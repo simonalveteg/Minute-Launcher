@@ -79,6 +79,7 @@ class LauncherViewModel @Inject constructor(
     fun onEvent(event: Event) {
         when (event) {
             is Event.OpenApplication -> {
+                Log.d("VIEWMODEL","Open application")
                 sendUiEvent(UiEvent.ShowToast(getAppTitle(event.app).value))
                 pm.getLaunchIntentForPackage(event.app.activityInfo.packageName)?.apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
@@ -88,9 +89,11 @@ class LauncherViewModel @Inject constructor(
                 updateSearch("")
             }
             is Event.UpdateSearch -> {
+                Log.d("VIEWMODEL","Update search")
                 updateSearch(event.searchTerm)
             }
             is Event.CloseAppsList -> {
+                Log.d("VIEWMODEL","Close apps list")
                 updateSearch("")
                 sendUiEvent(UiEvent.HideAppsList)
             }
