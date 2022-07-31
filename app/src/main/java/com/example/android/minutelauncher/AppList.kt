@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,13 +50,22 @@ fun AppList(
         Column {
             Row(
                 Modifier
-                    .statusBarsPadding()) {
+                    .statusBarsPadding()
+            ) {
                 TextField(
-                    value = "test",
+                    value = "",
                     onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    colors = TextFieldDefaults.outlinedTextFieldColors()
+                    colors = TextFieldDefaults.outlinedTextFieldColors(),
+                    placeholder = {
+                        Text(
+                            text = "search",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
                 )
             }
             LazyColumn(
@@ -73,7 +83,10 @@ fun AppList(
                     Row {
                         val appTitle by viewModel.getAppTitle(app)
                         val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
-                        AppCard(appTitle, appUsage) { viewModel.onEvent(Event.OpenApplication(app)) }
+                        AppCard(
+                            appTitle,
+                            appUsage
+                        ) { viewModel.onEvent(Event.OpenApplication(app)) }
                     }
                 }
             }
