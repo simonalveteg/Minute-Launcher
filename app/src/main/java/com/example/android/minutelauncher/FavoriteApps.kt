@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +17,7 @@ fun FavoriteApps(
     viewModel: LauncherViewModel = hiltViewModel()
 ) {
     val totalUsage by viewModel.getTotalUsage()
-    val favorites = viewModel.favoriteApps
+    val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
 
     LazyColumn(
         modifier = Modifier
