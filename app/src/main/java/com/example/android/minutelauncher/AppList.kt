@@ -40,7 +40,9 @@ fun AppList(
                 TextField(
                     value = searchText.value,
                     onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
-                    modifier = Modifier.fillMaxWidth().clearFocusOnKeyboardDismiss(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clearFocusOnKeyboardDismiss(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = {
                         viewModel.onEvent(Event.OpenApplication(apps.first()))
@@ -74,7 +76,7 @@ fun AppList(
                         AppCard(
                             appTitle,
                             appUsage,
-                            { viewModel.onEvent(Event.ToggleFavorite(app)) }
+                            { viewModel.onEvent(Event.ShowAppInfo(app)) }
                         ) { viewModel.onEvent(Event.OpenApplication(app)) }
                     }
                 }
