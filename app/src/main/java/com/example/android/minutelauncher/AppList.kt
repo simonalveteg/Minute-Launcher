@@ -80,36 +80,12 @@ fun AppList(
                         val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
                         AppCard(
                             appTitle,
-                            appUsage
+                            appUsage,
+                            { viewModel.onEvent(Event.ToggleFavorite(app)) }
                         ) { viewModel.onEvent(Event.OpenApplication(app)) }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun AppCard(
-    appTitle: String,
-    appUsage: Long,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .padding(2.dp)
-            .clickable { onClick() }
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = appTitle,
-            fontSize = 23.sp,
-            textAlign = TextAlign.Center,
-            overflow = TextOverflow.Clip,
-            modifier = Modifier
-                .fillMaxWidth()
-        )
-        Text(appUsage.toTimeUsed(), color = MaterialTheme.colorScheme.primary)
     }
 }
