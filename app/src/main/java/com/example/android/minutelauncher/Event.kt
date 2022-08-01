@@ -7,4 +7,6 @@ sealed class Event {
     data class UpdateSearch(val searchTerm: String): Event()
     object CloseAppsList: Event()
     data class ToggleFavorite(val app: ResolveInfo): Event()
+    data class ShowAppInfo(val app: ResolveInfo): Event()
+    object DismissDialog: Event()
 }

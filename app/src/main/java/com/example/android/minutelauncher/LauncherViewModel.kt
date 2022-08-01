@@ -90,6 +90,10 @@ class LauncherViewModel @Inject constructor(
         }
     }
 
+    private fun dismissDialog() {
+        sendUiEvent(UiEvent.DismissDialog)
+    }
+
     fun onEvent(event: Event) {
         when (event) {
             is Event.OpenApplication -> {
@@ -114,7 +118,10 @@ class LauncherViewModel @Inject constructor(
             is Event.ToggleFavorite -> {
                 Log.d("VIEWMODEL", "Favorite toggled: ${event.app}")
                 toggleFavorite(event.app)
+                dismissDialog()
             }
+            is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
+            is Event.DismissDialog -> dismissDialog()
         }
     }
 }
