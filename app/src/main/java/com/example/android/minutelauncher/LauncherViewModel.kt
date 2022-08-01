@@ -8,13 +8,16 @@ import android.content.pm.ResolveInfo
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.*
@@ -22,7 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LauncherViewModel @Inject constructor(
-    application: Application,
+    private val application: Application,
 ) : ViewModel() {
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
@@ -46,7 +49,15 @@ class LauncherViewModel @Inject constructor(
     var applicationList by mutableStateOf(installedPackages)
         private set
 
-    val favoriteApps = mutableStateListOf<ResolveInfo>()
+    val favoriteApps: Flow<List<ResolveInfo>> = channelFlow {
+        application.applicationContext.datastore.data.collectLatest {
+            val test = it.favoriteApps.mapNotNull {
+                val intent = Intent().apply { setPackage(it) }
+                pm.resolveActivity(intent, 0)
+            }
+            send(test)
+        }
+    }
 
     private fun queryUsageStats(): MutableList<UsageStats> {
         val currentTime = System.currentTimeMillis()
@@ -63,8 +74,16 @@ class LauncherViewModel @Inject constructor(
         )
     }
 
-    private fun toggleFavorite(app: ResolveInfo) {
-        if (!favoriteApps.remove(app)) favoriteApps.add(app)
+    private suspend fun toggleFavorite(app: ResolveInfo) {
+        application.applicationContext.datastore.updateData {
+            it.copy(
+                favoriteApps = it.favoriteApps.mutate { list ->
+                    val packageName = app.activityInfo.packageName
+                    if (!list.contains(packageName)) list.add(packageName)
+                    else list.remove(packageName)
+                }
+            )
+        }
     }
 
     fun getUsageForApp(packageName: String) =
@@ -117,8 +136,10 @@ class LauncherViewModel @Inject constructor(
             }
             is Event.ToggleFavorite -> {
                 Log.d("VIEWMODEL", "Favorite toggled: ${event.app}")
-                toggleFavorite(event.app)
                 dismissDialog()
+                viewModelScope.launch {
+                    toggleFavorite(event.app)
+                }
             }
             is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
             is Event.DismissDialog -> dismissDialog()

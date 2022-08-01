@@ -8,12 +8,15 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
+import androidx.datastore.dataStore
 import androidx.navigation.compose.rememberNavController
 import com.example.android.minutelauncher.ui.theme.MinuteLauncherTheme
 import dagger.hilt.android.AndroidEntryPoint
+
+val Context.datastore by dataStore("app_settings.json", AppSettingsSerializer)
 
 @ExperimentalMaterial3Api
 @AndroidEntryPoint
