@@ -1,5 +1,6 @@
 package com.example.android.minutelauncher
 
+import android.util.Log
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer
 import kotlinx.collections.immutable.PersistentList
@@ -26,19 +27,19 @@ data class AppSettings(
 
 @OptIn(ExperimentalSerializationApi::class)
 @kotlinx.serialization.Serializer(forClass = PersistentList::class)
-class PersistentListSerializer(private val dataSerializer: KSerializer<String>) :
-  KSerializer<PersistentList<String>> {
-  private class PersistentListDescriptor : SerialDescriptor by serialDescriptor<List<String>>() {
+class PersistentListSerializer(private val dataSerializer: KSerializer<UserApp>) :
+  KSerializer<PersistentList<UserApp>> {
+  private class PersistentListDescriptor : SerialDescriptor by serialDescriptor<List<UserApp>>() {
     @ExperimentalSerializationApi
     override val serialName: String = "kotlinx.serialization.immutable.persistentList"
   }
 
   override val descriptor: SerialDescriptor = PersistentListDescriptor()
-  override fun serialize(encoder: Encoder, value: PersistentList<String>) {
+  override fun serialize(encoder: Encoder, value: PersistentList<UserApp>) {
     return ListSerializer(dataSerializer).serialize(encoder, value.toList())
   }
 
-  override fun deserialize(decoder: Decoder): PersistentList<String> {
+  override fun deserialize(decoder: Decoder): PersistentList<UserApp> {
     return ListSerializer(dataSerializer).deserialize(decoder).toPersistentList()
   }
 }
@@ -53,7 +54,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
       return Json.decodeFromString(
         deserializer = AppSettings.serializer(),
         string = input.readBytes().decodeToString()
-      )
+      ).also { Log.d("APP_SETTINGS", it.favoriteApps.toString()) }
     } catch (e: SerializationException) {
       throw CorruptionException("Unable to read AppSettings", e)
     }
@@ -65,7 +66,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
         Json.encodeToString(
           serializer = AppSettings.serializer(),
           value = t
-        ).encodeToByteArray()
+        ).encodeToByteArray().also { Log.d("APP_SETTINGS", t.favoriteApps.toString()) }
       )
     }
   }

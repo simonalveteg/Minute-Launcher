@@ -4,7 +4,6 @@ import android.app.Application
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.content.pm.ResolveInfo
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -48,15 +47,7 @@ class LauncherViewModel @Inject constructor(
 
   val favoriteApps: Flow<List<UserApp>> = channelFlow {
     application.applicationContext.datastore.data.collectLatest { appSettings ->
-      val test = appSettings.favoriteApps.mapNotNull { app ->
-        val intent = Intent().apply {
-          setPackage(app.packageName)
-          action = Intent.ACTION_MAIN
-        }
-        pm.resolveActivity(intent, 0)?.let {
-          return@mapNotNull it.toUserApp(pm)
-        }
-      }
+      val test = appSettings.favoriteApps
       send(test)
     }
   }
@@ -80,9 +71,7 @@ class LauncherViewModel @Inject constructor(
       }
       is Event.ToggleFavorite -> {
         dismissDialog()
-        viewModelScope.launch {
-          toggleFavorite(event.app)
-        }
+        toggleFavorite(event.app)
       }
       is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
       is Event.DismissDialog -> dismissDialog()
@@ -127,14 +116,17 @@ class LauncherViewModel @Inject constructor(
     } as MutableMap<String, UsageStats>)
   }
 
-  private suspend fun toggleFavorite(app: UserApp) {
-    application.applicationContext.datastore.updateData {
-      it.copy(
-        favoriteApps = it.favoriteApps.mutate { list ->
-          if (!list.contains(app)) list.add(app)
-          else list.remove(app)
-        }
-      )
+  private fun toggleFavorite(app: UserApp) {
+    viewModelScope.launch {
+      application.applicationContext.datastore.updateData {
+        it.copy(
+          favoriteApps = it.favoriteApps.mutate { list ->
+            if (!list.contains(app)) list.add(app)
+            else list.remove(app)
+            Log.d("vm", app.packageName)
+          }
+        )
+      }
     }
   }
 
