@@ -41,7 +41,8 @@ class LauncherViewModel @Inject constructor(
   private var installedPackages = pm.queryIntentActivities(mainIntent, 0).sortedBy {
     it.loadLabel(pm).toString().lowercase()
   }
-  var applicationList = MutableStateFlow(installedPackages.map { it.toUserApp(pm) })
+  private val installedApps = MutableStateFlow(installedPackages.map { it.toUserApp(pm) })
+  var applicationList = MutableStateFlow(installedApps.value)
     private set
 
   val favoriteApps: Flow<List<UserApp>> = channelFlow {
@@ -100,7 +101,7 @@ class LauncherViewModel @Inject constructor(
         searchTerm.value = text
       }
       launch {
-        applicationList.value = applicationList.value.filter {
+        applicationList.value = installedApps.value.filter {
           it.appTitle
             .replace(" ", "")
             .replace("-", "")
