@@ -14,28 +14,28 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun FavoriteApps(
-    viewModel: LauncherViewModel = hiltViewModel()
+  viewModel: LauncherViewModel = hiltViewModel()
 ) {
-    val totalUsage by viewModel.getTotalUsage()
-    val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
+  val totalUsage by viewModel.getTotalUsage()
+  val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        item {
-            Text(totalUsage.toTimeUsed())
-        }
-        items(favorites) { app ->
-            val appTitle by viewModel.getAppTitle(app)
-            val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
-            AppCard(
-                appTitle,
-                appUsage,
-                { viewModel.onEvent(Event.ShowAppInfo(app)) }
-            ) { viewModel.onEvent(Event.OpenApplication(app)) }
-        }
+  LazyColumn(
+    modifier = Modifier
+      .fillMaxSize(),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    item {
+      Text(totalUsage.toTimeUsed())
     }
+    items(favorites) { app ->
+      val appTitle by viewModel.getAppTitle(app)
+      val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
+      AppCard(
+        appTitle,
+        appUsage,
+        { viewModel.onEvent(Event.ShowAppInfo(app)) }
+      ) { viewModel.onEvent(Event.OpenApplication(app)) }
+    }
+  }
 }

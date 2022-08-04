@@ -22,50 +22,53 @@ import java.io.OutputStream
 
 @Serializable
 data class AppSettings(
-    @Serializable(PersistentListSerializer::class)
-    val favoriteApps: PersistentList<String> = persistentListOf()
+  @Serializable(PersistentListSerializer::class)
+  val favoriteApps: PersistentList<String> = persistentListOf()
 )
 
 @OptIn(ExperimentalSerializationApi::class)
 @kotlinx.serialization.Serializer(forClass = PersistentList::class)
-class PersistentListSerializer(private val dataSerializer: KSerializer<String>) : KSerializer<PersistentList<String>> {
-    private class PersistentListDescriptor : SerialDescriptor by serialDescriptor<List<String>>() {
-        @ExperimentalSerializationApi
-        override val serialName: String = "kotlinx.serialization.immutable.persistentList"
-    }
-    override val descriptor: SerialDescriptor = PersistentListDescriptor()
-    override fun serialize(encoder: Encoder, value: PersistentList<String>) {
-        return ListSerializer(dataSerializer).serialize(encoder, value.toList())
-    }
-    override fun deserialize(decoder: Decoder): PersistentList<String> {
-        return ListSerializer(dataSerializer).deserialize(decoder).toPersistentList()
-    }
+class PersistentListSerializer(private val dataSerializer: KSerializer<String>) :
+  KSerializer<PersistentList<String>> {
+  private class PersistentListDescriptor : SerialDescriptor by serialDescriptor<List<String>>() {
+    @ExperimentalSerializationApi
+    override val serialName: String = "kotlinx.serialization.immutable.persistentList"
+  }
+
+  override val descriptor: SerialDescriptor = PersistentListDescriptor()
+  override fun serialize(encoder: Encoder, value: PersistentList<String>) {
+    return ListSerializer(dataSerializer).serialize(encoder, value.toList())
+  }
+
+  override fun deserialize(decoder: Decoder): PersistentList<String> {
+    return ListSerializer(dataSerializer).deserialize(decoder).toPersistentList()
+  }
 }
 
 object AppSettingsSerializer : Serializer<AppSettings> {
 
-    override val defaultValue: AppSettings
-        get() = AppSettings()
+  override val defaultValue: AppSettings
+    get() = AppSettings()
 
-    override suspend fun readFrom(input: InputStream): AppSettings {
-        try {
-            return Json.decodeFromString(
-                deserializer = AppSettings.serializer(),
-                string = input.readBytes().decodeToString()
-            )
-        } catch (e: SerializationException) {
-            throw CorruptionException("Unable to read UserPrefs", e)
-        }
+  override suspend fun readFrom(input: InputStream): AppSettings {
+    try {
+      return Json.decodeFromString(
+        deserializer = AppSettings.serializer(),
+        string = input.readBytes().decodeToString()
+      )
+    } catch (e: SerializationException) {
+      throw CorruptionException("Unable to read UserPrefs", e)
     }
+  }
 
-    override suspend fun writeTo(t: AppSettings, output: OutputStream) {
-        withContext(Dispatchers.IO) {
-            output.write(
-                Json.encodeToString(
-                    serializer = AppSettings.serializer(),
-                    value = t
-                ).encodeToByteArray()
-            )
-        }
+  override suspend fun writeTo(t: AppSettings, output: OutputStream) {
+    withContext(Dispatchers.IO) {
+      output.write(
+        Json.encodeToString(
+          serializer = AppSettings.serializer(),
+          value = t
+        ).encodeToByteArray()
+      )
     }
+  }
 }

@@ -5,5 +5,5 @@ import dagger.hilt.android.HiltAndroidApp
 
 
 @HiltAndroidApp
-class MinuteLauncher: Application() {
+class MinuteLauncher : Application() {
 }
