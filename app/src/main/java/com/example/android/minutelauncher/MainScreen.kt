@@ -1,14 +1,15 @@
 package com.example.android.minutelauncher
 
-import android.content.pm.ResolveInfo
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.material.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
   viewModel: LauncherViewModel = hiltViewModel()
@@ -58,6 +59,8 @@ fun MainScreen(
     },
     sheetGesturesEnabled = true,
   ) {
-    FavoriteApps()
+    Surface {
+      FavoriteApps()
+    }
   }
 }
