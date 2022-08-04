@@ -12,7 +12,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.mutate
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -22,8 +21,8 @@ import javax.inject.Inject
 class LauncherViewModel @Inject constructor(
   private val application: Application,
 ) : ViewModel() {
-  private val _uiEvent = Channel<UiEvent>()
-  val uiEvent = _uiEvent.receiveAsFlow()
+  private val _uiEvent = MutableSharedFlow<UiEvent>()
+  val uiEvent = _uiEvent.asSharedFlow()
   private val usageStatsManager by lazy {
     application.applicationContext.getSystemService(
       ComponentActivity.USAGE_STATS_SERVICE
@@ -132,7 +131,7 @@ class LauncherViewModel @Inject constructor(
 
   private fun sendUiEvent(event: UiEvent) {
     viewModelScope.launch {
-      _uiEvent.send(event)
+      _uiEvent.emit(event)
     }
   }
 
