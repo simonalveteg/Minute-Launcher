@@ -29,10 +29,9 @@ fun FavoriteApps(
       Text(totalUsage.toTimeUsed())
     }
     items(favorites) { app ->
-      val appTitle by viewModel.getAppTitle(app)
-      val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
+      val appUsage by viewModel.getUsageForApp(app)
       AppCard(
-        appTitle,
+        app.appTitle,
         appUsage,
         { viewModel.onEvent(Event.ShowAppInfo(app)) }
       ) { viewModel.onEvent(Event.OpenApplication(app)) }

@@ -7,18 +7,13 @@ import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
@@ -46,16 +41,73 @@ class LauncherViewModel @Inject constructor(
   private var installedPackages = pm.queryIntentActivities(mainIntent, 0).sortedBy {
     it.loadLabel(pm).toString().lowercase()
   }
-  var applicationList by mutableStateOf(installedPackages)
+  private val installedApps = MutableStateFlow(installedPackages.map { it.toUserApp(pm) })
+  var applicationList = MutableStateFlow(installedApps.value)
     private set
 
-  val favoriteApps: Flow<List<ResolveInfo>> = channelFlow {
-    application.applicationContext.datastore.data.collectLatest {
-      val test = it.favoriteApps.mapNotNull {
-        val intent = Intent().apply { setPackage(it) }
-        pm.resolveActivity(intent, 0)
+  val favoriteApps: Flow<List<UserApp>> = channelFlow {
+    application.applicationContext.datastore.data.collectLatest { appSettings ->
+      val test = appSettings.favoriteApps.mapNotNull { app ->
+        val intent = Intent().apply {
+          setPackage(app.packageName)
+          action = Intent.ACTION_MAIN
+        }
+        pm.resolveActivity(intent, 0)?.let {
+          return@mapNotNull it.toUserApp(pm)
+        }
       }
       send(test)
+    }
+  }
+
+  fun onEvent(event: Event) {
+    Log.d("VIEWMODEL", event.toString())
+    when (event) {
+      is Event.OpenApplication -> {
+        sendUiEvent(UiEvent.ShowToast(event.app.appTitle))
+        pm.getLaunchIntentForPackage(event.app.packageName)?.apply {
+          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+        }?.let {
+          sendUiEvent(UiEvent.StartActivity(it))
+        }
+        updateSearch("")
+      }
+      is Event.UpdateSearch -> updateSearch(event.searchTerm)
+      is Event.CloseAppsList -> {
+        updateSearch("")
+        sendUiEvent(UiEvent.HideAppsList)
+      }
+      is Event.ToggleFavorite -> {
+        dismissDialog()
+        viewModelScope.launch {
+          toggleFavorite(event.app)
+        }
+      }
+      is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
+      is Event.DismissDialog -> dismissDialog()
+    }
+  }
+
+  fun getUsageForApp(app: UserApp) =
+    mutableStateOf(appList.find { it.packageName == app.packageName }?.totalTimeInForeground ?: 0)
+
+  fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
+
+  fun getTotalUsage() = mutableStateOf(appList.sumOf { it.totalTimeInForeground })
+
+  private fun updateSearch(text: String) {
+    viewModelScope.apply {
+      launch {
+        searchTerm.value = text
+      }
+      launch {
+        applicationList.value = installedApps.value.filter {
+          it.appTitle
+            .replace(" ", "")
+            .replace("-", "")
+            .contains(text.trim(), true)
+        }
+      }
     }
   }
 
@@ -74,24 +126,16 @@ class LauncherViewModel @Inject constructor(
     )
   }
 
-  private suspend fun toggleFavorite(app: ResolveInfo) {
+  private suspend fun toggleFavorite(app: UserApp) {
     application.applicationContext.datastore.updateData {
       it.copy(
         favoriteApps = it.favoriteApps.mutate { list ->
-          val packageName = app.activityInfo.packageName
-          if (!list.contains(packageName)) list.add(packageName)
-          else list.remove(packageName)
+          if (!list.contains(app)) list.add(app)
+          else list.remove(app)
         }
       )
     }
   }
-
-  fun getUsageForApp(packageName: String) =
-    mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
-
-  fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
-
-  fun getTotalUsage() = mutableStateOf(appList.sumOf { it.totalTimeInForeground })
 
   private fun sendUiEvent(event: UiEvent) {
     viewModelScope.launch {
@@ -99,50 +143,7 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
-  private fun updateSearch(text: String) {
-    searchTerm.value = text
-    applicationList = installedPackages.filter {
-      it.loadLabel(pm).toString()
-        .replace(" ", "")
-        .replace("-", "")
-        .contains(searchTerm.value, true)
-    }
-  }
-
   private fun dismissDialog() {
     sendUiEvent(UiEvent.DismissDialog)
-  }
-
-  fun onEvent(event: Event) {
-    when (event) {
-      is Event.OpenApplication -> {
-        Log.d("VIEWMODEL", "Open application")
-        sendUiEvent(UiEvent.ShowToast(getAppTitle(event.app).value))
-        pm.getLaunchIntentForPackage(event.app.activityInfo.packageName)?.apply {
-          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-        }?.let {
-          sendUiEvent(UiEvent.StartActivity(it))
-        }
-        updateSearch("")
-      }
-      is Event.UpdateSearch -> {
-        Log.d("VIEWMODEL", "Update search")
-        updateSearch(event.searchTerm)
-      }
-      is Event.CloseAppsList -> {
-        Log.d("VIEWMODEL", "Close apps list")
-        updateSearch("")
-        sendUiEvent(UiEvent.HideAppsList)
-      }
-      is Event.ToggleFavorite -> {
-        Log.d("VIEWMODEL", "Favorite toggled: ${event.app}")
-        dismissDialog()
-        viewModelScope.launch {
-          toggleFavorite(event.app)
-        }
-      }
-      is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
-      is Event.DismissDialog -> dismissDialog()
-    }
   }
 }
