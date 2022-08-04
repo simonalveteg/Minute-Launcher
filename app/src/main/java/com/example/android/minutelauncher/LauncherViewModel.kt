@@ -15,10 +15,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
@@ -46,7 +43,7 @@ class LauncherViewModel @Inject constructor(
   private var installedPackages = pm.queryIntentActivities(mainIntent, 0).sortedBy {
     it.loadLabel(pm).toString().lowercase()
   }
-  var applicationList by mutableStateOf(installedPackages)
+  var applicationList = MutableStateFlow(installedPackages)
     private set
 
   val favoriteApps: Flow<List<ResolveInfo>> = channelFlow {
@@ -56,6 +53,57 @@ class LauncherViewModel @Inject constructor(
         pm.resolveActivity(intent, 0)
       }
       send(test)
+    }
+  }
+
+  fun onEvent(event: Event) {
+    Log.d("VIEWMODEL", event.toString())
+    when (event) {
+      is Event.OpenApplication -> {
+        sendUiEvent(UiEvent.ShowToast(getAppTitle(event.app).value))
+        pm.getLaunchIntentForPackage(event.app.activityInfo.packageName)?.apply {
+          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+        }?.let {
+          sendUiEvent(UiEvent.StartActivity(it))
+        }
+        updateSearch("")
+      }
+      is Event.UpdateSearch -> updateSearch(event.searchTerm)
+      is Event.CloseAppsList -> {
+        updateSearch("")
+        sendUiEvent(UiEvent.HideAppsList)
+      }
+      is Event.ToggleFavorite -> {
+        dismissDialog()
+        viewModelScope.launch {
+          toggleFavorite(event.app)
+        }
+      }
+      is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
+      is Event.DismissDialog -> dismissDialog()
+    }
+  }
+
+  fun getUsageForApp(packageName: String) =
+    mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
+
+  fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
+
+  fun getTotalUsage() = mutableStateOf(appList.sumOf { it.totalTimeInForeground })
+
+  private fun updateSearch(text: String) {
+    viewModelScope.apply {
+      launch {
+        searchTerm.value = text
+      }
+      launch {
+        applicationList.value = installedPackages.filter {
+          it.loadLabel(pm).toString()
+            .replace(" ", "")
+            .replace("-", "")
+            .contains(text, true)
+        }
+      }
     }
   }
 
@@ -86,63 +134,13 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
-  fun getUsageForApp(packageName: String) =
-    mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
-
-  fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
-
-  fun getTotalUsage() = mutableStateOf(appList.sumOf { it.totalTimeInForeground })
-
   private fun sendUiEvent(event: UiEvent) {
     viewModelScope.launch {
       _uiEvent.send(event)
     }
   }
 
-  private fun updateSearch(text: String) {
-    searchTerm.value = text
-    applicationList = installedPackages.filter {
-      it.loadLabel(pm).toString()
-        .replace(" ", "")
-        .replace("-", "")
-        .contains(searchTerm.value, true)
-    }
-  }
-
   private fun dismissDialog() {
     sendUiEvent(UiEvent.DismissDialog)
-  }
-
-  fun onEvent(event: Event) {
-    when (event) {
-      is Event.OpenApplication -> {
-        Log.d("VIEWMODEL", "Open application")
-        sendUiEvent(UiEvent.ShowToast(getAppTitle(event.app).value))
-        pm.getLaunchIntentForPackage(event.app.activityInfo.packageName)?.apply {
-          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-        }?.let {
-          sendUiEvent(UiEvent.StartActivity(it))
-        }
-        updateSearch("")
-      }
-      is Event.UpdateSearch -> {
-        Log.d("VIEWMODEL", "Update search")
-        updateSearch(event.searchTerm)
-      }
-      is Event.CloseAppsList -> {
-        Log.d("VIEWMODEL", "Close apps list")
-        updateSearch("")
-        sendUiEvent(UiEvent.HideAppsList)
-      }
-      is Event.ToggleFavorite -> {
-        Log.d("VIEWMODEL", "Favorite toggled: ${event.app}")
-        dismissDialog()
-        viewModelScope.launch {
-          toggleFavorite(event.app)
-        }
-      }
-      is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
-      is Event.DismissDialog -> dismissDialog()
-    }
   }
 }

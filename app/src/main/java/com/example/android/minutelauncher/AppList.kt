@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun AppList(
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
-  val apps = viewModel.applicationList
-  val searchText = viewModel.searchTerm
+  val apps by viewModel.applicationList.collectAsState(emptyList())
+  val searchText by viewModel.searchTerm
 
   BackHandler(true) {
     Log.d("NAV", "back pressed")
@@ -38,11 +39,11 @@ fun AppList(
           .statusBarsPadding()
       ) {
         TextField(
-          value = searchText.value,
+          value = searchText,
           onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
           modifier = Modifier
-              .fillMaxWidth()
-              .clearFocusOnKeyboardDismiss(),
+            .fillMaxWidth()
+            .clearFocusOnKeyboardDismiss(),
           keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
           keyboardActions = KeyboardActions(onSearch = {
             viewModel.onEvent(Event.OpenApplication(apps.first()))
@@ -56,15 +57,14 @@ fun AppList(
             )
           },
           textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
-
-          )
+        )
       }
       LazyColumn(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+          .fillMaxSize()
+          .background(MaterialTheme.colorScheme.background)
       ) {
         item {
           Spacer(modifier = Modifier.height(24.dp))
