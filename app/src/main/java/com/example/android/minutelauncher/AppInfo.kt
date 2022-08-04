@@ -16,35 +16,35 @@ import androidx.compose.ui.window.Dialog
 
 @Composable
 fun AppInfo(
-    onFavorite: () -> Unit,
-    onHide: () -> Unit,
-    onUninstall: () -> Unit,
-    onDismiss: () -> Unit
+  onFavorite: () -> Unit,
+  onHide: () -> Unit,
+  onUninstall: () -> Unit,
+  onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss ) {
-        Surface(
-            modifier = Modifier
-                .padding(32.dp)
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = "App Info",
-                    style = MaterialTheme.typography.h5
-                )
-                TextButton(onClick = onFavorite ) {
-                    Text("Favorite")
-                }
-                TextButton(onClick = onHide ) {
-                    Text("Hide")
-                }
-                TextButton(onClick = onUninstall ) {
-                    Text("Uninstall")
-                }
-            }
+  Dialog(onDismissRequest = onDismiss) {
+    Surface(
+      modifier = Modifier
+          .padding(32.dp)
+          .fillMaxWidth(),
+      shape = RoundedCornerShape(10.dp)
+    ) {
+      Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
+        Text(
+          text = "App Info",
+          style = MaterialTheme.typography.h5
+        )
+        TextButton(onClick = onFavorite) {
+          Text("Favorite")
         }
+        TextButton(onClick = onHide) {
+          Text("Hide")
+        }
+        TextButton(onClick = onUninstall) {
+          Text("Uninstall")
+        }
+      }
     }
+  }
 }

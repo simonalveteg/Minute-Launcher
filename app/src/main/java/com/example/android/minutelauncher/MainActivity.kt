@@ -22,26 +22,26 @@ val Context.datastore by dataStore("app_settings.json", AppSettingsSerializer)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MinuteLauncherTheme {
-                val navController = rememberNavController()
-                if (!isAccessGranted(LocalContext.current)) {
-                    // TODO: open dialog informing user about permission before opening settings
-                    startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
-                }
-                WindowCompat.setDecorFitsSystemWindows(window, false)
-                LauncherNavHost(navController)
-            }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent {
+      MinuteLauncherTheme {
+        val navController = rememberNavController()
+        if (!isAccessGranted(LocalContext.current)) {
+          // TODO: open dialog informing user about permission before opening settings
+          startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
         }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        LauncherNavHost(navController)
+      }
     }
+  }
 }
 
 fun isAccessGranted(context: Context): Boolean {
-    val appOpsManager = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
-    return appOpsManager.unsafeCheckOpNoThrow(
-        "android:get_usage_stats",
-        android.os.Process.myUid(), context.packageName
-    ) == AppOpsManager.MODE_ALLOWED
+  val appOpsManager = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
+  return appOpsManager.unsafeCheckOpNoThrow(
+    "android:get_usage_stats",
+    android.os.Process.myUid(), context.packageName
+  ) == AppOpsManager.MODE_ALLOWED
 }

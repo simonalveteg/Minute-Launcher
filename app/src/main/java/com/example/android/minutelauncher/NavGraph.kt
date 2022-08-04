@@ -7,11 +7,11 @@ import androidx.navigation.compose.composable
 
 @Composable
 fun LauncherNavHost(
-    navController: NavHostController,
+  navController: NavHostController,
 ) {
-    NavHost(navController = navController, startDestination = "main") {
-        composable("main") {
-            MainScreen()
-        }
+  NavHost(navController = navController, startDestination = "main") {
+    composable("main") {
+      MainScreen()
     }
+  }
 }

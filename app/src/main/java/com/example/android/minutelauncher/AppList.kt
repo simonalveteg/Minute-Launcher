@@ -21,66 +21,66 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppList(
-    viewModel: LauncherViewModel = hiltViewModel()
+  viewModel: LauncherViewModel = hiltViewModel()
 ) {
-    val apps = viewModel.applicationList
-    val searchText = viewModel.searchTerm
+  val apps = viewModel.applicationList
+  val searchText = viewModel.searchTerm
 
-    BackHandler(true) {
-        Log.d("NAV","back pressed")
-        viewModel.onEvent(Event.CloseAppsList)
-    }
+  BackHandler(true) {
+    Log.d("NAV", "back pressed")
+    viewModel.onEvent(Event.CloseAppsList)
+  }
 
-    Surface {
-        Column {
-            Row(
-                Modifier
-                    .statusBarsPadding()
-            ) {
-                TextField(
-                    value = searchText.value,
-                    onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clearFocusOnKeyboardDismiss(),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = {
-                        viewModel.onEvent(Event.OpenApplication(apps.first()))
-                    }),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(),
-                    placeholder = {
-                        Text(
-                            text = "search",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    },
-                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+  Surface {
+    Column {
+      Row(
+        Modifier
+          .statusBarsPadding()
+      ) {
+        TextField(
+          value = searchText.value,
+          onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
+          modifier = Modifier
+              .fillMaxWidth()
+              .clearFocusOnKeyboardDismiss(),
+          keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+          keyboardActions = KeyboardActions(onSearch = {
+            viewModel.onEvent(Event.OpenApplication(apps.first()))
+          }),
+          colors = TextFieldDefaults.outlinedTextFieldColors(),
+          placeholder = {
+            Text(
+              text = "search",
+              textAlign = TextAlign.Center,
+              modifier = Modifier.fillMaxWidth()
+            )
+          },
+          textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
 
-                )
-            }
-            LazyColumn(
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-            ) {
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                items(apps) { app ->
-                    Row {
-                        val appTitle by viewModel.getAppTitle(app)
-                        val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
-                        AppCard(
-                            appTitle,
-                            appUsage,
-                            { viewModel.onEvent(Event.ShowAppInfo(app)) }
-                        ) { viewModel.onEvent(Event.OpenApplication(app)) }
-                    }
-                }
-            }
+          )
+      }
+      LazyColumn(
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+      ) {
+        item {
+          Spacer(modifier = Modifier.height(24.dp))
         }
+        items(apps) { app ->
+          Row {
+            val appTitle by viewModel.getAppTitle(app)
+            val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
+            AppCard(
+              appTitle,
+              appUsage,
+              { viewModel.onEvent(Event.ShowAppInfo(app)) }
+            ) { viewModel.onEvent(Event.OpenApplication(app)) }
+          }
+        }
+      }
     }
+  }
 }
