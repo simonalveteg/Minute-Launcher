@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.ResolveInfo
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -89,11 +90,11 @@ class LauncherViewModel @Inject constructor(
   }
 
   fun getUsageForApp(app: UserApp) =
-    mutableStateOf(appList.find { it.packageName == app.packageName }?.totalTimeInForeground ?: 0)
+    mutableStateOf(appList[app.packageName]?.totalTimeInForeground ?: 0)
 
   fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
 
-  fun getTotalUsage() = mutableStateOf(appList.sumOf { it.totalTimeInForeground })
+  fun getTotalUsage() = mutableStateOf(appList.values.sumOf { it.totalTimeInForeground })
 
   private fun updateSearch(text: String) {
     viewModelScope.apply {
@@ -111,19 +112,19 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
-  private fun queryUsageStats(): MutableList<UsageStats> {
+  private fun queryUsageStats(): MutableMap<String, UsageStats> {
     val currentTime = System.currentTimeMillis()
     val startTime = Calendar.getInstance()
       .apply {
-        set(Calendar.HOUR_OF_DAY, 0)
+        timeZone = TimeZone.getDefault()
+        set(Calendar.HOUR_OF_DAY, 10)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
       }.timeInMillis
-    return usageStatsManager.queryUsageStats(
-      UsageStatsManager.INTERVAL_DAILY,
-      startTime,
-      currentTime
-    )
+    return (usageStatsManager.queryAndAggregateUsageStats(startTime, currentTime).filter {
+      // TODO: Replace later when implementing app exclusions for usage stats
+      application.applicationContext.packageName != it.key
+    } as MutableMap<String, UsageStats>)
   }
 
   private suspend fun toggleFavorite(app: UserApp) {
