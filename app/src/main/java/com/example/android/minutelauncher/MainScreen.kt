@@ -17,7 +17,7 @@ fun MainScreen(
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
     bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
   )
-  var openDialogApp by remember { mutableStateOf<ResolveInfo?>(null) }
+  var openDialogApp by remember { mutableStateOf<UserApp?>(null) }
 
   LaunchedEffect(key1 = true) {
     viewModel.uiEvent.collect { event ->

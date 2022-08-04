@@ -7,10 +7,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.serialDescriptor
@@ -22,8 +19,9 @@ import java.io.OutputStream
 
 @Serializable
 data class AppSettings(
+  @Polymorphic
   @Serializable(PersistentListSerializer::class)
-  val favoriteApps: PersistentList<String> = persistentListOf()
+  val favoriteApps: PersistentList<UserApp> = persistentListOf()
 )
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -57,7 +55,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
         string = input.readBytes().decodeToString()
       )
     } catch (e: SerializationException) {
-      throw CorruptionException("Unable to read UserPrefs", e)
+      throw CorruptionException("Unable to read AppSettings", e)
     }
   }
 

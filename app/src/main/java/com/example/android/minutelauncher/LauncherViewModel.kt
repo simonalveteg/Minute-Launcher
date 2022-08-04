@@ -7,9 +7,7 @@ import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,14 +41,19 @@ class LauncherViewModel @Inject constructor(
   private var installedPackages = pm.queryIntentActivities(mainIntent, 0).sortedBy {
     it.loadLabel(pm).toString().lowercase()
   }
-  var applicationList = MutableStateFlow(installedPackages)
+  var applicationList = MutableStateFlow(installedPackages.map { it.toUserApp(pm) })
     private set
 
-  val favoriteApps: Flow<List<ResolveInfo>> = channelFlow {
-    application.applicationContext.datastore.data.collectLatest {
-      val test = it.favoriteApps.mapNotNull {
-        val intent = Intent().apply { setPackage(it) }
-        pm.resolveActivity(intent, 0)
+  val favoriteApps: Flow<List<UserApp>> = channelFlow {
+    application.applicationContext.datastore.data.collectLatest { appSettings ->
+      val test = appSettings.favoriteApps.mapNotNull { app ->
+        val intent = Intent().apply {
+          setPackage(app.packageName)
+          action = Intent.ACTION_MAIN
+        }
+        pm.resolveActivity(intent, 0)?.let {
+          return@mapNotNull it.toUserApp(pm)
+        }
       }
       send(test)
     }
@@ -60,8 +63,8 @@ class LauncherViewModel @Inject constructor(
     Log.d("VIEWMODEL", event.toString())
     when (event) {
       is Event.OpenApplication -> {
-        sendUiEvent(UiEvent.ShowToast(getAppTitle(event.app).value))
-        pm.getLaunchIntentForPackage(event.app.activityInfo.packageName)?.apply {
+        sendUiEvent(UiEvent.ShowToast(event.app.appTitle))
+        pm.getLaunchIntentForPackage(event.app.packageName)?.apply {
           addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
         }?.let {
           sendUiEvent(UiEvent.StartActivity(it))
@@ -84,8 +87,8 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
-  fun getUsageForApp(packageName: String) =
-    mutableStateOf(appList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0)
+  fun getUsageForApp(app: UserApp) =
+    mutableStateOf(appList.find { it.packageName == app.packageName }?.totalTimeInForeground ?: 0)
 
   fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
 
@@ -97,11 +100,11 @@ class LauncherViewModel @Inject constructor(
         searchTerm.value = text
       }
       launch {
-        applicationList.value = installedPackages.filter {
-          it.loadLabel(pm).toString()
+        applicationList.value = applicationList.value.filter {
+          it.appTitle
             .replace(" ", "")
             .replace("-", "")
-            .contains(text, true)
+            .contains(text.trim(), true)
         }
       }
     }
@@ -122,13 +125,12 @@ class LauncherViewModel @Inject constructor(
     )
   }
 
-  private suspend fun toggleFavorite(app: ResolveInfo) {
+  private suspend fun toggleFavorite(app: UserApp) {
     application.applicationContext.datastore.updateData {
       it.copy(
         favoriteApps = it.favoriteApps.mutate { list ->
-          val packageName = app.activityInfo.packageName
-          if (!list.contains(packageName)) list.add(packageName)
-          else list.remove(packageName)
+          if (!list.contains(app)) list.add(app)
+          else list.remove(app)
         }
       )
     }

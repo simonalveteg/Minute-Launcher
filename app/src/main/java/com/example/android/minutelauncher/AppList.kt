@@ -71,8 +71,8 @@ fun AppList(
         }
         items(apps) { app ->
           Row {
-            val appTitle by viewModel.getAppTitle(app)
-            val appUsage by viewModel.getUsageForApp(app.activityInfo.packageName)
+            val appTitle = app.appTitle
+            val appUsage by viewModel.getUsageForApp(app)
             AppCard(
               appTitle,
               appUsage,
