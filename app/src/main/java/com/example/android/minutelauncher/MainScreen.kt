@@ -59,8 +59,7 @@ fun MainScreen(
     },
     sheetGesturesEnabled = true,
   ) {
-    Surface {
-      FavoriteApps()
-    }
+    FavoriteApps()
+
   }
 }
