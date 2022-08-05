@@ -74,6 +74,7 @@ class LauncherViewModel @Inject constructor(
       }
       is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
       is Event.DismissDialog -> dismissDialog()
+      is Event.SearchClicked -> sendUiEvent(UiEvent.Search)
     }
   }
 
