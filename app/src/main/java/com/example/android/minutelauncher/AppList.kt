@@ -42,7 +42,7 @@ fun AppList(
     viewModel.uiEvent.collect { event ->
       when (event) {
         is UiEvent.Search -> {
-          Log.d("APP_LIST", "Search pressed")
+          Log.d("APP_LIST", "Search focused")
           focusRequester.requestFocus()
         }
         is UiEvent.DismissSearch -> {

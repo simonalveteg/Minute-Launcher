@@ -5,7 +5,9 @@ import android.widget.Toast
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -17,7 +19,9 @@ fun MainScreen(
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
     bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed) {
       Log.d("MAIN_SCREEN", it.name)
-      if (it.name == BottomSheetValue.Expanded.name && !bottomSheetExpanded.value) viewModel.onEvent(Event.SearchClicked)
+      if (it.name == BottomSheetValue.Expanded.name && !bottomSheetExpanded.value) {
+        viewModel.onEvent(Event.SearchClicked)
+      }
       else viewModel.onEvent(Event.DismissSearch)
       bottomSheetExpanded.value = it.name == BottomSheetValue.Expanded.name
       true
@@ -36,11 +40,10 @@ fun MainScreen(
           mContext.startActivity(event.intent)
         }
         is UiEvent.HideAppsList -> {
-          Log.d("SCREEN", "back pressed")
-          bottomSheetScaffoldState.bottomSheetState.collapse()
+          launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
         }
         is UiEvent.ShowAppsList -> {
-          bottomSheetScaffoldState.bottomSheetState.expand()
+          launch { bottomSheetScaffoldState.bottomSheetState.expand() }
         }
         is UiEvent.ShowAppInfo -> {
           openDialogApp = event.app
@@ -55,6 +58,7 @@ fun MainScreen(
 
   BottomSheetScaffold(
     scaffoldState = bottomSheetScaffoldState,
+    sheetPeekHeight = 0.dp,
     sheetContent = {
       if (openDialogApp != null) {
         AppInfo(
