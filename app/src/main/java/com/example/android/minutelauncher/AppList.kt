@@ -3,7 +3,6 @@ package com.example.android.minutelauncher
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,16 +13,17 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun AppList(
   viewModel: LauncherViewModel = hiltViewModel()
@@ -31,6 +31,7 @@ fun AppList(
   val apps by viewModel.applicationList.collectAsState(emptyList())
   val searchText by viewModel.searchTerm
   val focusRequester = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
 
   BackHandler(true) {
     Log.d("NAV", "back pressed")
@@ -47,6 +48,7 @@ fun AppList(
         is UiEvent.DismissSearch -> {
           Log.d("APP_LIST", "Search dismissed")
           focusRequester.freeFocus()
+          keyboardController?.hide()
         }
         else -> Unit
       }
@@ -55,18 +57,17 @@ fun AppList(
 
   Scaffold(
     floatingActionButton = {
-      LargeFloatingActionButton(
+      FloatingActionButton(
         onClick = { viewModel.onEvent(Event.SearchClicked) }
       ) {
         Icon(
           imageVector = Icons.Default.Search,
-          modifier = Modifier.size(FloatingActionButtonDefaults.LargeIconSize),
           contentDescription = "Search apps"
         )
       }
     }
-  ) {
-    Surface(modifier = Modifier.padding(it)) {
+  ) { paddingValues ->
+    Surface(modifier = Modifier.padding(paddingValues)) {
       Column {
         Row(
           Modifier
