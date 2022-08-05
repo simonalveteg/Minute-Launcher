@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.consumeAllChanges
@@ -24,20 +25,23 @@ fun FavoriteApps(
 ) {
   val totalUsage by viewModel.getTotalUsage()
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
+  var gestureEvent: Event? = null
   Surface(Modifier.fillMaxSize()) {
     Column(
       modifier = Modifier
         .fillMaxSize()
         .pointerInput(Unit) {
-          detectDragGestures { change, dragAmount ->
+          detectDragGestures(
+            onDragEnd = { gestureEvent?.let { viewModel.onEvent(it) } }
+          ) { change, dragAmount ->
             change.consume()
             val threshold = 10f
             if (abs(dragAmount.y) < threshold) {
-              if (dragAmount.x > threshold) viewModel.onEvent(Event.SwipeRight)
-              else if (dragAmount.x < -threshold) viewModel.onEvent(Event.SwipeLeft)
+              if (dragAmount.x > threshold) gestureEvent = Event.SwipeRight
+              else if (dragAmount.x < -threshold) gestureEvent = Event.SwipeLeft
             } else {
-              if (dragAmount.y > threshold) viewModel.onEvent(Event.SwipeDown)
-              else if (dragAmount.y < -threshold) viewModel.onEvent(Event.SwipeUp)
+              if (dragAmount.y > threshold) gestureEvent = Event.SwipeDown
+              else if (dragAmount.y < -threshold) gestureEvent = Event.SwipeUp
             }
           }
         },
