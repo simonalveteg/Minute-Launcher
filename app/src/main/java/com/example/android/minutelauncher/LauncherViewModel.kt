@@ -76,6 +76,10 @@ class LauncherViewModel @Inject constructor(
       is Event.DismissDialog -> dismissDialog()
       is Event.SearchClicked -> sendUiEvent(UiEvent.Search)
       is Event.DismissSearch -> sendUiEvent(UiEvent.DismissSearch)
+      is Event.SwipeRight -> Unit
+      is Event.SwipeLeft -> Unit
+      is Event.SwipeUp -> Unit
+      is Event.SwipeDown -> Unit
     }
   }
 

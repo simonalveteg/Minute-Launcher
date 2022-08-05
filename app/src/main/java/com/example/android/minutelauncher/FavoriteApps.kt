@@ -1,5 +1,7 @@
 package com.example.android.minutelauncher
 
+import android.util.Log
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,8 +12,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.consumeAllChanges
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlin.math.abs
 
 @Composable
 fun FavoriteApps(
@@ -21,7 +26,21 @@ fun FavoriteApps(
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
   Surface(Modifier.fillMaxSize()) {
     Column(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier
+        .fillMaxSize()
+        .pointerInput(Unit) {
+          detectDragGestures { change, dragAmount ->
+            change.consume()
+            val threshold = 10f
+            if (abs(dragAmount.y) < threshold) {
+              if (dragAmount.x > threshold) viewModel.onEvent(Event.SwipeRight)
+              else if (dragAmount.x < -threshold) viewModel.onEvent(Event.SwipeLeft)
+            } else {
+              if (dragAmount.y > threshold) viewModel.onEvent(Event.SwipeDown)
+              else if (dragAmount.y < -threshold) viewModel.onEvent(Event.SwipeUp)
+            }
+          }
+        },
       verticalArrangement = Arrangement.Bottom,
       horizontalAlignment = Alignment.CenterHorizontally
     ) {

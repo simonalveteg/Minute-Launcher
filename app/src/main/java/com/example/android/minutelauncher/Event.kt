@@ -10,4 +10,8 @@ sealed class Event {
   object DismissDialog : Event()
   object SearchClicked : Event()
   object DismissSearch : Event()
+  object SwipeLeft : Event()
+  object SwipeRight : Event()
+  object SwipeUp : Event()
+  object SwipeDown : Event()
 }
