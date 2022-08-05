@@ -8,9 +8,7 @@ import android.content.pm.ResolveInfo
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.mutate
@@ -25,9 +23,9 @@ class LauncherViewModel @Inject constructor(
 ) : ViewModel() {
   private val _uiEvent = MutableSharedFlow<UiEvent>()
   val uiEvent = _uiEvent.asSharedFlow()
-    .onSubscription { Log.d("UI_EVENT","New subscriber") }
+    .onSubscription { Log.d("UI_EVENT", "New subscriber") }
     .onCompletion { Log.d("UI_EVENT", "Completed") }
-    .onEach { Log.d("UI_EVENT",it.toString()) }
+    .onEach { Log.d("UI_EVENT", it.toString()) }
   private val usageStatsManager by lazy {
     application.applicationContext.getSystemService(
       ComponentActivity.USAGE_STATS_SERVICE
@@ -88,7 +86,7 @@ class LauncherViewModel @Inject constructor(
       is Event.SwipeRight -> Unit
       is Event.SwipeLeft -> Unit
       is Event.SwipeUp -> onEvent(Event.OpenAppsList)
-      is Event.SwipeDown -> Unit
+      is Event.SwipeDown -> sendUiEvent(UiEvent.ShowNotifications)
     }
   }
 

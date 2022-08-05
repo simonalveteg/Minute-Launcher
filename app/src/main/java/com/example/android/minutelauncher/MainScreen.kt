@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainScreen(
@@ -21,8 +22,7 @@ fun MainScreen(
       Log.d("MAIN_SCREEN", it.name)
       if (it.name == BottomSheetValue.Expanded.name && !bottomSheetExpanded.value) {
         viewModel.onEvent(Event.SearchClicked)
-      }
-      else viewModel.onEvent(Event.DismissSearch)
+      } else viewModel.onEvent(Event.DismissSearch)
       bottomSheetExpanded.value = it.name == BottomSheetValue.Expanded.name
       true
     }
@@ -39,6 +39,7 @@ fun MainScreen(
         is UiEvent.StartActivity -> {
           mContext.startActivity(event.intent)
         }
+        is UiEvent.ShowNotifications -> Unit
         is UiEvent.HideAppsList -> {
           launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
         }
