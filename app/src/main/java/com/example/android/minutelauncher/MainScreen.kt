@@ -13,11 +13,13 @@ fun MainScreen(
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
   val mContext = LocalContext.current
+  val bottomSheetExpanded = remember { mutableStateOf(false) }
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
     bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed) {
       Log.d("MAIN_SCREEN", it.name)
-      if (it.name == BottomSheetValue.Expanded.name) viewModel.onEvent(Event.SearchClicked)
+      if (it.name == BottomSheetValue.Expanded.name && !bottomSheetExpanded.value) viewModel.onEvent(Event.SearchClicked)
       else viewModel.onEvent(Event.DismissSearch)
+      bottomSheetExpanded.value = it.name == BottomSheetValue.Expanded.name
       true
     }
   )
@@ -36,6 +38,9 @@ fun MainScreen(
         is UiEvent.HideAppsList -> {
           Log.d("SCREEN", "back pressed")
           bottomSheetScaffoldState.bottomSheetState.collapse()
+        }
+        is UiEvent.ShowAppsList -> {
+          bottomSheetScaffoldState.bottomSheetState.expand()
         }
         is UiEvent.ShowAppInfo -> {
           openDialogApp = event.app

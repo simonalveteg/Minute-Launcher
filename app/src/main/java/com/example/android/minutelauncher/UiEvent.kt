@@ -13,6 +13,7 @@ sealed class UiEvent {
   ) : UiEvent()
 
   object HideAppsList : UiEvent()
+  object ShowAppsList : UiEvent()
 
   data class ShowAppInfo(
     val app: UserApp

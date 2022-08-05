@@ -68,6 +68,7 @@ class LauncherViewModel @Inject constructor(
         updateSearch("")
         sendUiEvent(UiEvent.HideAppsList)
       }
+      is Event.OpenAppsList -> sendUiEvent(UiEvent.ShowAppsList)
       is Event.ToggleFavorite -> {
         dismissDialog()
         toggleFavorite(event.app)
@@ -78,7 +79,7 @@ class LauncherViewModel @Inject constructor(
       is Event.DismissSearch -> sendUiEvent(UiEvent.DismissSearch)
       is Event.SwipeRight -> Unit
       is Event.SwipeLeft -> Unit
-      is Event.SwipeUp -> Unit
+      is Event.SwipeUp -> onEvent(Event.OpenAppsList)
       is Event.SwipeDown -> Unit
     }
   }
