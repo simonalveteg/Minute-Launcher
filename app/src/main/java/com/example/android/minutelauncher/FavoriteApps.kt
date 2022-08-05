@@ -20,15 +20,13 @@ fun FavoriteApps(
   val totalUsage by viewModel.getTotalUsage()
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
   Surface(Modifier.fillMaxSize()) {
-    LazyColumn(
+    Column(
       modifier = Modifier.fillMaxSize(),
       verticalArrangement = Arrangement.Bottom,
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      item {
-        Text(totalUsage.toTimeUsed())
-      }
-      items(favorites) { app ->
+      Text(totalUsage.toTimeUsed())
+      favorites.forEach { app ->
         val appUsage by viewModel.getUsageForApp(app)
         AppCard(
           app.appTitle,
@@ -36,9 +34,7 @@ fun FavoriteApps(
           { viewModel.onEvent(Event.ShowAppInfo(app)) }
         ) { viewModel.onEvent(Event.OpenApplication(app)) }
       }
-      item {
-        Spacer(modifier = Modifier.height(150.dp)) // TODO: Don't use hardcoded dp value
-      }
+      Spacer(modifier = Modifier.height(150.dp)) // TODO: Don't use hardcoded dp value
     }
   }
 }
