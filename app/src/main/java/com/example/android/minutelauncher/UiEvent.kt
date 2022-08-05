@@ -20,4 +20,5 @@ sealed class UiEvent {
 
   object DismissDialog : UiEvent()
   object Search : UiEvent()
+  object DismissSearch: UiEvent()
 }

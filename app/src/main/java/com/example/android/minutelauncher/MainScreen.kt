@@ -2,27 +2,24 @@ package com.example.android.minutelauncher
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.LargeFloatingActionButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainScreen(
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
   val mContext = LocalContext.current
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-    bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+    bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed) {
+      Log.d("MAIN_SCREEN", it.name)
+      if (it.name == BottomSheetValue.Expanded.name) viewModel.onEvent(Event.SearchClicked)
+      else viewModel.onEvent(Event.DismissSearch)
+      true
+    }
   )
   var openDialogApp by remember { mutableStateOf<UserApp?>(null) }
 

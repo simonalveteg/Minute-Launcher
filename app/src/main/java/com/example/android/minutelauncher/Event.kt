@@ -9,4 +9,5 @@ sealed class Event {
   data class ShowAppInfo(val app: UserApp) : Event()
   object DismissDialog : Event()
   object SearchClicked : Event()
+  object DismissSearch : Event()
 }
