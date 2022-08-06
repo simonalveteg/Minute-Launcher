@@ -30,16 +30,16 @@ fun AppCard(
 
   Column(
     modifier = Modifier
-        .padding(2.dp)
-        .combinedClickable(onLongClick = {
-            Log.d("APP_CARD", "long press")
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            onLongPress()
-        }) {
-            Log.d("APP_CARD", "click")
-            onClick()
-        }
-        .fillMaxWidth(),
+      .padding(2.dp)
+      .combinedClickable(onLongClick = {
+        Log.d("APP_CARD", "long press")
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        onLongPress()
+      }) {
+        Log.d("APP_CARD", "click")
+        onClick()
+      }
+      .fillMaxWidth(),
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     Text(
