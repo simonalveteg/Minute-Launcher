@@ -23,6 +23,9 @@ class LauncherViewModel @Inject constructor(
 ) : ViewModel() {
   private val _uiEvent = MutableSharedFlow<UiEvent>()
   val uiEvent = _uiEvent.asSharedFlow()
+    .onSubscription { Log.d("UI_EVENT", "New subscriber") }
+    .onCompletion { Log.d("UI_EVENT", "Completed") }
+    .onEach { Log.d("UI_EVENT", it.toString()) }
   private val usageStatsManager by lazy {
     application.applicationContext.getSystemService(
       ComponentActivity.USAGE_STATS_SERVICE
@@ -68,6 +71,10 @@ class LauncherViewModel @Inject constructor(
         updateSearch("")
         sendUiEvent(UiEvent.HideAppsList)
       }
+      is Event.OpenAppsList -> {
+        sendUiEvent(UiEvent.ShowAppsList)
+        sendUiEvent(UiEvent.Search)
+      }
       is Event.ToggleFavorite -> {
         dismissDialog()
         toggleFavorite(event.app)
@@ -76,6 +83,10 @@ class LauncherViewModel @Inject constructor(
       is Event.DismissDialog -> dismissDialog()
       is Event.SearchClicked -> sendUiEvent(UiEvent.Search)
       is Event.DismissSearch -> sendUiEvent(UiEvent.DismissSearch)
+      is Event.SwipeRight -> Unit
+      is Event.SwipeLeft -> Unit
+      is Event.SwipeUp -> onEvent(Event.OpenAppsList)
+      is Event.SwipeDown -> sendUiEvent(UiEvent.ShowNotifications)
     }
   }
 

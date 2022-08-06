@@ -13,12 +13,16 @@ sealed class UiEvent {
   ) : UiEvent()
 
   object HideAppsList : UiEvent()
+  object ShowAppsList : UiEvent()
 
   data class ShowAppInfo(
     val app: UserApp
   ) : UiEvent()
 
   object DismissDialog : UiEvent()
+
   object Search : UiEvent()
-  object DismissSearch: UiEvent()
+  object DismissSearch : UiEvent()
+
+  object ShowNotifications : UiEvent()
 }
