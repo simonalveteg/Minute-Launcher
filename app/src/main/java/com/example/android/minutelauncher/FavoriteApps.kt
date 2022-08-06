@@ -1,8 +1,9 @@
 package com.example.android.minutelauncher
 
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.material.ripple.RippleAlpha
@@ -20,6 +21,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FavoriteApps(
   viewModel: LauncherViewModel = hiltViewModel()
@@ -29,11 +31,15 @@ fun FavoriteApps(
   var gestureEvent: Event? = null
   val gestureThreshold = 10f
   Surface(Modifier.fillMaxSize()) {
-    Column(
-      modifier = Modifier
-        .fillMaxSize()
-        .pointerInput(Unit) {
-          forEachGesture {
+    CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
+      Column(
+        modifier = Modifier
+          .fillMaxSize()
+          .combinedClickable(onLongClick = {
+            Log.d("LONG_PRESS", "Long press on home screen")
+            viewModel.onEvent(Event.NavigateToSettings)
+          }) {}
+          .pointerInput(Unit) {
             detectDragGestures(
               onDragEnd = { gestureEvent?.let { viewModel.onEvent(it) } }
             ) { change, dragAmount ->
@@ -43,13 +49,11 @@ fun FavoriteApps(
                 if (change.position.y < 2399 / 2) GestureZone.UPPER else GestureZone.LOWER
               gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let { gestureEvent = it }
             }
-          }
-        },
-      verticalArrangement = Arrangement.Bottom,
-      horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-      Text(totalUsage.toTimeUsed())
-      CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
+          },
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        Text(totalUsage.toTimeUsed())
         favorites.forEach { app ->
           val appUsage by viewModel.getUsageForApp(app)
           AppCard(
@@ -58,8 +62,8 @@ fun FavoriteApps(
             { viewModel.onEvent(Event.ShowAppInfo(app)) }
           ) { viewModel.onEvent(Event.OpenApplication(app)) }
         }
+        Spacer(modifier = Modifier.height(150.dp)) // TODO: Don't use hardcoded dp value
       }
-      Spacer(modifier = Modifier.height(150.dp)) // TODO: Don't use hardcoded dp value
     }
   }
 }

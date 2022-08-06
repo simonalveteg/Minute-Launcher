@@ -87,6 +87,7 @@ class LauncherViewModel @Inject constructor(
       is Event.SwipeLeft -> Unit
       is Event.SwipeUp -> onEvent(Event.OpenAppsList)
       is Event.SwipeDown -> sendUiEvent(UiEvent.ShowNotifications)
+      is Event.NavigateToSettings -> sendUiEvent(UiEvent.Navigate("settings"))
     }
   }
 

@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainScreen(
+  onNavigate: (UiEvent.Navigate) -> Unit,
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
   val mContext = LocalContext.current
@@ -38,6 +39,9 @@ fun MainScreen(
         }
         is UiEvent.StartActivity -> {
           mContext.startActivity(event.intent)
+        }
+        is UiEvent.Navigate -> {
+          onNavigate(event)
         }
         is UiEvent.ShowNotifications -> Unit
         is UiEvent.HideAppsList -> {

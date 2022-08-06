@@ -15,4 +15,5 @@ sealed class Event {
   data class SwipeRight(val gestureZone: GestureZone) : Event()
   object SwipeUp : Event()
   object SwipeDown : Event()
+  object NavigateToSettings : Event()
 }
