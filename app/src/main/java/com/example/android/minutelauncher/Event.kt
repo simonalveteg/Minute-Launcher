@@ -11,8 +11,8 @@ sealed class Event {
   object DismissDialog : Event()
   object SearchClicked : Event()
   object DismissSearch : Event()
-  object SwipeLeft : Event()
-  object SwipeRight : Event()
+  data class SwipeLeft(val gestureZone: GestureZone) : Event()
+  data class SwipeRight(val gestureZone: GestureZone) : Event()
   object SwipeUp : Event()
   object SwipeDown : Event()
 }
