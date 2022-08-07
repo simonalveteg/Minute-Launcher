@@ -72,6 +72,7 @@ fun MainScreen(
         onBackPressed = {
           coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
           viewModel.onEvent(Event.UpdateSearch(""))
+          bottomSheetExpanded.value = false
         }
       )
     },
