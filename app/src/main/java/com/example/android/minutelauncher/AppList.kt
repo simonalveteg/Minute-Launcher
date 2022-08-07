@@ -28,8 +28,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun AppList(
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
-  val apps by viewModel.applicationList.collectAsState(emptyList())
-  val searchText by viewModel.searchTerm
+  val apps = viewModel.uiState.apps
+  val searchText = viewModel.uiState.searchTerm
   val focusRequester = remember { FocusRequester() }
   val keyboardController = LocalSoftwareKeyboardController.current
 

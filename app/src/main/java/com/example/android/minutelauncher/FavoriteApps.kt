@@ -25,7 +25,7 @@ fun FavoriteApps(
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
   val totalUsage by viewModel.getTotalUsage()
-  val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
+  val favorites by viewModel.uiState.favoriteApps.collectAsState(initial = emptyList())
   var gestureEvent: Event? = null
   val gestureThreshold = 10f
   Surface(Modifier.fillMaxSize()) {
