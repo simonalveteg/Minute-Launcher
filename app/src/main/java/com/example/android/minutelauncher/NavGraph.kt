@@ -12,7 +12,7 @@ fun LauncherNavHost(
   NavHost(navController = navController, startDestination = "main") {
     composable("main") {
       MainScreen(onNavigate = {
-        navController.navigate(it.route)
+        navController.navigate(it)
       })
     }
     composable("settings") {

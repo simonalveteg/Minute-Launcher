@@ -22,7 +22,10 @@ import java.io.OutputStream
 data class AppSettings(
   @Polymorphic
   @Serializable(PersistentListSerializer::class)
-  val favoriteApps: PersistentList<UserApp> = persistentListOf()
+  val favoriteApps: PersistentList<UserApp> = persistentListOf(),
+  @Polymorphic
+  @Serializable(PersistentListSerializer::class)
+  val gestureActions: PersistentList<GestureAction> = persistentListOf()
 )
 
 @OptIn(ExperimentalSerializationApi::class)

@@ -1,17 +1,16 @@
 package com.example.android.minutelauncher
 
 import android.app.Application
-import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Intent
-import android.content.pm.ResolveInfo
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.mutate
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -26,33 +25,28 @@ class LauncherViewModel @Inject constructor(
     .onSubscription { Log.d("UI_EVENT", "New subscriber") }
     .onCompletion { Log.d("UI_EVENT", "Completed") }
     .onEach { Log.d("UI_EVENT", it.toString()) }
-  private val usageStatsManager by lazy {
-    application.applicationContext.getSystemService(
-      ComponentActivity.USAGE_STATS_SERVICE
-    ) as UsageStatsManager
-  }
-  private val appList by lazy { queryUsageStats() }
-  private val mainIntent = Intent().apply {
-    action = Intent.ACTION_MAIN
-    addCategory(Intent.CATEGORY_LAUNCHER)
-  }
-
-  val searchTerm = mutableStateOf("")
 
   private val pm = application.applicationContext.packageManager
-  private var installedPackages = pm.queryIntentActivities(mainIntent, 0).sortedBy {
-    it.loadLabel(pm).toString().lowercase()
-  }
-  private val installedApps = MutableStateFlow(installedPackages.map { it.toUserApp(pm) })
-  var applicationList = MutableStateFlow(installedApps.value)
-    private set
+  private val installedApps = pm.queryIntentActivities(
+    Intent().apply { action = Intent.ACTION_MAIN; addCategory(Intent.CATEGORY_LAUNCHER) },
+    0
+  ).sortedBy { it.loadLabel(pm).toString().lowercase() }.map { it.toUserApp(pm) }
 
-  val favoriteApps: Flow<List<UserApp>> = channelFlow {
-    application.applicationContext.datastore.data.collectLatest { appSettings ->
-      val test = appSettings.favoriteApps
-      send(test)
-    }
-  }
+  private val _uiState = MutableStateFlow(
+    UiState(
+      installedApps = installedApps,
+      filteredApps = installedApps,
+      favoriteApps = channelFlow {
+        application.applicationContext.datastore.data.collectLatest { appSettings ->
+          val test = appSettings.favoriteApps
+          send(test)
+        }
+      },
+      usage = queryUsageStats()
+    )
+  )
+  val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
 
   fun onEvent(event: Event) {
     Log.d("VIEWMODEL", event.toString())
@@ -64,57 +58,49 @@ class LauncherViewModel @Inject constructor(
         }?.let {
           sendUiEvent(UiEvent.StartActivity(it))
         }
-        updateSearch("")
+        viewModelScope.launch { delay(100); updateSearch("") }
       }
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
-      is Event.CloseAppsList -> {
-        updateSearch("")
-        sendUiEvent(UiEvent.HideAppsList)
-      }
-      is Event.OpenAppsList -> {
-        sendUiEvent(UiEvent.ShowAppsList)
-        sendUiEvent(UiEvent.Search)
-      }
-      is Event.ToggleFavorite -> {
-        dismissDialog()
-        toggleFavorite(event.app)
-      }
-      is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
-      is Event.DismissDialog -> dismissDialog()
-      is Event.SearchClicked -> sendUiEvent(UiEvent.Search)
-      is Event.DismissSearch -> sendUiEvent(UiEvent.DismissSearch)
-      is Event.SwipeRight -> Unit
-      is Event.SwipeLeft -> Unit
-      is Event.SwipeUp -> onEvent(Event.OpenAppsList)
-      is Event.SwipeDown -> sendUiEvent(UiEvent.ShowNotifications)
-      is Event.NavigateToSettings -> sendUiEvent(UiEvent.Navigate("settings"))
+      is Event.ToggleFavorite -> toggleFavorite(event.app)
+      is Event.HandleGesture -> handleGestureAction(event.gesture)
+    }
+  }
+
+  private fun handleGestureAction(gestureAction: GestureAction) {
+    when (gestureAction.direction) {
+      GestureDirection.LEFT -> Unit
+      GestureDirection.RIGHT -> Unit
+      GestureDirection.UP -> sendUiEvent(UiEvent.OpenAppDrawer)
+      GestureDirection.DOWN -> Unit
     }
   }
 
   fun getUsageForApp(app: UserApp) =
-    mutableStateOf(appList[app.packageName]?.totalTimeInForeground ?: 0)
+    mutableStateOf(uiState.value.usage[app.packageName] ?: 0)
 
-  fun getAppTitle(app: ResolveInfo) = mutableStateOf(app.loadLabel(pm).toString())
+  fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
 
-  fun getTotalUsage() = mutableStateOf(appList.values.sumOf { it.totalTimeInForeground })
-
-  private fun updateSearch(text: String) {
+  private fun updateSearch(text: String?) {
+    Log.d("VIEW_MODEL", "Update search with $text")
+    val textString = text ?: ""
     viewModelScope.apply {
-      launch {
-        searchTerm.value = text
-      }
-      launch {
-        applicationList.value = installedApps.value.filter {
-          it.appTitle
-            .replace(" ", "")
-            .replace("-", "")
-            .contains(text.trim(), true)
-        }
+      _uiState.update { it ->
+        it.copy(
+          filteredApps = installedApps.filter { app ->
+            app.appTitle
+              .replace(" ", "")
+              .replace("-", "")
+              .contains(textString.trim(), true)
+          },
+          searchTerm = textString
+        )
       }
     }
   }
 
-  private fun queryUsageStats(): MutableMap<String, UsageStats> {
+  private fun queryUsageStats(): Map<String, Long> {
+    val usageStatsManager = application.applicationContext
+      .getSystemService(ComponentActivity.USAGE_STATS_SERVICE) as UsageStatsManager
     val currentTime = System.currentTimeMillis()
     val startTime = Calendar.getInstance()
       .apply {
@@ -123,10 +109,9 @@ class LauncherViewModel @Inject constructor(
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
       }.timeInMillis
-    return (usageStatsManager.queryAndAggregateUsageStats(startTime, currentTime).filter {
-      // TODO: Replace later when implementing app exclusions for usage stats
-      application.applicationContext.packageName != it.key
-    } as MutableMap<String, UsageStats>)
+    return usageStatsManager.queryAndAggregateUsageStats(startTime, currentTime)
+      .filter { application.applicationContext.packageName != it.key }
+      .mapValues { it.value.totalTimeInForeground }
   }
 
   private fun toggleFavorite(app: UserApp) {
@@ -136,7 +121,7 @@ class LauncherViewModel @Inject constructor(
           favoriteApps = it.favoriteApps.mutate { list ->
             if (!list.contains(app)) list.add(app)
             else list.remove(app)
-            Log.d("vm", app.packageName)
+            Log.d("VIEW_MODEL", "Toggled favorite: ${app.packageName}")
           }
         )
       }
@@ -149,7 +134,11 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
-  private fun dismissDialog() {
-    sendUiEvent(UiEvent.DismissDialog)
-  }
+  data class UiState(
+    val installedApps: List<UserApp>,
+    val filteredApps: List<UserApp>,
+    val favoriteApps: Flow<List<UserApp>>,
+    val usage: Map<String, Long>,
+    val searchTerm: String = ""
+  )
 }

@@ -24,11 +24,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FavoriteApps(
-  viewModel: LauncherViewModel = hiltViewModel()
+  viewModel: LauncherViewModel = hiltViewModel(),
+  onAppPressed: (UserApp) -> Unit,
+  onNavigate: (String) -> Unit
 ) {
   val totalUsage by viewModel.getTotalUsage()
-  val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
-  var gestureEvent: Event? = null
+  val favorites by viewModel.uiState.collectAsState().value.favoriteApps.collectAsState(initial = emptyList())
+  var gestureAction: GestureAction? = null
   val gestureThreshold = 10f
   Surface(Modifier.fillMaxSize()) {
     CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
@@ -37,17 +39,17 @@ fun FavoriteApps(
           .fillMaxSize()
           .combinedClickable(onLongClick = {
             Log.d("LONG_PRESS", "Long press on home screen")
-            viewModel.onEvent(Event.NavigateToSettings)
+            onNavigate("settings")
           }) {}
           .pointerInput(Unit) {
             detectDragGestures(
-              onDragEnd = { gestureEvent?.let { viewModel.onEvent(it) } }
+              onDragEnd = { gestureAction?.let { viewModel.onEvent(Event.HandleGesture(it)) } }
             ) { change, dragAmount ->
               change.consume()
               Log.d("SWIPE", "position: ${change.position}") // height: 0-2399f
               val gestureZone =
                 if (change.position.y < 2399 / 2) GestureZone.UPPER else GestureZone.LOWER
-              gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let { gestureEvent = it }
+              gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let { gestureAction = it }
             }
           },
         verticalArrangement = Arrangement.Bottom,
@@ -56,11 +58,9 @@ fun FavoriteApps(
         Text(totalUsage.toTimeUsed())
         favorites.forEach { app ->
           val appUsage by viewModel.getUsageForApp(app)
-          AppCard(
-            app.appTitle,
+          AppCard(app.appTitle,
             appUsage,
-            { viewModel.onEvent(Event.ShowAppInfo(app)) }
-          ) { viewModel.onEvent(Event.OpenApplication(app)) }
+            { onAppPressed(app) }) { viewModel.onEvent(Event.OpenApplication(app)) }
         }
         Spacer(modifier = Modifier.height(150.dp)) // TODO: Don't use hardcoded dp value
       }
@@ -74,9 +74,6 @@ object ClearRippleTheme : RippleTheme {
 
   @Composable
   override fun rippleAlpha() = RippleAlpha(
-    draggedAlpha = 0f,
-    focusedAlpha = 0f,
-    hoveredAlpha = 0f,
-    pressedAlpha = 0f
+    draggedAlpha = 0f, focusedAlpha = 0f, hoveredAlpha = 0f, pressedAlpha = 0f
   )
 }
