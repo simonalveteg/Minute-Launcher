@@ -11,67 +11,50 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppList(
-  viewModel: LauncherViewModel = hiltViewModel()
+  viewModel: LauncherViewModel = hiltViewModel(),
+  focusRequester: FocusRequester = remember { FocusRequester() },
+  onLongPress: (UserApp) -> Unit,
+  onBackPressed: () -> Unit
 ) {
-  val apps by viewModel.applicationList.collectAsState(emptyList())
-  val searchText by viewModel.searchTerm
-  val focusRequester = remember { FocusRequester() }
-  val keyboardController = LocalSoftwareKeyboardController.current
+  val uiState by viewModel.uiState.collectAsState()
+  val apps = uiState.filteredApps
+  val searchText = uiState.searchTerm
 
   BackHandler(true) {
     Log.d("NAV", "back pressed")
-    viewModel.onEvent(Event.CloseAppsList)
+    onBackPressed()
   }
 
-  LaunchedEffect(key1 = true) {
-    viewModel.uiEvent.collect { event ->
-      when (event) {
-        is UiEvent.Search -> {
-          Log.d("APP_LIST", "Search focused")
-          focusRequester.requestFocus()
-        }
-        is UiEvent.DismissSearch -> {
-          Log.d("APP_LIST", "Search dismissed")
-          focusRequester.freeFocus()
-          keyboardController?.hide()
-        }
-        else -> Unit
-      }
+  Scaffold(floatingActionButton = {
+    FloatingActionButton(onClick = {
+      Log.d("APP_LIST", "Search focused")
+      focusRequester.requestFocus()
+    }) {
+      Icon(
+        imageVector = Icons.Default.Search, contentDescription = "Search apps"
+      )
     }
-  }
-
-  Scaffold(
-    floatingActionButton = {
-      FloatingActionButton(
-        onClick = { viewModel.onEvent(Event.SearchClicked) }
-      ) {
-        Icon(
-          imageVector = Icons.Default.Search,
-          contentDescription = "Search apps"
-        )
-      }
-    }
-  ) { paddingValues ->
+  }) { paddingValues ->
     Surface(modifier = Modifier.padding(paddingValues)) {
       Column {
         Row(
-          Modifier
-            .statusBarsPadding()
+          Modifier.statusBarsPadding()
         ) {
           TextField(
             value = searchText,
@@ -87,9 +70,7 @@ fun AppList(
             colors = TextFieldDefaults.outlinedTextFieldColors(),
             placeholder = {
               Text(
-                text = "search",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                text = "search", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
               )
             },
             textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
@@ -109,11 +90,13 @@ fun AppList(
             Row {
               val appTitle = app.appTitle
               val appUsage by viewModel.getUsageForApp(app)
-              AppCard(
-                appTitle,
-                appUsage,
-                { viewModel.onEvent(Event.ShowAppInfo(app)) }
-              ) { viewModel.onEvent(Event.OpenApplication(app)) }
+              AppCard(appTitle, appUsage, { onLongPress(app) }) {
+                viewModel.onEvent(
+                  Event.OpenApplication(
+                    app
+                  )
+                )
+              }
             }
           }
         }

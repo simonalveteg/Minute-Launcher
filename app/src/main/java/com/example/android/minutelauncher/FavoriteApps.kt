@@ -22,11 +22,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun FavoriteApps(
-  viewModel: LauncherViewModel = hiltViewModel()
+  viewModel: LauncherViewModel = hiltViewModel(), onAppPressed: (UserApp) -> Unit
 ) {
   val totalUsage by viewModel.getTotalUsage()
-  val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
-  var gestureEvent: Event? = null
+  val favorites by viewModel.uiState.collectAsState().value.favoriteApps.collectAsState(initial = emptyList())
+  var gestureAction: GestureAction? = null
   val gestureThreshold = 10f
   Surface(Modifier.fillMaxSize()) {
     Column(
@@ -35,13 +35,13 @@ fun FavoriteApps(
         .pointerInput(Unit) {
           forEachGesture {
             detectDragGestures(
-              onDragEnd = { gestureEvent?.let { viewModel.onEvent(it) } }
+              onDragEnd = { gestureAction?.let { viewModel.onEvent(Event.HandleGesture(it)) } }
             ) { change, dragAmount ->
               change.consume()
               Log.d("SWIPE", "position: ${change.position}") // height: 0-2399f
               val gestureZone =
                 if (change.position.y < 2399 / 2) GestureZone.UPPER else GestureZone.LOWER
-              gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let { gestureEvent = it }
+              gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let { gestureAction = it }
             }
           }
         },
@@ -52,11 +52,9 @@ fun FavoriteApps(
       CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
         favorites.forEach { app ->
           val appUsage by viewModel.getUsageForApp(app)
-          AppCard(
-            app.appTitle,
+          AppCard(app.appTitle,
             appUsage,
-            { viewModel.onEvent(Event.ShowAppInfo(app)) }
-          ) { viewModel.onEvent(Event.OpenApplication(app)) }
+            { onAppPressed(app) }) { viewModel.onEvent(Event.OpenApplication(app)) }
         }
       }
       Spacer(modifier = Modifier.height(150.dp)) // TODO: Don't use hardcoded dp value
@@ -70,9 +68,6 @@ object ClearRippleTheme : RippleTheme {
 
   @Composable
   override fun rippleAlpha() = RippleAlpha(
-    draggedAlpha = 0f,
-    focusedAlpha = 0f,
-    hoveredAlpha = 0f,
-    pressedAlpha = 0f
+    draggedAlpha = 0f, focusedAlpha = 0f, hoveredAlpha = 0f, pressedAlpha = 0f
   )
 }
