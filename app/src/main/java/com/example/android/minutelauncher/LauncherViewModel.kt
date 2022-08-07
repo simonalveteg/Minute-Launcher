@@ -5,9 +5,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Intent
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,9 +32,9 @@ class LauncherViewModel @Inject constructor(
     0
   ).sortedBy { it.loadLabel(pm).toString().lowercase() }.map { it.toUserApp(pm) }
 
-  var uiState by mutableStateOf(
+  private val _uiState = MutableStateFlow(
     UiState(
-      apps = installedApps,
+      installedApps = installedApps,
       filteredApps = installedApps,
       favoriteApps = channelFlow {
         application.applicationContext.datastore.data.collectLatest { appSettings ->
@@ -47,7 +45,8 @@ class LauncherViewModel @Inject constructor(
       usage = queryUsageStats()
     )
   )
-    private set
+  val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
 
   fun onEvent(event: Event) {
     Log.d("VIEWMODEL", event.toString())
@@ -62,45 +61,30 @@ class LauncherViewModel @Inject constructor(
         viewModelScope.launch { delay(100); updateSearch("") }
       }
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
-      is Event.CloseAppsList -> {
-        updateSearch("")
-        sendUiEvent(UiEvent.HideAppsList)
-      }
-      is Event.OpenAppsList -> {
-        sendUiEvent(UiEvent.ShowAppsList)
-        sendUiEvent(UiEvent.Search)
-      }
-      is Event.ToggleFavorite -> {
-        sendUiEvent(UiEvent.DismissDialog)
-        toggleFavorite(event.app)
-      }
-      is Event.ShowAppInfo -> sendUiEvent(UiEvent.ShowAppInfo(event.app))
-      is Event.DismissDialog -> sendUiEvent(UiEvent.DismissDialog)
-      is Event.SearchClicked -> sendUiEvent(UiEvent.Search)
-      is Event.DismissSearch -> sendUiEvent(UiEvent.DismissSearch)
-      is Event.SwipeRight -> Unit
-      is Event.SwipeLeft -> Unit
-      is Event.SwipeUp -> onEvent(Event.OpenAppsList)
-      is Event.SwipeDown -> sendUiEvent(UiEvent.ShowNotifications)
+      is Event.ToggleFavorite -> toggleFavorite(event.app)
     }
   }
 
   fun getUsageForApp(app: UserApp) =
-    mutableStateOf(uiState.usage[app.packageName] ?: 0)
+    mutableStateOf(uiState.value.usage[app.packageName] ?: 0)
 
-  fun getTotalUsage() = mutableStateOf(uiState.usage.values.sum())
+  fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
 
-  private fun updateSearch(text: String) {
+  private fun updateSearch(text: String?) {
+    Log.d("VIEW_MODEL","Update search with $text")
+    val textString = text ?: ""
     viewModelScope.apply {
-      uiState = uiState.copy(
-        filteredApps = installedApps.filter {
-          it.appTitle
-            .replace(" ", "")
-            .replace("-", "")
-            .contains(text.trim(), true)
-        },
-        searchTerm = text
-      )
+      _uiState.update { it ->
+        it.copy(
+          filteredApps = installedApps.filter { app ->
+            app.appTitle
+              .replace(" ", "")
+              .replace("-", "")
+              .contains(textString.trim(), true)
+          },
+          searchTerm = textString
+        )
+      }
     }
   }
 
@@ -141,7 +125,7 @@ class LauncherViewModel @Inject constructor(
   }
 
   data class UiState(
-    val apps: List<UserApp>,
+    val installedApps: List<UserApp>,
     val filteredApps: List<UserApp>,
     val favoriteApps: Flow<List<UserApp>>,
     val usage: Map<String, Long>,
