@@ -34,7 +34,9 @@ fun FavoriteApps(
         .fillMaxSize()
         .pointerInput(Unit) {
           forEachGesture {
-            detectDragGestures(onDragEnd = { /* TODO: Handle gesture */ }) { change, dragAmount ->
+            detectDragGestures(
+              onDragEnd = { gestureAction?.let { viewModel.onEvent(Event.HandleGesture(it)) } }
+            ) { change, dragAmount ->
               change.consume()
               Log.d("SWIPE", "position: ${change.position}") // height: 0-2399f
               val gestureZone =

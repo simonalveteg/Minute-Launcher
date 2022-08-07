@@ -25,7 +25,7 @@ fun MainScreen(
   val bottomSheetExpanded = remember { mutableStateOf(false) }
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
     bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed) {
-      Log.d("MAIN_SCREEN", it.name)
+      Log.d("MAIN_SCREEN", "${it.name}, ${bottomSheetExpanded.value}")
       if (it.name == BottomSheetValue.Expanded.name && !bottomSheetExpanded.value) {
         focusRequester.requestFocus()
       } else {
@@ -44,11 +44,11 @@ fun MainScreen(
     viewModel.uiEvent.collect { event ->
       Log.d("MAIN_SCREEN", "event: $event")
       when (event) {
-        is UiEvent.ShowToast -> {
-          Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-        }
-        is UiEvent.StartActivity -> {
-          mContext.startActivity(event.intent)
+        is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
+        is UiEvent.StartActivity -> mContext.startActivity(event.intent)
+        is UiEvent.OpenAppDrawer -> {
+          launch { bottomSheetScaffoldState.bottomSheetState.expand() }
+          focusRequester.requestFocus()
         }
       }
     }
@@ -56,7 +56,7 @@ fun MainScreen(
 
   BottomSheetScaffold(
     scaffoldState = bottomSheetScaffoldState,
-    //sheetPeekHeight = 0.dp,
+    sheetPeekHeight = 0.dp,
     sheetContent = {
       if (openDialogApp != null) {
         AppInfo(

@@ -62,6 +62,16 @@ class LauncherViewModel @Inject constructor(
       }
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
       is Event.ToggleFavorite -> toggleFavorite(event.app)
+      is Event.HandleGesture -> handleGestureAction(event.gesture)
+    }
+  }
+
+  private fun handleGestureAction(gestureAction: GestureAction) {
+    when (gestureAction.direction) {
+      GestureDirection.LEFT -> Unit
+      GestureDirection.RIGHT -> Unit
+      GestureDirection.UP -> sendUiEvent(UiEvent.OpenAppDrawer)
+      GestureDirection.DOWN -> Unit
     }
   }
 
@@ -71,7 +81,7 @@ class LauncherViewModel @Inject constructor(
   fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
 
   private fun updateSearch(text: String?) {
-    Log.d("VIEW_MODEL","Update search with $text")
+    Log.d("VIEW_MODEL", "Update search with $text")
     val textString = text ?: ""
     viewModelScope.apply {
       _uiState.update { it ->
