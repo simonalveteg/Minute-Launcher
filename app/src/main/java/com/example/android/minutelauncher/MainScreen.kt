@@ -56,7 +56,7 @@ fun MainScreen(
 
   BottomSheetScaffold(
     scaffoldState = bottomSheetScaffoldState,
-    sheetPeekHeight = 100.dp,
+    //sheetPeekHeight = 0.dp,
     sheetContent = {
       if (openDialogApp != null) {
         AppInfo(
