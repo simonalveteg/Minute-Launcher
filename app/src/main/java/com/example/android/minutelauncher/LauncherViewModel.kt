@@ -3,6 +3,8 @@ package com.example.android.minutelauncher
 import android.app.Application
 import android.app.usage.UsageStatsManager
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.*
@@ -10,11 +12,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.mutate
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 @HiltViewModel
 class LauncherViewModel @Inject constructor(
@@ -47,6 +51,14 @@ class LauncherViewModel @Inject constructor(
   )
   val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
+  private val handler = Handler(Looper.getMainLooper())
+  private var usageQueryRunnable = Runnable { handlerTest() }
+
+  init {
+    Log.d("VIEW_MODEL", "INIT.")
+    handler.removeCallbacksAndMessages(null)
+    usageQueryRunnable.run()
+  }
 
   fun onEvent(event: Event) {
     Log.d("VIEWMODEL", event.toString())
@@ -66,6 +78,11 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
+  fun getUsageForApp(app: UserApp) =
+    mutableStateOf(uiState.value.usage[app.packageName] ?: 0)
+
+  fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
+
   private fun handleGestureAction(gestureAction: GestureAction) {
     when (gestureAction.direction) {
       GestureDirection.LEFT -> Unit
@@ -74,11 +91,6 @@ class LauncherViewModel @Inject constructor(
       GestureDirection.DOWN -> Unit
     }
   }
-
-  fun getUsageForApp(app: UserApp) =
-    mutableStateOf(uiState.value.usage[app.packageName] ?: 0)
-
-  fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
 
   private fun updateSearch(text: String?) {
     Log.d("VIEW_MODEL", "Update search with $text")
@@ -96,6 +108,12 @@ class LauncherViewModel @Inject constructor(
         )
       }
     }
+  }
+
+  private fun handlerTest() {
+    Log.d("VIEW_MODEL", "Usage queried.")
+    _uiState.update { it.copy(usage = queryUsageStats()) }
+    handler.postDelayed(usageQueryRunnable, 60000)
   }
 
   private fun queryUsageStats(): Map<String, Long> {
