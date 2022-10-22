@@ -7,4 +7,5 @@ sealed class Event {
   data class ToggleFavorite(val app: UserApp) : Event()
   data class HandleGesture(val gesture: GestureDirection) : Event()
   data class SetAppGesture(val app: UserApp, val gesture: GestureDirection) : Event()
+  data class ClearAppGesture(val gesture: GestureDirection) : Event()
 }

@@ -71,6 +71,7 @@ class LauncherViewModel @Inject constructor(
       is Event.ToggleFavorite -> toggleFavorite(event.app)
       is Event.HandleGesture -> handleGesture(event.gesture)
       is Event.SetAppGesture -> setGestureApp(event.app, event.gesture)
+      is Event.ClearAppGesture -> clearGestureApp(event.gesture)
     }
   }
 
@@ -160,6 +161,18 @@ class LauncherViewModel @Inject constructor(
             } else {
               map[gesture] = app
             }
+          }
+        )
+      }
+    }
+  }
+
+  private fun clearGestureApp(gesture: GestureDirection) {
+    viewModelScope.launch {
+      application.applicationContext.datastore.updateData {
+        it.copy(
+          gestureApps = it.gestureApps.mutate { map ->
+            map.remove(gesture)
           }
         )
       }

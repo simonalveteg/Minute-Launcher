@@ -1,19 +1,18 @@
 package com.example.android.minutelauncher
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -35,43 +34,57 @@ fun SettingsScreen(
       Button(onClick = { onNavigate("main") }) {
         Text(text = "GO BACK")
       }
-
-      Column {
-        Text(text = "Set apps to open when swiping left or right")
-        Row {
-          Button(onClick = {
-            selectedDirection = GestureDirection.UPPER_RIGHT
+      LazyVerticalGrid(columns = GridCells.Fixed(2)){
+        item {
+          val gestureDirection = GestureDirection.UPPER_RIGHT
+          val app = gestureApps.value[gestureDirection]
+          GestureAppCard(
+            app = app,
+            onLongClick = {
+              app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
+            }
+          ) {
+            selectedDirection = gestureDirection
             appSelectorVisible.value = true
-          }) {
-            Text(
-              text = gestureApps.value[GestureDirection.UPPER_RIGHT]?.appTitle ?: "none"
-            )
-          }
-          Button(onClick = {
-            selectedDirection = GestureDirection.UPPER_LEFT
-            appSelectorVisible.value = true
-          }) {
-            Text(
-              text = gestureApps.value[GestureDirection.UPPER_LEFT]?.appTitle ?: "none"
-            )
           }
         }
-        Row {
-          Button(onClick = {
-            selectedDirection = GestureDirection.LOWER_RIGHT
+        item {
+          val gestureDirection = GestureDirection.UPPER_LEFT
+          val app = gestureApps.value[gestureDirection]
+          GestureAppCard(
+            app = app,
+            onLongClick = {
+              app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
+            }
+          ) {
+            selectedDirection = gestureDirection
             appSelectorVisible.value = true
-          }) {
-            Text(
-              text = gestureApps.value[GestureDirection.LOWER_RIGHT]?.appTitle ?: "none"
-            )
           }
-          Button(onClick = {
-            selectedDirection = GestureDirection.LOWER_LEFT
+        }
+        item {
+          val gestureDirection = GestureDirection.LOWER_RIGHT
+          val app = gestureApps.value[gestureDirection]
+          GestureAppCard(
+            app = app,
+            onLongClick = {
+              app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
+            }
+          ) {
+            selectedDirection = gestureDirection
             appSelectorVisible.value = true
-          }) {
-            Text(
-              text = gestureApps.value[GestureDirection.LOWER_LEFT]?.appTitle ?: "none"
-            )
+          }
+        }
+        item {
+          val gestureDirection = GestureDirection.LOWER_LEFT
+          val app = gestureApps.value[gestureDirection]
+          GestureAppCard(
+            app = app,
+            onLongClick = {
+              app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
+            }
+            ) {
+            selectedDirection = gestureDirection
+            appSelectorVisible.value = true
           }
         }
       }
@@ -94,5 +107,24 @@ fun SettingsScreen(
         }
       }
     }
+  }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun GestureAppCard(app: UserApp?, onLongClick: () -> Unit, onClick: () -> Unit) {
+  Surface(
+    tonalElevation = 4.dp,
+    modifier = Modifier
+      .padding(32.dp)
+      .combinedClickable(onLongClick = {
+        onLongClick()
+      }) {
+        onClick()
+      }
+  ) {
+    Text(
+      text = app?.appTitle ?: "none"
+    )
   }
 }
