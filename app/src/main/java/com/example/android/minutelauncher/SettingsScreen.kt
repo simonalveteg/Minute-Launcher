@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -23,6 +24,8 @@ fun SettingsScreen(
   val uiState by viewModel.uiState.collectAsState()
   val gestureApps = uiState.gestureApps.collectAsState(initial = emptyMap())
   val appSelectorVisible = remember { mutableStateOf(false) }
+  var selectedDirection: GestureDirection? = null
+
   Surface {
     Column(
       modifier = Modifier.fillMaxSize(),
@@ -32,16 +35,46 @@ fun SettingsScreen(
       Button(onClick = { onNavigate("main") }) {
         Text(text = "GO BACK")
       }
-      Text(text = "Gestures")
-      Text(text = "Upper")
-      Button(onClick = { appSelectorVisible.value = true }) {
-        Text(text = "Left App")
+
+      Column {
+        Text(text = "Set apps to open when swiping left or right")
+        Row {
+          Button(onClick = {
+            selectedDirection = GestureDirection.UPPER_RIGHT
+            appSelectorVisible.value = true
+          }) {
+            Text(
+              text = gestureApps.value[GestureDirection.UPPER_RIGHT]?.appTitle ?: "none"
+            )
+          }
+          Button(onClick = {
+            selectedDirection = GestureDirection.UPPER_LEFT
+            appSelectorVisible.value = true
+          }) {
+            Text(
+              text = gestureApps.value[GestureDirection.UPPER_LEFT]?.appTitle ?: "none"
+            )
+          }
+        }
+        Row {
+          Button(onClick = {
+            selectedDirection = GestureDirection.LOWER_RIGHT
+            appSelectorVisible.value = true
+          }) {
+            Text(
+              text = gestureApps.value[GestureDirection.LOWER_RIGHT]?.appTitle ?: "none"
+            )
+          }
+          Button(onClick = {
+            selectedDirection = GestureDirection.LOWER_LEFT
+            appSelectorVisible.value = true
+          }) {
+            Text(
+              text = gestureApps.value[GestureDirection.LOWER_LEFT]?.appTitle ?: "none"
+            )
+          }
+        }
       }
-      Text(
-        text = gestureApps.value[GestureDirection.UPPER_LEFT]?.appTitle ?: "none"
-      )
-      Text(text = "Lower")
-      Text(text = "Restart App")
     }
     AnimatedVisibility(
       visible = appSelectorVisible.value,
@@ -50,8 +83,10 @@ fun SettingsScreen(
     ) {
       Surface {
         AppList(
-          onAppPress = {
-            viewModel.onEvent(Event.SetAppGesture(it, GestureDirection.UPPER_LEFT))
+          onAppPress = { app ->
+            selectedDirection?.let {
+              viewModel.onEvent(Event.SetAppGesture(app, it))
+            }
             appSelectorVisible.value = false
           }
         ) {

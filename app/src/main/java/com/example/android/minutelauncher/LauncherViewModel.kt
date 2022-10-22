@@ -65,9 +65,7 @@ class LauncherViewModel @Inject constructor(
     Log.d("VIEW_MODEL", event.toString())
     when (event) {
       is Event.OpenApplication -> {
-        sendUiEvent(UiEvent.ShowToast(event.app.appTitle))
         openApplication(event.app)
-        viewModelScope.launch { delay(100); updateSearch("") }
       }
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
       is Event.ToggleFavorite -> toggleFavorite(event.app)
@@ -82,12 +80,14 @@ class LauncherViewModel @Inject constructor(
   fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
 
   private fun handleGesture(gestureDirection: GestureDirection) {
+    Log.d("VIEW_MODEL","Gesture handled, $gestureDirection")
     when (gestureDirection) {
       GestureDirection.UP -> sendUiEvent(UiEvent.OpenAppDrawer)
       GestureDirection.DOWN -> Unit
       else -> viewModelScope.launch {
         application.applicationContext.datastore.data.collectLatest { appSettings ->
           appSettings.gestureApps[gestureDirection]?.let { openApplication(it) }
+          cancel()
         }
       }
     }
@@ -181,11 +181,14 @@ class LauncherViewModel @Inject constructor(
   }
 
   private fun openApplication(app: UserApp) {
+    Log.d("VIEW_MODEL","Open Application ${app.appTitle}")
+    sendUiEvent(UiEvent.ShowToast(app.appTitle))
     pm.getLaunchIntentForPackage(app.packageName)?.apply {
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
     }?.let {
       sendUiEvent(UiEvent.StartActivity(it))
     }
+    viewModelScope.launch { delay(100); updateSearch("") }
   }
 
   private fun sendUiEvent(event: UiEvent) {
