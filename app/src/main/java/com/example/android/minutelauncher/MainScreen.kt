@@ -6,6 +6,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
@@ -55,6 +56,7 @@ fun MainScreen(
   BottomSheetScaffold(
     scaffoldState = bottomSheetScaffoldState,
     sheetPeekHeight = 0.dp,
+    backgroundColor = Color.Transparent,
     sheetContent = {
       if (openDialogApp != null) {
         AppInfo(

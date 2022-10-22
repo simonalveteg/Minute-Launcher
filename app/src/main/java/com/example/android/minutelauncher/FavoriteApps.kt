@@ -16,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
@@ -32,7 +33,9 @@ fun FavoriteApps(
   val favorites by viewModel.uiState.collectAsState().value.favoriteApps.collectAsState(initial = emptyList())
   var gestureAction: GestureAction? = null
   val gestureThreshold = 10f
-  Surface(Modifier.fillMaxSize()) {
+  Surface(
+    Modifier.fillMaxSize().alpha(0.95f)
+  ) {
     CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
       Column(
         modifier = Modifier
