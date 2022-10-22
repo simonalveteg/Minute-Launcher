@@ -1,7 +1,6 @@
 package com.example.android.minutelauncher
 
 import android.app.Application
-import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Intent
 import android.os.Handler
@@ -17,9 +16,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.*
 import javax.inject.Inject
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 @HiltViewModel
 class LauncherViewModel @Inject constructor(
@@ -70,16 +66,12 @@ class LauncherViewModel @Inject constructor(
     when (event) {
       is Event.OpenApplication -> {
         sendUiEvent(UiEvent.ShowToast(event.app.appTitle))
-        pm.getLaunchIntentForPackage(event.app.packageName)?.apply {
-          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-        }?.let {
-          sendUiEvent(UiEvent.StartActivity(it))
-        }
+        openApplication(event.app)
         viewModelScope.launch { delay(100); updateSearch("") }
       }
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
       is Event.ToggleFavorite -> toggleFavorite(event.app)
-      is Event.HandleGesture -> handleGestureAction(event.gesture)
+      is Event.HandleGesture -> handleGesture(event.gesture)
       is Event.SetAppGesture -> setGestureApp(event.app, event.gesture)
     }
   }
@@ -89,12 +81,15 @@ class LauncherViewModel @Inject constructor(
 
   fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
 
-  private fun handleGestureAction(gestureAction: GestureAction) {
-    when (gestureAction.direction) {
-      GestureDirection.LEFT -> Unit
-      GestureDirection.RIGHT -> Unit
+  private fun handleGesture(gestureDirection: GestureDirection) {
+    when (gestureDirection) {
       GestureDirection.UP -> sendUiEvent(UiEvent.OpenAppDrawer)
       GestureDirection.DOWN -> Unit
+      else -> viewModelScope.launch {
+        application.applicationContext.datastore.data.collectLatest { appSettings ->
+          appSettings.gestureApps[gestureDirection]?.let { openApplication(it) }
+        }
+      }
     }
   }
 
@@ -155,7 +150,7 @@ class LauncherViewModel @Inject constructor(
       .mapValues { it.value.totalTimeInForeground }
   }
 
-  private fun setGestureApp(app: UserApp, gesture: GestureAction) {
+  private fun setGestureApp(app: UserApp, gesture: GestureDirection) {
     viewModelScope.launch {
       application.applicationContext.datastore.updateData {
         it.copy(
@@ -185,6 +180,14 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
+  private fun openApplication(app: UserApp) {
+    pm.getLaunchIntentForPackage(app.packageName)?.apply {
+      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+    }?.let {
+      sendUiEvent(UiEvent.StartActivity(it))
+    }
+  }
+
   private fun sendUiEvent(event: UiEvent) {
     viewModelScope.launch {
       _uiEvent.emit(event)
@@ -195,7 +198,7 @@ class LauncherViewModel @Inject constructor(
     val installedApps: List<UserApp>,
     val filteredApps: List<UserApp>,
     val favoriteApps: Flow<List<UserApp>>,
-    val gestureApps: Flow<Map<GestureAction, UserApp>>,
+    val gestureApps: Flow<Map<GestureDirection, UserApp>>,
     val usage: Map<String, Long>,
     val searchTerm: String = ""
   )

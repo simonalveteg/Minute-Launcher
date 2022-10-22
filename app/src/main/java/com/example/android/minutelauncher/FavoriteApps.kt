@@ -31,7 +31,7 @@ fun FavoriteApps(
 ) {
   val totalUsage by viewModel.getTotalUsage()
   val favorites by viewModel.uiState.collectAsState().value.favoriteApps.collectAsState(initial = emptyList())
-  var gestureAction: GestureAction? = null
+  var gestureDirection: GestureDirection? = null
   val gestureThreshold = 10f
   Surface(
     Modifier.fillMaxSize().alpha(0.95f)
@@ -46,13 +46,13 @@ fun FavoriteApps(
           }) {}
           .pointerInput(Unit) {
             detectDragGestures(
-              onDragEnd = { gestureAction?.let { viewModel.onEvent(Event.HandleGesture(it)) } }
+              onDragEnd = { gestureDirection?.let { viewModel.onEvent(Event.HandleGesture(it)) } }
             ) { change, dragAmount ->
               change.consume()
               Log.d("SWIPE", "position: ${change.position}") // height: 0-2399f
               val gestureZone =
                 if (change.position.y < 2399 / 2) GestureZone.UPPER else GestureZone.LOWER
-              gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let { gestureAction = it }
+              gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let { gestureDirection = it }
             }
           },
         verticalArrangement = Arrangement.Bottom,

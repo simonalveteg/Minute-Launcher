@@ -1,6 +1,8 @@
 package com.example.android.minutelauncher
 
 import androidx.compose.ui.geometry.Offset
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 
@@ -9,7 +11,7 @@ enum class GestureZone {
 }
 
 enum class GestureDirection {
-  LEFT, RIGHT, DOWN, UP
+  UPPER_LEFT, LOWER_LEFT, UPPER_RIGHT, LOWER_RIGHT, DOWN, UP
 }
 
 @Serializable
@@ -18,24 +20,24 @@ data class GestureAction(
   val zone: GestureZone,
 )
 
-fun gestureHandler(dragAmount: Offset, threshold: Float, gestureZone: GestureZone): GestureAction? {
-  var gestureAction: GestureAction? = null
+fun gestureHandler(dragAmount: Offset, threshold: Float, gestureZone: GestureZone): GestureDirection? {
+  var gestureDirection: GestureDirection? = null
   if (abs(dragAmount.x) > abs(dragAmount.y)) {
     if (abs(dragAmount.x) > threshold) {
       if (dragAmount.x > 0) {
-        gestureAction = GestureAction(GestureDirection.RIGHT, gestureZone)
+        gestureDirection = if (gestureZone == GestureZone.UPPER) GestureDirection.UPPER_RIGHT else GestureDirection.LOWER_RIGHT
       } else if (dragAmount.x < 0) {
-        gestureAction = GestureAction(GestureDirection.LEFT, gestureZone)
+        gestureDirection = if (gestureZone == GestureZone.UPPER) GestureDirection.UPPER_LEFT else GestureDirection.LOWER_LEFT
       }
     }
   } else if (abs(dragAmount.x) < abs(dragAmount.y)) {
     if (abs(dragAmount.y) > threshold) {
       if (dragAmount.y > 0) {
-        gestureAction = GestureAction(GestureDirection.DOWN, gestureZone)
+        gestureDirection = GestureDirection.DOWN
       } else if (dragAmount.y < 0) {
-        gestureAction = GestureAction(GestureDirection.UP, gestureZone)
+        gestureDirection = GestureDirection.UP
       }
     }
   }
-  return gestureAction
+  return gestureDirection
 }

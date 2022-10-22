@@ -23,11 +23,8 @@ data class AppSettings(
   @Serializable(PersistentListSerializer::class)
   val favoriteApps: PersistentList<UserApp> = persistentListOf(),
   @Polymorphic
-  @Serializable(PersistentListSerializer::class)
-  val gestureActions: PersistentList<GestureAction> = persistentListOf(),
-  @Polymorphic
   @Serializable(PersistentMapSerializer::class)
-  val gestureApps: PersistentMap<GestureAction, UserApp> = persistentMapOf()
+  val gestureApps: PersistentMap<GestureDirection, UserApp> = persistentMapOf()
 )
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -54,21 +51,21 @@ class PersistentListSerializer(
 @OptIn(ExperimentalSerializationApi::class)
 @kotlinx.serialization.Serializer(forClass = PersistentMap::class)
 class PersistentMapSerializer(
-  private val keySerializer: KSerializer<GestureAction>,
+  private val keySerializer: KSerializer<GestureDirection>,
   private val valueSerializer: KSerializer<UserApp>
-) : KSerializer<PersistentMap<GestureAction, UserApp>> {
+) : KSerializer<PersistentMap<GestureDirection, UserApp>> {
 
-  private class PersistentListDescriptor : SerialDescriptor by serialDescriptor<List<UserApp>>() {
+  private class PersistentMapDescriptor : SerialDescriptor by serialDescriptor<Map<GestureDirection,UserApp>>() {
     @ExperimentalSerializationApi
-    override val serialName: String = "kotlinx.serialization.immutable.persistentList"
+    override val serialName: String = "kotlinx.serialization.immutable.persistentMap"
   }
 
-  override val descriptor: SerialDescriptor = PersistentListDescriptor()
-  override fun serialize(encoder: Encoder, value: PersistentMap<GestureAction, UserApp>) {
+  override val descriptor: SerialDescriptor = PersistentMapDescriptor()
+  override fun serialize(encoder: Encoder, value: PersistentMap<GestureDirection, UserApp>) {
     return MapSerializer(keySerializer, valueSerializer).serialize(encoder, value.toMap())
   }
 
-  override fun deserialize(decoder: Decoder): PersistentMap<GestureAction, UserApp> {
+  override fun deserialize(decoder: Decoder): PersistentMap<GestureDirection, UserApp> {
     return MapSerializer(keySerializer, valueSerializer).deserialize(decoder).toPersistentMap()
   }
 }
@@ -83,7 +80,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
       return Json.decodeFromString(
         deserializer = AppSettings.serializer(),
         string = input.readBytes().decodeToString()
-      ).also { Log.d("APP_SETTINGS", it.favoriteApps.toString()) }
+      ).also { Log.d("APP_SETTINGS", it.toString()) }
     } catch (e: SerializationException) {
       throw CorruptionException("Unable to read AppSettings", e)
     }
@@ -95,7 +92,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
         Json.encodeToString(
           serializer = AppSettings.serializer(),
           value = t
-        ).encodeToByteArray().also { Log.d("APP_SETTINGS", t.favoriteApps.toString()) }
+        ).encodeToByteArray().also { Log.d("APP_SETTINGS", t.toString()) }
       )
     }
   }
