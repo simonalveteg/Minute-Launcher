@@ -1,6 +1,7 @@
 package com.example.android.minutelauncher
 
 import android.app.Application
+import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Intent
 import android.os.Handler
@@ -123,10 +124,27 @@ class LauncherViewModel @Inject constructor(
     val startTime = Calendar.getInstance()
       .apply {
         timeZone = TimeZone.getDefault()
-        set(Calendar.HOUR_OF_DAY, 10)
+        set(Calendar.HOUR_OF_DAY, 4)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
       }.timeInMillis
+    val yesterday = Calendar.getInstance()
+      .apply {
+        timeZone = TimeZone.getDefault()
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+      }.timeInMillis
+    usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startTime, currentTime)
+      .sortedBy {
+      it.totalTimeInForeground
+    }.forEach {
+      Log.d(
+        "VIEW_MODEL",
+        "Package: ${it.packageName} time: ${it.firstTimeStamp}, usage: ${it.totalTimeInForeground.toTimeUsed()}"
+      )
+    }
+
     return usageStatsManager.queryAndAggregateUsageStats(startTime, currentTime)
       .filter { application.applicationContext.packageName != it.key }
       .mapValues { it.value.totalTimeInForeground }
