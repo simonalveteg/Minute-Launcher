@@ -27,7 +27,7 @@ data class AppSettings(
   val gestureActions: PersistentList<GestureAction> = persistentListOf(),
   @Polymorphic
   @Serializable(PersistentMapSerializer::class)
-  val shortcutApps: PersistentMap<GestureAction, UserApp> = persistentMapOf()
+  val gestureApps: PersistentMap<GestureAction, UserApp> = persistentMapOf()
 )
 
 @OptIn(ExperimentalSerializationApi::class)

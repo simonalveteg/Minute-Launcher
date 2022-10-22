@@ -41,10 +41,14 @@ class LauncherViewModel @Inject constructor(
     UiState(
       installedApps = installedApps,
       filteredApps = installedApps,
+      gestureApps = channelFlow {
+        application.applicationContext.datastore.data.collectLatest { appSettings ->
+          send(appSettings.gestureApps)
+        }
+      },
       favoriteApps = channelFlow {
         application.applicationContext.datastore.data.collectLatest { appSettings ->
-          val test = appSettings.favoriteApps
-          send(test)
+          send(appSettings.favoriteApps)
         }
       },
       usage = queryUsageStats()
@@ -76,7 +80,7 @@ class LauncherViewModel @Inject constructor(
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
       is Event.ToggleFavorite -> toggleFavorite(event.app)
       is Event.HandleGesture -> handleGestureAction(event.gesture)
-      is Event.SetAppGesture -> Unit
+      is Event.SetAppGesture -> setGestureApp(event.app, event.gesture)
     }
   }
 
@@ -151,6 +155,22 @@ class LauncherViewModel @Inject constructor(
       .mapValues { it.value.totalTimeInForeground }
   }
 
+  private fun setGestureApp(app: UserApp, gesture: GestureAction) {
+    viewModelScope.launch {
+      application.applicationContext.datastore.updateData {
+        it.copy(
+          gestureApps = it.gestureApps.mutate { map ->
+            if(map.contains(gesture)) {
+              map.replace(gesture, app)
+            } else {
+              map[gesture] = app
+            }
+          }
+        )
+      }
+    }
+  }
+
   private fun toggleFavorite(app: UserApp) {
     viewModelScope.launch {
       application.applicationContext.datastore.updateData {
@@ -175,6 +195,7 @@ class LauncherViewModel @Inject constructor(
     val installedApps: List<UserApp>,
     val filteredApps: List<UserApp>,
     val favoriteApps: Flow<List<UserApp>>,
+    val gestureApps: Flow<Map<GestureAction, UserApp>>,
     val usage: Map<String, Long>,
     val searchTerm: String = ""
   )

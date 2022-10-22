@@ -6,5 +6,5 @@ sealed class Event {
   data class UpdateSearch(val searchTerm: String) : Event()
   data class ToggleFavorite(val app: UserApp) : Event()
   data class HandleGesture(val gesture: GestureAction) : Event()
-  data class SetAppGesture(val app: UserApp) : Event()
+  data class SetAppGesture(val app: UserApp, val gesture: GestureAction) : Event()
 }
