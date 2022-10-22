@@ -76,6 +76,7 @@ class LauncherViewModel @Inject constructor(
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
       is Event.ToggleFavorite -> toggleFavorite(event.app)
       is Event.HandleGesture -> handleGestureAction(event.gesture)
+      is Event.SetAppGesture -> Unit
     }
   }
 
