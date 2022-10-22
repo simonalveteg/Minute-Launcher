@@ -29,8 +29,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun AppList(
   viewModel: LauncherViewModel = hiltViewModel(),
   focusRequester: FocusRequester = remember { FocusRequester() },
-  onLongPress: (UserApp) -> Unit,
-  onBackPressed: () -> Unit
+  onAppPress: (UserApp) -> Unit = {},
+  onAppLongPress: (UserApp) -> Unit = {},
+  onBackPressed: () -> Unit = {}
 ) {
   val uiState by viewModel.uiState.collectAsState()
   val apps = uiState.filteredApps
@@ -90,12 +91,8 @@ fun AppList(
             Row {
               val appTitle = app.appTitle
               val appUsage by viewModel.getUsageForApp(app)
-              AppCard(appTitle, appUsage, { onLongPress(app) }) {
-                viewModel.onEvent(
-                  Event.OpenApplication(
-                    app
-                  )
-                )
+              AppCard(appTitle, appUsage, { onAppLongPress(app) }) {
+                onAppPress(app)
               }
             }
           }

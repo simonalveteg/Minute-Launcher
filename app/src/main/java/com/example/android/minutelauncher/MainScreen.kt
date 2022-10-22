@@ -68,7 +68,8 @@ fun MainScreen(
       }
       AppList(
         focusRequester = focusRequester,
-        onLongPress = { openDialogApp = it },
+        onAppPress = { viewModel.onEvent(Event.OpenApplication(it))},
+        onAppLongPress = { openDialogApp = it },
         onBackPressed = {
           coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
           viewModel.onEvent(Event.UpdateSearch(""))
