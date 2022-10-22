@@ -16,9 +16,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun SettingsScreen(
+  viewModel: LauncherViewModel = hiltViewModel(),
   onNavigate: (String) -> Unit
 ) {
   val appSelectorVisible = remember { mutableStateOf(false) }
@@ -45,7 +47,13 @@ fun SettingsScreen(
       exit = fadeOut()
     ) {
       Surface {
-        AppList()
+        AppList(
+          onAppPress = {
+            appSelectorVisible.value = false
+          }
+        ) {
+          appSelectorVisible.value = false
+        }
       }
     }
   }
