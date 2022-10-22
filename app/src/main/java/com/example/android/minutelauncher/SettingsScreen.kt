@@ -34,7 +34,11 @@ fun SettingsScreen(
       Button(onClick = { onNavigate("main") }) {
         Text(text = "GO BACK")
       }
-      LazyVerticalGrid(columns = GridCells.Fixed(2)){
+      LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        horizontalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
+      ){
         item {
           val gestureDirection = GestureDirection.UPPER_RIGHT
           val app = gestureApps.value[gestureDirection]
@@ -116,15 +120,21 @@ fun GestureAppCard(app: UserApp?, onLongClick: () -> Unit, onClick: () -> Unit) 
   Surface(
     tonalElevation = 4.dp,
     modifier = Modifier
-      .padding(32.dp)
+      .fillMaxSize()
+      .height(120.dp)
       .combinedClickable(onLongClick = {
         onLongClick()
       }) {
         onClick()
       }
   ) {
-    Text(
-      text = app?.appTitle ?: "none"
-    )
+    Box(
+      modifier = Modifier.fillMaxSize().padding(8.dp)
+    ) {
+      Text(
+        text = app?.appTitle ?: "none",
+        modifier = Modifier.align(Alignment.Center)
+      )
+    }
   }
 }
