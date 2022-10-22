@@ -62,7 +62,7 @@ class LauncherViewModel @Inject constructor(
   }
 
   fun onEvent(event: Event) {
-    Log.d("VIEWMODEL", event.toString())
+    Log.d("VIEW_MODEL", event.toString())
     when (event) {
       is Event.OpenApplication -> {
         sendUiEvent(UiEvent.ShowToast(event.app.appTitle))

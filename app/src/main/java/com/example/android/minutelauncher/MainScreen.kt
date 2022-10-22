@@ -23,18 +23,15 @@ fun MainScreen(
   val focusRequester = remember { FocusRequester() }
   val keyboardController = LocalSoftwareKeyboardController.current
   val coroutineScope = rememberCoroutineScope()
-  val bottomSheetExpanded = remember { mutableStateOf(false) }
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-    bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed) {
-      Log.d("MAIN_SCREEN", "${it.name}, ${bottomSheetExpanded.value}")
-      if (it.name == BottomSheetValue.Expanded.name && !bottomSheetExpanded.value) {
-        focusRequester.requestFocus()
-      } else {
+    bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed) {
+      Log.d("MAIN_SCREEN", it.name)
+      // When sheet is dragged into a collapsed state the keyboard should be hidden
+      if (it.name != BottomSheetValue.Expanded.name) {
         focusRequester.freeFocus()
         keyboardController?.hide()
         viewModel.onEvent(Event.UpdateSearch(""))
       }
-      bottomSheetExpanded.value = it.name == BottomSheetValue.Expanded.name
       true
     }
   )
@@ -57,7 +54,7 @@ fun MainScreen(
 
   BottomSheetScaffold(
     scaffoldState = bottomSheetScaffoldState,
-    sheetPeekHeight = 64.dp,
+    sheetPeekHeight = 0.dp,
     sheetContent = {
       if (openDialogApp != null) {
         AppInfo(
@@ -73,7 +70,6 @@ fun MainScreen(
         onBackPressed = {
           coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
           viewModel.onEvent(Event.UpdateSearch(""))
-          bottomSheetExpanded.value = false
         }
       )
     },
