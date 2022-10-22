@@ -1,6 +1,7 @@
 package com.example.android.minutelauncher
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,7 +17,9 @@ fun LauncherNavHost(
       })
     }
     composable("settings") {
-      SettingsScreen()
+      SettingsScreen(onNavigate = {
+        navController.navigate(it)
+      })
     }
   }
 }
