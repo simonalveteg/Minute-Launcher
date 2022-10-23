@@ -64,9 +64,8 @@ class LauncherViewModel @Inject constructor(
   fun onEvent(event: Event) {
     Log.d("VIEW_MODEL", event.toString())
     when (event) {
-      is Event.OpenApplication -> {
-        openApplication(event.app)
-      }
+      is Event.OpenApplication -> openApplication(event.app)
+      is Event.LaunchActivity -> launchActivity(event.app)
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
       is Event.ToggleFavorite -> toggleFavorite(event.app)
       is Event.HandleGesture -> handleGesture(event.gesture)
@@ -81,7 +80,7 @@ class LauncherViewModel @Inject constructor(
   fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
 
   private fun handleGesture(gestureDirection: GestureDirection) {
-    Log.d("VIEW_MODEL","Gesture handled, $gestureDirection")
+    Log.d("VIEW_MODEL", "Gesture handled, $gestureDirection")
     when (gestureDirection) {
       GestureDirection.UP -> sendUiEvent(UiEvent.OpenAppDrawer)
       GestureDirection.DOWN -> Unit
@@ -98,7 +97,7 @@ class LauncherViewModel @Inject constructor(
     Log.d("VIEW_MODEL", "Update search with $text")
     val textString = text ?: ""
     viewModelScope.apply {
-      _uiState.update { it ->
+      _uiState.update {
         it.copy(
           filteredApps = installedApps.filter { app ->
             app.appTitle
@@ -138,13 +137,13 @@ class LauncherViewModel @Inject constructor(
       }.timeInMillis
     usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startTime, currentTime)
       .sortedBy {
-      it.totalTimeInForeground
-    }.forEach {
-      Log.d(
-        "VIEW_MODEL",
-        "Package: ${it.packageName} time: ${it.firstTimeStamp}, usage: ${it.totalTimeInForeground.toTimeUsed()}"
-      )
-    }
+        it.totalTimeInForeground
+      }.forEach {
+        Log.d(
+          "VIEW_MODEL",
+          "Package: ${it.packageName} time: ${it.firstTimeStamp}, usage: ${it.totalTimeInForeground.toTimeUsed()}"
+        )
+      }
 
     return usageStatsManager.queryAndAggregateUsageStats(startTime, currentTime)
       .filter { application.applicationContext.packageName != it.key }
@@ -156,7 +155,7 @@ class LauncherViewModel @Inject constructor(
       application.applicationContext.datastore.updateData {
         it.copy(
           gestureApps = it.gestureApps.mutate { map ->
-            if(map.contains(gesture)) {
+            if (map.contains(gesture)) {
               map.replace(gesture, app)
             } else {
               map[gesture] = app
@@ -194,14 +193,23 @@ class LauncherViewModel @Inject constructor(
   }
 
   private fun openApplication(app: UserApp) {
-    Log.d("VIEW_MODEL","Open Application ${app.appTitle}")
-    sendUiEvent(UiEvent.ShowToast(app.appTitle))
+    Log.d("VIEW_MODEL", "Open Application ${app.appTitle}")
+    sendUiEvent(UiEvent.OpenApplication(app))
+  }
+
+  private fun launchActivity(app: UserApp) {
+    Log.d("VIEW_MODEL", "Launch Activity ${app.appTitle}")
     pm.getLaunchIntentForPackage(app.packageName)?.apply {
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-    }?.let {
-      sendUiEvent(UiEvent.StartActivity(it))
+    }?.let { intent ->
+      sendUiEvent(UiEvent.LaunchActivity(intent))
+      sendUiEvent(
+        UiEvent.ShowToast(
+          "${app.appTitle} used for ${getUsageForApp(app).value.toTimeUsed(false)}"
+        )
+      )
+      viewModelScope.launch { delay(100); updateSearch("") }
     }
-    viewModelScope.launch { delay(100); updateSearch("") }
   }
 
   private fun sendUiEvent(event: UiEvent) {

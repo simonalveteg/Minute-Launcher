@@ -2,9 +2,13 @@ package com.example.android.minutelauncher
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -36,15 +40,26 @@ fun MainScreen(
       true
     }
   )
-  var currentAppInfoDialog by remember { mutableStateOf<UserApp?>(null) }
 
+  var currentAppInfoDialog by remember { mutableStateOf<UserApp?>(null) }
+  var currentAppConfirmationDialog by remember { mutableStateOf<UserApp?>(null) }
+
+  val dialogSheetScaffoldState =
+    rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden) {
+      if (it == ModalBottomSheetValue.Hidden) {
+        currentAppConfirmationDialog = null
+        currentAppInfoDialog = null
+      }
+      true
+    }
   LaunchedEffect(key1 = true) {
     Log.d("MAIN_SCREEN", "launched effect")
     viewModel.uiEvent.collect { event ->
       Log.d("MAIN_SCREEN", "event: $event")
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-        is UiEvent.StartActivity -> mContext.startActivity(event.intent)
+        is UiEvent.OpenApplication -> currentAppConfirmationDialog = event.app
+        is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.OpenAppDrawer -> {
           launch { bottomSheetScaffoldState.bottomSheetState.expand() }
           focusRequester.requestFocus()
@@ -53,33 +68,66 @@ fun MainScreen(
     }
   }
 
-  BottomSheetScaffold(
-    scaffoldState = bottomSheetScaffoldState,
-    sheetPeekHeight = 0.dp,
-    backgroundColor = Color.Transparent,
+  LaunchedEffect(key1 = currentAppInfoDialog, key2 = currentAppConfirmationDialog) {
+    if (currentAppInfoDialog != null || currentAppConfirmationDialog != null) {
+      launch { dialogSheetScaffoldState.show() }
+      keyboardController?.hide()
+      focusRequester.freeFocus()
+    }
+  }
+
+  ModalBottomSheetLayout(
+    sheetState = dialogSheetScaffoldState,
+    sheetBackgroundColor = MaterialTheme.colorScheme.background,
     sheetContent = {
+      Spacer(modifier = Modifier.height(4.dp))
       if (currentAppInfoDialog != null) {
         AppInfo(
-          onFavorite = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
-          onHide = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
-          onUninstall = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
-          onDismiss = { currentAppInfoDialog = null }
+          app = currentAppInfoDialog!!,
+          onEvent = viewModel::onEvent,
+          onDismiss = {
+            coroutineScope.launch { dialogSheetScaffoldState.hide() }
+            currentAppInfoDialog = null
+          }
         )
       }
-      AppList(
-        focusRequester = focusRequester,
-        onAppPress = { viewModel.onEvent(Event.OpenApplication(it))},
-        onAppLongPress = { currentAppInfoDialog = it },
-        onBackPressed = {
-          coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
-          viewModel.onEvent(Event.UpdateSearch(""))
-        }
-      )
-    },
+      if (currentAppConfirmationDialog != null) {
+        val app = currentAppConfirmationDialog!!
+        AppConfirmation(
+          app = app,
+          onConfirmation = {
+            viewModel.onEvent(Event.LaunchActivity(app))
+            currentAppConfirmationDialog = null
+          },
+          onDismiss = {
+            coroutineScope.launch { dialogSheetScaffoldState.hide() }
+            currentAppConfirmationDialog = null
+          }
+        )
+      }
+      Spacer(modifier = Modifier.height(16.dp))
+    }
   ) {
-    FavoriteApps(
-      onAppPressed = { currentAppInfoDialog = it },
-      onNavigate = onNavigate
-    )
+    BottomSheetScaffold(
+      scaffoldState = bottomSheetScaffoldState,
+      sheetPeekHeight = 0.dp,
+      backgroundColor = Color.Transparent,
+      sheetContent = {
+        AppList(
+          focusRequester = focusRequester,
+          onAppPress = { viewModel.onEvent(Event.OpenApplication(it)) },
+          onAppLongPress = { currentAppInfoDialog = it },
+          onBackPressed = {
+            coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
+            viewModel.onEvent(Event.UpdateSearch(""))
+          }
+        )
+      },
+    ) {
+      FavoriteApps(
+        onAppPressed = { currentAppInfoDialog = it },
+        onNavigate = onNavigate
+      )
+    }
   }
 }

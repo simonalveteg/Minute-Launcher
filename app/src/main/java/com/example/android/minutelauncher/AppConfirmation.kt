@@ -2,7 +2,7 @@ package com.example.android.minutelauncher
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -11,18 +11,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun AppInfo(
+fun AppConfirmation(
   app: UserApp,
-  onEvent: (Event) -> Unit,
+  viewModel: LauncherViewModel = hiltViewModel(),
+  onConfirmation: () -> Unit,
   onDismiss: () -> Unit
 ) {
+
+  val appUsage = viewModel.getUsageForApp(app).value
+
   Surface(
     modifier = Modifier
       .fillMaxWidth()
-      .fillMaxHeight(0.55f),
+      .fillMaxHeight(0.4f),
     shape = RoundedCornerShape(10.dp)
   ) {
     Column(
@@ -30,32 +34,20 @@ fun AppInfo(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.SpaceBetween
     ) {
-      Text(
-        text = app.appTitle, style = MaterialTheme.typography.h5
-      )
-      TextButton(onClick = {
-        onEvent(Event.ToggleFavorite(app))
-        onDismiss()
-      }) {
-        Text("Favorite")
-      }
-      TextButton(onClick = {
-        onEvent(Event.ToggleFavorite(app))
-        onDismiss()
-      }) {
-        Text("Hide")
-      }
-      TextButton(onClick = {
-        onEvent(Event.ToggleFavorite(app))
-        onDismiss()
-      }) {
-        Text("App Info")
-      }
-      TextButton(onClick = {
-        onEvent(Event.ToggleFavorite(app))
-        onDismiss()
-      }) {
-        Text("Uninstall")
+      Text(text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}")
+      Row(
+        modifier = Modifier
+          .fillMaxSize()
+          .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Bottom
+      ) {
+        TextButton(onClick = onConfirmation) {
+          Text(text = "Open anyway")
+        }
+        Button(onClick = onDismiss) {
+          Text(text = "Cancel")
+        }
       }
     }
   }

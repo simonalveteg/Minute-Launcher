@@ -10,13 +10,15 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 
-fun Long.toTimeUsed(): String {
+fun Long.toTimeUsed(
+  blankIfZero: Boolean = true
+): String {
   val minutes = div(60000)
   val hours = minutes.div(60)
   val sb = StringBuilder()
   if (hours != 0L) sb.append("${hours}h ")
   if (minutes != 0L) sb.append("${minutes % 60}min")
-  return sb.toString()
+  return sb.toString().ifBlank { if (!blankIfZero) "0min" else "" }
 }
 
 fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
