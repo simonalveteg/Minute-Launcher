@@ -46,9 +46,8 @@ fun MainScreen(
       Log.d("MAIN_SCREEN", "event: $event")
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-        is UiEvent.StartActivity -> {
-          currentAppConfirmationDialog = Pair(event.app, event.intent)
-        }
+        is UiEvent.OpenApplication -> currentAppConfirmationDialog = Pair(event.app, event.intent)
+        is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.OpenAppDrawer -> {
           launch { bottomSheetScaffoldState.bottomSheetState.expand() }
           focusRequester.requestFocus()
@@ -70,10 +69,13 @@ fun MainScreen(
         )
       }
       if (currentAppConfirmationDialog != null) {
+        val app = currentAppConfirmationDialog!!.first
+        val intent = currentAppConfirmationDialog!!.second
         AppConfirmation(
-          app = currentAppConfirmationDialog!!.first,
+          app = app,
           onConfirmation = {
-            mContext.startActivity(currentAppConfirmationDialog!!.second)
+            viewModel.onEvent(Event.LaunchActivity(app, intent))
+            currentAppConfirmationDialog = null
           },
           onDismiss = { currentAppConfirmationDialog = null }
         )
