@@ -23,10 +23,11 @@ fun AppInfo(
     Surface(
       modifier = Modifier
         .fillMaxWidth()
-        .fillMaxHeight(0.4f),
+        .fillMaxHeight(0.55f),
       shape = RoundedCornerShape(10.dp)
     ) {
       Column(
+        modifier = Modifier.padding(top = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
       ) {
@@ -38,18 +39,24 @@ fun AppInfo(
           onDismiss()
         }) {
           Text("Favorite")
-          TextButton(onClick = {
-            onEvent(Event.ToggleFavorite(app))
-            onDismiss()
-          }) {
-            Text("Hide")
-          }
-          TextButton(onClick = {
-            onEvent(Event.ToggleFavorite(app))
-            onDismiss()
-          }) {
-            Text("Uninstall")
-          }
+        }
+        TextButton(onClick = {
+          onEvent(Event.ToggleFavorite(app))
+          onDismiss()
+        }) {
+          Text("Hide")
+        }
+        TextButton(onClick = {
+          onEvent(Event.ToggleFavorite(app))
+          onDismiss()
+        }) {
+          Text("App Info")
+        }
+        TextButton(onClick = {
+          onEvent(Event.ToggleFavorite(app))
+          onDismiss()
+        }) {
+          Text("Uninstall")
         }
       }
     }
