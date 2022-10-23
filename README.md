@@ -3,10 +3,13 @@ Open source minimal digital wellbeing launcher for android. No unneccessary bloa
 
 # Planned functionality
 
-* Usage time displayed underneath every app
-* Total usage time visible on home screen
-* Swipe gestures on homescreen, different on upper and lower half of screen
-* Usage alerts when opening an app that's already been used a lot
+- [x] Usage time displayed underneath every app
+- [x] Total usage time visible on home screen
+- [x] Swipe gestures on homescreen, different on upper and lower half of screen
+- [x] Confirmation dialog when opening an app
+- [ ] Usage alerts when opening an app that's already been used a lot
+- [ ] Show weekly usage on confirmation dialog when opening an app
+- [ ] Finalize UI
 
 If you want to help out with improvements or new ideas you're very welcome to submit a pull request!
 
