@@ -1,5 +1,6 @@
 package com.example.android.minutelauncher
 
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.material.*
@@ -37,6 +38,7 @@ fun MainScreen(
     }
   )
   var currentAppInfoDialog by remember { mutableStateOf<UserApp?>(null) }
+  var currentAppConfirmationDialog by remember { mutableStateOf<Pair<UserApp, Intent>?>(null) }
 
   LaunchedEffect(key1 = true) {
     Log.d("MAIN_SCREEN", "launched effect")
@@ -44,7 +46,9 @@ fun MainScreen(
       Log.d("MAIN_SCREEN", "event: $event")
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-        is UiEvent.StartActivity -> mContext.startActivity(event.intent)
+        is UiEvent.StartActivity -> {
+          currentAppConfirmationDialog = Pair(event.app, event.intent)
+        }
         is UiEvent.OpenAppDrawer -> {
           launch { bottomSheetScaffoldState.bottomSheetState.expand() }
           focusRequester.requestFocus()
@@ -65,9 +69,18 @@ fun MainScreen(
           onDismiss = { currentAppInfoDialog = null }
         )
       }
+      if (currentAppConfirmationDialog != null) {
+        AppConfirmation(
+          app = currentAppConfirmationDialog!!.first,
+          onConfirmation = {
+            mContext.startActivity(currentAppConfirmationDialog!!.second)
+          },
+          onDismiss = { currentAppConfirmationDialog = null }
+        )
+      }
       AppList(
         focusRequester = focusRequester,
-        onAppPress = { viewModel.onEvent(Event.OpenApplication(it))},
+        onAppPress = { viewModel.onEvent(Event.OpenApplication(it)) },
         onAppLongPress = { currentAppInfoDialog = it },
         onBackPressed = {
           coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }

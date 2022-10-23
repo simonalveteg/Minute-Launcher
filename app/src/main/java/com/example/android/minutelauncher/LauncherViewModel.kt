@@ -197,13 +197,13 @@ class LauncherViewModel @Inject constructor(
     Log.d("VIEW_MODEL", "Open Application ${app.appTitle}")
     sendUiEvent(
       UiEvent.ShowToast(
-        "${app.appTitle} used for ${getUsageForApp(app).value.toTimeUsed().ifBlank { "0min" }}"
+        "${app.appTitle} used for ${getUsageForApp(app).value.toTimeUsed(false)}"
       )
     )
     pm.getLaunchIntentForPackage(app.packageName)?.apply {
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-    }?.let {
-      sendUiEvent(UiEvent.StartActivity(it))
+    }?.let { intent ->
+      sendUiEvent(UiEvent.StartActivity(app, intent))
     }
     viewModelScope.launch { delay(100); updateSearch("") }
   }
