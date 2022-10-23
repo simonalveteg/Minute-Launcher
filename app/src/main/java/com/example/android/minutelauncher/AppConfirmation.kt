@@ -23,30 +23,30 @@ fun AppConfirmation(
 
   val appUsage = viewModel.getUsageForApp(app).value
 
-  Dialog(onDismissRequest = onDismiss) {
-    Surface(
-      modifier = Modifier
-        .fillMaxWidth()
-        .fillMaxHeight(0.4f),
-      shape = RoundedCornerShape(10.dp)
+  Surface(
+    modifier = Modifier
+      .fillMaxWidth()
+      .fillMaxHeight(0.4f),
+    shape = RoundedCornerShape(10.dp)
+  ) {
+    Column(
+      modifier = Modifier.padding(top = 8.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.SpaceBetween
     ) {
-      Column(
-        modifier = Modifier.padding(top = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+      Text(text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}")
+      Row(
+        modifier = Modifier
+          .fillMaxSize()
+          .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Bottom
       ) {
-        Text(text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}")
-        Row(
-          modifier = Modifier.fillMaxSize().padding(bottom = 8.dp),
-          horizontalArrangement = Arrangement.SpaceEvenly,
-          verticalAlignment = Alignment.Bottom
-        ) {
-          TextButton(onClick = onConfirmation) {
-            Text(text = "Open anyway")
-          }
-          Button(onClick = onDismiss) {
-            Text(text = "Cancel")
-          }
+        TextButton(onClick = onConfirmation) {
+          Text(text = "Open anyway")
+        }
+        Button(onClick = onDismiss) {
+          Text(text = "Cancel")
         }
       }
     }

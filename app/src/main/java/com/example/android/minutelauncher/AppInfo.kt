@@ -19,45 +19,43 @@ fun AppInfo(
   onEvent: (Event) -> Unit,
   onDismiss: () -> Unit
 ) {
-  Dialog(onDismissRequest = onDismiss) {
-    Surface(
-      modifier = Modifier
-        .fillMaxWidth()
-        .fillMaxHeight(0.55f),
-      shape = RoundedCornerShape(10.dp)
+  Surface(
+    modifier = Modifier
+      .fillMaxWidth()
+      .fillMaxHeight(0.55f),
+    shape = RoundedCornerShape(10.dp)
+  ) {
+    Column(
+      modifier = Modifier.padding(top = 8.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.SpaceBetween
     ) {
-      Column(
-        modifier = Modifier.padding(top = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-      ) {
-        Text(
-          text = app.appTitle, style = MaterialTheme.typography.h5
-        )
-        TextButton(onClick = {
-          onEvent(Event.ToggleFavorite(app))
-          onDismiss()
-        }) {
-          Text("Favorite")
-        }
-        TextButton(onClick = {
-          onEvent(Event.ToggleFavorite(app))
-          onDismiss()
-        }) {
-          Text("Hide")
-        }
-        TextButton(onClick = {
-          onEvent(Event.ToggleFavorite(app))
-          onDismiss()
-        }) {
-          Text("App Info")
-        }
-        TextButton(onClick = {
-          onEvent(Event.ToggleFavorite(app))
-          onDismiss()
-        }) {
-          Text("Uninstall")
-        }
+      Text(
+        text = app.appTitle, style = MaterialTheme.typography.h5
+      )
+      TextButton(onClick = {
+        onEvent(Event.ToggleFavorite(app))
+        onDismiss()
+      }) {
+        Text("Favorite")
+      }
+      TextButton(onClick = {
+        onEvent(Event.ToggleFavorite(app))
+        onDismiss()
+      }) {
+        Text("Hide")
+      }
+      TextButton(onClick = {
+        onEvent(Event.ToggleFavorite(app))
+        onDismiss()
+      }) {
+        Text("App Info")
+      }
+      TextButton(onClick = {
+        onEvent(Event.ToggleFavorite(app))
+        onDismiss()
+      }) {
+        Text("Uninstall")
       }
     }
   }
