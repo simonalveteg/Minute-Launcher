@@ -37,9 +37,9 @@ fun AppConfirmation(
       ) {
         Text(text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}")
         Row(
-          modifier = Modifier.fillMaxSize(),
+          modifier = Modifier.fillMaxSize().padding(bottom = 8.dp),
           horizontalArrangement = Arrangement.SpaceEvenly,
-          verticalAlignment = Alignment.CenterVertically
+          verticalAlignment = Alignment.Bottom
         ) {
           TextButton(onClick = onConfirmation) {
             Text(text = "Open anyway")
