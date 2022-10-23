@@ -73,6 +73,8 @@ fun MainScreen(
       launch { dialogSheetScaffoldState.show() }
       keyboardController?.hide()
       focusRequester.freeFocus()
+    } else {
+      launch { dialogSheetScaffoldState.hide() }
     }
   }
 
