@@ -1,5 +1,6 @@
 package com.example.android.minutelauncher
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,7 +24,9 @@ fun SettingsScreen(
   val uiState by viewModel.uiState.collectAsState()
   val gestureApps = uiState.gestureApps.collectAsState(initial = emptyMap())
   val appSelectorVisible = remember { mutableStateOf(false) }
-  var selectedDirection: GestureDirection? = null
+  var selectedDirection = remember {
+    mutableStateOf<GestureDirection?>(null)
+  }
 
   Surface {
     Column(
@@ -48,7 +51,7 @@ fun SettingsScreen(
               app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
             }
           ) {
-            selectedDirection = gestureDirection
+            selectedDirection.value = gestureDirection
             appSelectorVisible.value = true
           }
         }
@@ -61,7 +64,7 @@ fun SettingsScreen(
               app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
             }
           ) {
-            selectedDirection = gestureDirection
+            selectedDirection.value = gestureDirection
             appSelectorVisible.value = true
           }
         }
@@ -74,7 +77,7 @@ fun SettingsScreen(
               app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
             }
           ) {
-            selectedDirection = gestureDirection
+            selectedDirection.value = gestureDirection
             appSelectorVisible.value = true
           }
         }
@@ -87,7 +90,7 @@ fun SettingsScreen(
               app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
             }
             ) {
-            selectedDirection = gestureDirection
+            selectedDirection.value = gestureDirection
             appSelectorVisible.value = true
           }
         }
@@ -101,12 +104,15 @@ fun SettingsScreen(
       Surface {
         AppList(
           onAppPress = { app ->
-            selectedDirection?.let {
+            selectedDirection.value?.let {
+              Log.d("SETTINGS","Selected ${app.appTitle} in direction $it")
               viewModel.onEvent(Event.SetAppGesture(app, it))
             }
+            viewModel.onEvent(Event.UpdateSearch(""))
             appSelectorVisible.value = false
           }
         ) {
+          viewModel.onEvent(Event.UpdateSearch(""))
           appSelectorVisible.value = false
         }
       }
@@ -129,7 +135,9 @@ fun GestureAppCard(app: UserApp?, onLongClick: () -> Unit, onClick: () -> Unit) 
       }
   ) {
     Box(
-      modifier = Modifier.fillMaxSize().padding(8.dp)
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(8.dp)
     ) {
       Text(
         text = app?.appTitle ?: "none",
