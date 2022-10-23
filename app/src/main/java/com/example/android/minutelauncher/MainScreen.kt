@@ -60,9 +60,8 @@ fun MainScreen(
     sheetContent = {
       if (currentAppInfoDialog != null) {
         AppInfo(
-          onFavorite = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
-          onHide = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
-          onUninstall = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
+          app = currentAppInfoDialog!!,
+          onEvent = viewModel::onEvent,
           onDismiss = { currentAppInfoDialog = null }
         )
       }

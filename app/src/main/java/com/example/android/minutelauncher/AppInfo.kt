@@ -1,8 +1,6 @@
 package com.example.android.minutelauncher
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.Surface
@@ -13,36 +11,41 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun AppInfo(
-  onFavorite: () -> Unit, onHide: () -> Unit, onUninstall: () -> Unit, onDismiss: () -> Unit
+  app: UserApp,
+  onEvent: (Event) -> Unit,
+  onDismiss: () -> Unit
 ) {
   Dialog(onDismissRequest = onDismiss) {
     Surface(
       modifier = Modifier
-        .padding(32.dp)
-        .fillMaxWidth(), shape = RoundedCornerShape(10.dp)
+        .fillMaxWidth()
+        .fillMaxHeight(0.4f),
+      shape = RoundedCornerShape(10.dp)
     ) {
       Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
       ) {
         Text(
-          text = "App Info", style = MaterialTheme.typography.h5
+          text = app.appTitle, style = MaterialTheme.typography.h5
         )
         TextButton(onClick = {
-          onFavorite()
+          onEvent(Event.ToggleFavorite(app))
           onDismiss()
         }) {
           Text("Favorite")
           TextButton(onClick = {
-            onHide()
+            onEvent(Event.ToggleFavorite(app))
             onDismiss()
           }) {
             Text("Hide")
           }
           TextButton(onClick = {
-            onUninstall()
+            onEvent(Event.ToggleFavorite(app))
             onDismiss()
           }) {
             Text("Uninstall")
