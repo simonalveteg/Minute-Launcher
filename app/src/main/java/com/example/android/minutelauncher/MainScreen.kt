@@ -6,6 +6,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
@@ -16,28 +17,26 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MainScreen(
+  onNavigate: (String) -> Unit,
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
   val mContext = LocalContext.current
   val focusRequester = remember { FocusRequester() }
   val keyboardController = LocalSoftwareKeyboardController.current
   val coroutineScope = rememberCoroutineScope()
-  val bottomSheetExpanded = remember { mutableStateOf(false) }
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-    bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed) {
-      Log.d("MAIN_SCREEN", "${it.name}, ${bottomSheetExpanded.value}")
-      if (it.name == BottomSheetValue.Expanded.name && !bottomSheetExpanded.value) {
-        focusRequester.requestFocus()
-      } else {
+    bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed) {
+      Log.d("MAIN_SCREEN", it.name)
+      // When sheet is dragged into a collapsed state the keyboard should be hidden
+      if (it.name != BottomSheetValue.Expanded.name) {
         focusRequester.freeFocus()
         keyboardController?.hide()
         viewModel.onEvent(Event.UpdateSearch(""))
       }
-      bottomSheetExpanded.value = it.name == BottomSheetValue.Expanded.name
       true
     }
   )
-  var openDialogApp by remember { mutableStateOf<UserApp?>(null) }
+  var currentAppInfoDialog by remember { mutableStateOf<UserApp?>(null) }
 
   LaunchedEffect(key1 = true) {
     Log.d("MAIN_SCREEN", "launched effect")
@@ -57,28 +56,30 @@ fun MainScreen(
   BottomSheetScaffold(
     scaffoldState = bottomSheetScaffoldState,
     sheetPeekHeight = 0.dp,
+    backgroundColor = Color.Transparent,
     sheetContent = {
-      if (openDialogApp != null) {
+      if (currentAppInfoDialog != null) {
         AppInfo(
-          onFavorite = { viewModel.onEvent(Event.ToggleFavorite(openDialogApp!!)) },
-          onHide = { viewModel.onEvent(Event.ToggleFavorite(openDialogApp!!)) },
-          onUninstall = { viewModel.onEvent(Event.ToggleFavorite(openDialogApp!!)) },
-          onDismiss = { openDialogApp = null }
+          onFavorite = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
+          onHide = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
+          onUninstall = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
+          onDismiss = { currentAppInfoDialog = null }
         )
       }
       AppList(
         focusRequester = focusRequester,
-        onLongPress = { openDialogApp = it },
+        onAppPress = { viewModel.onEvent(Event.OpenApplication(it))},
+        onAppLongPress = { currentAppInfoDialog = it },
         onBackPressed = {
           coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
           viewModel.onEvent(Event.UpdateSearch(""))
-          bottomSheetExpanded.value = false
         }
       )
     },
   ) {
     FavoriteApps(
-      onAppPressed = { openDialogApp = it }
+      onAppPressed = { currentAppInfoDialog = it },
+      onNavigate = onNavigate
     )
   }
 }

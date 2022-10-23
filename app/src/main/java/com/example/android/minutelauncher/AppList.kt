@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -29,8 +30,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun AppList(
   viewModel: LauncherViewModel = hiltViewModel(),
   focusRequester: FocusRequester = remember { FocusRequester() },
-  onLongPress: (UserApp) -> Unit,
-  onBackPressed: () -> Unit
+  onAppPress: (UserApp) -> Unit = {},
+  onAppLongPress: (UserApp) -> Unit = {},
+  onBackPressed: () -> Unit = {}
 ) {
   val uiState by viewModel.uiState.collectAsState()
   val apps = uiState.filteredApps
@@ -65,7 +67,9 @@ fun AppList(
               .clearFocusOnKeyboardDismiss(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = {
-              viewModel.onEvent(Event.OpenApplication(apps.first()))
+              apps.firstOrNull()?.let {
+                viewModel.onEvent(Event.OpenApplication(it))
+              }
             }),
             colors = TextFieldDefaults.outlinedTextFieldColors(),
             placeholder = {
@@ -90,12 +94,8 @@ fun AppList(
             Row {
               val appTitle = app.appTitle
               val appUsage by viewModel.getUsageForApp(app)
-              AppCard(appTitle, appUsage, { onLongPress(app) }) {
-                viewModel.onEvent(
-                  Event.OpenApplication(
-                    app
-                  )
-                )
+              AppCard(appTitle, appUsage, { onAppLongPress(app) }) {
+                onAppPress(app)
               }
             }
           }

@@ -3,13 +3,12 @@ package com.example.android.minutelauncher
 import android.util.Log
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.serialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -24,14 +23,16 @@ data class AppSettings(
   @Serializable(PersistentListSerializer::class)
   val favoriteApps: PersistentList<UserApp> = persistentListOf(),
   @Polymorphic
-  @Serializable(PersistentListSerializer::class)
-  val gestureActions: PersistentList<GestureAction> = persistentListOf()
+  @Serializable(PersistentMapSerializer::class)
+  val gestureApps: PersistentMap<GestureDirection, UserApp> = persistentMapOf()
 )
 
 @OptIn(ExperimentalSerializationApi::class)
 @kotlinx.serialization.Serializer(forClass = PersistentList::class)
-class PersistentListSerializer(private val dataSerializer: KSerializer<UserApp>) :
-  KSerializer<PersistentList<UserApp>> {
+class PersistentListSerializer(
+  private val dataSerializer: KSerializer<UserApp>
+) : KSerializer<PersistentList<UserApp>> {
+
   private class PersistentListDescriptor : SerialDescriptor by serialDescriptor<List<UserApp>>() {
     @ExperimentalSerializationApi
     override val serialName: String = "kotlinx.serialization.immutable.persistentList"
@@ -47,6 +48,28 @@ class PersistentListSerializer(private val dataSerializer: KSerializer<UserApp>)
   }
 }
 
+@OptIn(ExperimentalSerializationApi::class)
+@kotlinx.serialization.Serializer(forClass = PersistentMap::class)
+class PersistentMapSerializer(
+  private val keySerializer: KSerializer<GestureDirection>,
+  private val valueSerializer: KSerializer<UserApp>
+) : KSerializer<PersistentMap<GestureDirection, UserApp>> {
+
+  private class PersistentMapDescriptor : SerialDescriptor by serialDescriptor<Map<GestureDirection,UserApp>>() {
+    @ExperimentalSerializationApi
+    override val serialName: String = "kotlinx.serialization.immutable.persistentMap"
+  }
+
+  override val descriptor: SerialDescriptor = PersistentMapDescriptor()
+  override fun serialize(encoder: Encoder, value: PersistentMap<GestureDirection, UserApp>) {
+    return MapSerializer(keySerializer, valueSerializer).serialize(encoder, value.toMap())
+  }
+
+  override fun deserialize(decoder: Decoder): PersistentMap<GestureDirection, UserApp> {
+    return MapSerializer(keySerializer, valueSerializer).deserialize(decoder).toPersistentMap()
+  }
+}
+
 object AppSettingsSerializer : Serializer<AppSettings> {
 
   override val defaultValue: AppSettings
@@ -57,7 +80,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
       return Json.decodeFromString(
         deserializer = AppSettings.serializer(),
         string = input.readBytes().decodeToString()
-      ).also { Log.d("APP_SETTINGS", it.favoriteApps.toString()) }
+      ).also { Log.d("APP_SETTINGS", it.toString()) }
     } catch (e: SerializationException) {
       throw CorruptionException("Unable to read AppSettings", e)
     }
@@ -69,7 +92,7 @@ object AppSettingsSerializer : Serializer<AppSettings> {
         Json.encodeToString(
           serializer = AppSettings.serializer(),
           value = t
-        ).encodeToByteArray().also { Log.d("APP_SETTINGS", t.favoriteApps.toString()) }
+        ).encodeToByteArray().also { Log.d("APP_SETTINGS", t.toString()) }
       )
     }
   }
