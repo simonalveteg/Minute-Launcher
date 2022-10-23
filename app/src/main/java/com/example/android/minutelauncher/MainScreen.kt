@@ -38,7 +38,7 @@ fun MainScreen(
     }
   )
   var currentAppInfoDialog by remember { mutableStateOf<UserApp?>(null) }
-  var currentAppConfirmationDialog by remember { mutableStateOf<Pair<UserApp, Intent>?>(null) }
+  var currentAppConfirmationDialog by remember { mutableStateOf<UserApp?>(null) }
 
   LaunchedEffect(key1 = true) {
     Log.d("MAIN_SCREEN", "launched effect")
@@ -46,7 +46,7 @@ fun MainScreen(
       Log.d("MAIN_SCREEN", "event: $event")
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-        is UiEvent.OpenApplication -> currentAppConfirmationDialog = Pair(event.app, event.intent)
+        is UiEvent.OpenApplication -> currentAppConfirmationDialog = event.app
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.OpenAppDrawer -> {
           launch { bottomSheetScaffoldState.bottomSheetState.expand() }
@@ -69,12 +69,11 @@ fun MainScreen(
         )
       }
       if (currentAppConfirmationDialog != null) {
-        val app = currentAppConfirmationDialog!!.first
-        val intent = currentAppConfirmationDialog!!.second
+        val app = currentAppConfirmationDialog!!
         AppConfirmation(
           app = app,
           onConfirmation = {
-            viewModel.onEvent(Event.LaunchActivity(app, intent))
+            viewModel.onEvent(Event.LaunchActivity(app))
             currentAppConfirmationDialog = null
           },
           onDismiss = { currentAppConfirmationDialog = null }

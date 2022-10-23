@@ -65,7 +65,7 @@ class LauncherViewModel @Inject constructor(
     Log.d("VIEW_MODEL", event.toString())
     when (event) {
       is Event.OpenApplication -> openApplication(event.app)
-      is Event.LaunchActivity -> launchActivity(event.app, event.intent)
+      is Event.LaunchActivity -> launchActivity(event.app)
       is Event.UpdateSearch -> updateSearch(event.searchTerm)
       is Event.ToggleFavorite -> toggleFavorite(event.app)
       is Event.HandleGesture -> handleGesture(event.gesture)
@@ -194,22 +194,22 @@ class LauncherViewModel @Inject constructor(
 
   private fun openApplication(app: UserApp) {
     Log.d("VIEW_MODEL", "Open Application ${app.appTitle}")
+    sendUiEvent(UiEvent.OpenApplication(app))
+  }
+
+  private fun launchActivity(app: UserApp) {
+    Log.d("VIEW_MODEL", "Launch Activity ${app.appTitle}")
     pm.getLaunchIntentForPackage(app.packageName)?.apply {
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
     }?.let { intent ->
-      sendUiEvent(UiEvent.OpenApplication(app, intent))
-    }
-  }
-
-  private fun launchActivity(app: UserApp, intent: Intent) {
-    Log.d("VIEW_MODEL", "Launch Activity ${app.appTitle}")
-    sendUiEvent(UiEvent.LaunchActivity(intent))
-    sendUiEvent(
-      UiEvent.ShowToast(
-        "${app.appTitle} used for ${getUsageForApp(app).value.toTimeUsed(false)}"
+      sendUiEvent(UiEvent.LaunchActivity(intent))
+      sendUiEvent(
+        UiEvent.ShowToast(
+          "${app.appTitle} used for ${getUsageForApp(app).value.toTimeUsed(false)}"
+        )
       )
-    )
-    viewModelScope.launch { delay(100); updateSearch("") }
+      viewModelScope.launch { delay(100); updateSearch("") }
+    }
   }
 
   private fun sendUiEvent(event: UiEvent) {
