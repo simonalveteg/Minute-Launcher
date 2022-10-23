@@ -36,7 +36,7 @@ fun MainScreen(
       true
     }
   )
-  var openDialogApp by remember { mutableStateOf<UserApp?>(null) }
+  var currentAppInfoDialog by remember { mutableStateOf<UserApp?>(null) }
 
   LaunchedEffect(key1 = true) {
     Log.d("MAIN_SCREEN", "launched effect")
@@ -58,18 +58,18 @@ fun MainScreen(
     sheetPeekHeight = 0.dp,
     backgroundColor = Color.Transparent,
     sheetContent = {
-      if (openDialogApp != null) {
+      if (currentAppInfoDialog != null) {
         AppInfo(
-          onFavorite = { viewModel.onEvent(Event.ToggleFavorite(openDialogApp!!)) },
-          onHide = { viewModel.onEvent(Event.ToggleFavorite(openDialogApp!!)) },
-          onUninstall = { viewModel.onEvent(Event.ToggleFavorite(openDialogApp!!)) },
-          onDismiss = { openDialogApp = null }
+          onFavorite = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
+          onHide = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
+          onUninstall = { viewModel.onEvent(Event.ToggleFavorite(currentAppInfoDialog!!)) },
+          onDismiss = { currentAppInfoDialog = null }
         )
       }
       AppList(
         focusRequester = focusRequester,
         onAppPress = { viewModel.onEvent(Event.OpenApplication(it))},
-        onAppLongPress = { openDialogApp = it },
+        onAppLongPress = { currentAppInfoDialog = it },
         onBackPressed = {
           coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
           viewModel.onEvent(Event.UpdateSearch(""))
@@ -78,7 +78,7 @@ fun MainScreen(
     },
   ) {
     FavoriteApps(
-      onAppPressed = { openDialogApp = it },
+      onAppPressed = { currentAppInfoDialog = it },
       onNavigate = onNavigate
     )
   }
