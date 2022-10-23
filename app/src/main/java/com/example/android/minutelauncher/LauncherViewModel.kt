@@ -97,7 +97,7 @@ class LauncherViewModel @Inject constructor(
     Log.d("VIEW_MODEL", "Update search with $text")
     val textString = text ?: ""
     viewModelScope.apply {
-      _uiState.update { it ->
+      _uiState.update {
         it.copy(
           filteredApps = installedApps.filter { app ->
             app.appTitle
