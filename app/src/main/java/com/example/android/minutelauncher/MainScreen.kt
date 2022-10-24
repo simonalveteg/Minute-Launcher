@@ -1,5 +1,7 @@
 package com.example.android.minutelauncher
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Spacer
@@ -11,11 +13,14 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
+import java.lang.reflect.Method
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
@@ -25,8 +30,9 @@ fun MainScreen(
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
   val mContext = LocalContext.current
-  val focusRequester = remember { FocusRequester() }
+  val hapticFeedback = LocalHapticFeedback.current
   val keyboardController = LocalSoftwareKeyboardController.current
+  val focusRequester = remember { FocusRequester() }
   val coroutineScope = rememberCoroutineScope()
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
     bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed) {
@@ -64,6 +70,11 @@ fun MainScreen(
           launch { bottomSheetScaffoldState.bottomSheetState.expand() }
           focusRequester.requestFocus()
         }
+        is UiEvent.ExpandNotifications -> {
+          setExpandNotificationDrawer(mContext,true)
+          hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+
       }
     }
   }
@@ -131,5 +142,18 @@ fun MainScreen(
         onNavigate = onNavigate
       )
     }
+  }
+}
+
+@SuppressLint("WrongConstant")
+fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
+  try {
+    val statusBarService = context.getSystemService("statusbar")
+    val methodName = if (expand) "expandNotificationsPanel" else "collapsePanels"
+    val statusBarManager: Class<*> = Class.forName("android.app.StatusBarManager")
+    val method: Method = statusBarManager.getMethod(methodName)
+    method.invoke(statusBarService)
+  } catch (e: Exception) {
+    e.printStackTrace()
   }
 }

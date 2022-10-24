@@ -83,7 +83,7 @@ class LauncherViewModel @Inject constructor(
     Log.d("VIEW_MODEL", "Gesture handled, $gestureDirection")
     when (gestureDirection) {
       GestureDirection.UP -> sendUiEvent(UiEvent.OpenAppDrawer)
-      GestureDirection.DOWN -> Unit
+      GestureDirection.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
       else -> viewModelScope.launch {
         application.applicationContext.datastore.data.collectLatest { appSettings ->
           appSettings.gestureApps[gestureDirection]?.let { openApplication(it) }
