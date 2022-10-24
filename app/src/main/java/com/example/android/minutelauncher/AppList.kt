@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -31,7 +30,6 @@ fun AppList(
   viewModel: LauncherViewModel = hiltViewModel(),
   focusRequester: FocusRequester = remember { FocusRequester() },
   onAppPress: (UserApp) -> Unit = {},
-  onAppLongPress: (UserApp) -> Unit = {},
   onBackPressed: () -> Unit = {}
 ) {
   val uiState by viewModel.uiState.collectAsState()
@@ -87,16 +85,13 @@ fun AppList(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
         ) {
-          item {
-            Spacer(modifier = Modifier.height(24.dp))
-          }
+          item { Spacer(modifier = Modifier.height(24.dp)) }
           items(apps) { app ->
             Row {
               val appTitle = app.appTitle
               val appUsage by viewModel.getUsageForApp(app)
-              AppCard(appTitle, appUsage, { onAppLongPress(app) }) {
-                onAppPress(app)
-              }
+
+              AppCard(appTitle, appUsage) { onAppPress(app) }
             }
           }
         }

@@ -26,7 +26,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun FavoriteApps(
   viewModel: LauncherViewModel = hiltViewModel(),
-  onAppPressed: (UserApp) -> Unit,
   onNavigate: (String) -> Unit
 ) {
   val totalUsage by viewModel.getTotalUsage()
@@ -34,7 +33,9 @@ fun FavoriteApps(
   var gestureDirection: GestureDirection? = null
   val gestureThreshold = 10f
   Surface(
-    Modifier.fillMaxSize().alpha(0.95f)
+    Modifier
+      .fillMaxSize()
+      .alpha(0.95f)
   ) {
     CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
       Column(
@@ -52,7 +53,9 @@ fun FavoriteApps(
               Log.d("SWIPE", "position: ${change.position}") // height: 0-2399f
               val gestureZone =
                 if (change.position.y < 2399 / 2) GestureZone.UPPER else GestureZone.LOWER
-              gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let { gestureDirection = it }
+              gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let {
+                gestureDirection = it
+              }
             }
           },
         verticalArrangement = Arrangement.Bottom,
@@ -61,9 +64,9 @@ fun FavoriteApps(
         Text(totalUsage.toTimeUsed())
         favorites.forEach { app ->
           val appUsage by viewModel.getUsageForApp(app)
-          AppCard(app.appTitle,
-            appUsage,
-            { onAppPressed(app) }) { viewModel.onEvent(Event.OpenApplication(app)) }
+          AppCard(app.appTitle, appUsage) {
+            viewModel.onEvent(Event.OpenApplication(app))
+          }
         }
         Spacer(modifier = Modifier.height(150.dp)) // TODO: Don't use hardcoded dp value
       }
