@@ -1,9 +1,11 @@
 package com.example.android.minutelauncher
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
@@ -13,8 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.flow.toList
 
 
 @Composable
@@ -25,6 +27,7 @@ fun AppModal(
   onDismiss: () -> Unit,
   viewModel: LauncherViewModel = hiltViewModel(),
 ) {
+  val mContext = LocalContext.current
   val appUsage = viewModel.getUsageForApp(app).value
   val uiState = viewModel.uiState.collectAsState()
   val favoriteApps = uiState.value.favoriteApps.collectAsState(initial = emptyList())
@@ -51,7 +54,13 @@ fun AppModal(
         Text(
           text = app.appTitle, style = MaterialTheme.typography.h5
         )
-        IconButton(onClick = {}) {
+        IconButton(onClick = {
+          val intent = Intent().apply {
+            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            data = Uri.fromParts("package", app.packageName, null)
+          }
+          startActivity(mContext,intent, null)
+        }) {
           Icon(imageVector = Icons.Default.Info, contentDescription = "App Info")
         }
       }
