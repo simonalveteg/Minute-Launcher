@@ -59,7 +59,7 @@ fun AppModal(
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(bottom = 8.dp),
+          .padding(bottom = 22.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.Bottom
       ) {
