@@ -1,20 +1,20 @@
 package com.example.android.minutelauncher
 
-import android.content.Intent
-import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.flow.toList
 
 
 @Composable
@@ -26,7 +26,10 @@ fun AppModal(
   viewModel: LauncherViewModel = hiltViewModel(),
 ) {
   val appUsage = viewModel.getUsageForApp(app).value
-  val mContext = LocalContext.current
+  val uiState = viewModel.uiState.collectAsState()
+  val favoriteApps = uiState.value.favoriteApps.collectAsState(initial = emptyList())
+  val isFavorite = favoriteApps.value.any { it.packageName == app.packageName }
+  val favoriteIcon = if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder
 
   Surface {
     Column(
@@ -43,7 +46,7 @@ fun AppModal(
         IconButton(onClick = {
           onEvent(Event.ToggleFavorite(app))
         }) {
-          Icon(imageVector = Icons.Default.Star, contentDescription = "Favorite")
+          Icon(imageVector = favoriteIcon, contentDescription = "Favorite")
         }
         Text(
           text = app.appTitle, style = MaterialTheme.typography.h5

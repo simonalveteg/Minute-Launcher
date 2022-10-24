@@ -30,7 +30,6 @@ fun AppList(
   viewModel: LauncherViewModel = hiltViewModel(),
   focusRequester: FocusRequester = remember { FocusRequester() },
   onAppPress: (UserApp) -> Unit = {},
-  onAppLongPress: (UserApp) -> Unit = {},
   onBackPressed: () -> Unit = {}
 ) {
   val uiState by viewModel.uiState.collectAsState()
