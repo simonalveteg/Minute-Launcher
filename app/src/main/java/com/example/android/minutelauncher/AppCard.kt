@@ -1,6 +1,5 @@
 package com.example.android.minutelauncher
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
@@ -11,8 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -23,22 +20,13 @@ import androidx.compose.ui.unit.sp
 fun AppCard(
   appTitle: String,
   appUsage: Long,
-  onLongPress: () -> Unit = {},
   onClick: () -> Unit
 ) {
-  val haptic = LocalHapticFeedback.current
 
   Column(
     modifier = Modifier
       .padding(2.dp)
-      .combinedClickable(onLongClick = {
-        Log.d("APP_CARD", "long press")
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        onLongPress()
-      }) {
-        Log.d("APP_CARD", "click")
-        onClick()
-      }
+      .combinedClickable { onClick() }
       .fillMaxWidth(),
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
