@@ -7,4 +7,5 @@ sealed class UiEvent {
   data class OpenApplication(val app: UserApp) : UiEvent()
   data class LaunchActivity(val intent: Intent) : UiEvent()
   object OpenAppDrawer : UiEvent()
+  object ExpandNotifications : UiEvent()
 }
