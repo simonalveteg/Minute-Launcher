@@ -64,7 +64,10 @@ fun MainScreen(
       Log.d("MAIN_SCREEN", "event: $event")
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-        is UiEvent.OpenApplication -> currentAppConfirmationDialog = event.app
+        is UiEvent.OpenApplication -> {
+          currentAppConfirmationDialog = event.app
+          hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.OpenAppDrawer -> {
           launch { bottomSheetScaffoldState.bottomSheetState.expand() }
