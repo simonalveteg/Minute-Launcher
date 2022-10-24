@@ -98,12 +98,16 @@ fun MainScreen(
     sheetContent = {
       Spacer(modifier = Modifier.height(4.dp))
       if (currentAppInfoDialog != null) {
-        AppInfo(
-          app = currentAppInfoDialog!!,
+        val app = currentAppInfoDialog!!
+        AppModal(
+          app = app,
           onEvent = viewModel::onEvent,
-          onDismiss = {
-            coroutineScope.launch { dialogSheetScaffoldState.hide() }
+          onConfirmation = {
+            viewModel.onEvent(Event.LaunchActivity(app))
             currentAppInfoDialog = null
+          },
+          onDismiss = {
+            // lock screen
           }
         )
       }
