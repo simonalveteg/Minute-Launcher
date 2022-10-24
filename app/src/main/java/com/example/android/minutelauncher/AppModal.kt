@@ -1,13 +1,7 @@
 package com.example.android.minutelauncher
 
-import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
-import android.content.Context
 import android.content.Intent
-import android.content.pm.ServiceInfo
 import android.provider.Settings
-import android.view.accessibility.AccessibilityManager
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
@@ -34,7 +28,7 @@ fun AppModal(
   val appUsage = viewModel.getUsageForApp(app).value
   val mContext = LocalContext.current
 
-  Surface() {
+  Surface {
     Column(
       verticalArrangement = Arrangement.SpaceBetween,
       horizontalAlignment = Alignment.CenterHorizontally
@@ -88,21 +82,4 @@ fun AppModal(
       }
     }
   }
-}
-
-fun isAccessibilityServiceEnabled(
-  context: Context,
-  service: Class<out AccessibilityService?>
-): Boolean {
-  val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as (AccessibilityManager)
-  val enabledServices: List<AccessibilityServiceInfo> =
-    am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-  for (enabledService in enabledServices) {
-    val enabledServiceInfo: ServiceInfo = enabledService.resolveInfo.serviceInfo
-    if (enabledServiceInfo.packageName.equals(context.packageName) && enabledServiceInfo.name.equals(
-        service.name
-      )
-    ) return true
-  }
-  return false
 }

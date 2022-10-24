@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MinuteLauncher</string>
+    <string name="accessibility_service_description">This accessibility service needs to be enabled in order for Minute Launcher to turn the screen off.</string>
 </resources>
