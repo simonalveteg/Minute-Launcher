@@ -66,17 +66,7 @@ fun AppModal(
         TextButton(onClick = onConfirmation) {
           Text(text = "Open anyway")
         }
-        Button(onClick = {
-          val isAccessibilityServiceEnabled =
-            isAccessibilityServiceEnabled(mContext, MinuteAccessibilityService::class.java)
-          if (isAccessibilityServiceEnabled) {
-            MinuteAccessibilityService.turnScreenOff()
-            onDismiss()
-          } else {
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            startActivity(mContext, intent, null)
-          }
-        }) {
+        Button(onClick = onDismiss) {
           Text(text = "Put the phone down")
         }
       }

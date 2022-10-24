@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 fun AppCard(
   appTitle: String,
   appUsage: Long,
-  onLongPress: () -> Unit,
+  onLongPress: () -> Unit = {},
   onClick: () -> Unit
 ) {
   val haptic = LocalHapticFeedback.current

@@ -2,6 +2,8 @@ package com.example.android.minutelauncher
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import java.lang.reflect.Method
@@ -47,15 +50,11 @@ fun MainScreen(
     }
   )
 
-  var currentAppInfoDialog by remember { mutableStateOf<UserApp?>(null) }
-  var currentAppConfirmationDialog by remember { mutableStateOf<UserApp?>(null) }
+  var currentAppModal by remember { mutableStateOf<UserApp?>(null) }
 
   val dialogSheetScaffoldState =
     rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden) {
-      if (it == ModalBottomSheetValue.Hidden) {
-        currentAppConfirmationDialog = null
-        currentAppInfoDialog = null
-      }
+      if (it == ModalBottomSheetValue.Hidden) currentAppModal = null
       true
     }
   LaunchedEffect(key1 = true) {
@@ -65,7 +64,7 @@ fun MainScreen(
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
         is UiEvent.OpenApplication -> {
-          currentAppConfirmationDialog = event.app
+          currentAppModal = event.app
           hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
@@ -77,13 +76,12 @@ fun MainScreen(
           setExpandNotificationDrawer(mContext,true)
           hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
-
       }
     }
   }
 
-  LaunchedEffect(key1 = currentAppInfoDialog, key2 = currentAppConfirmationDialog) {
-    if (currentAppInfoDialog != null || currentAppConfirmationDialog != null) {
+  LaunchedEffect(key1 = currentAppModal) {
+    if (currentAppModal != null) {
       launch { dialogSheetScaffoldState.show() }
       keyboardController?.hide()
       focusRequester.freeFocus()
@@ -97,35 +95,28 @@ fun MainScreen(
     sheetBackgroundColor = MaterialTheme.colorScheme.background,
     sheetContent = {
       Spacer(modifier = Modifier.height(4.dp))
-      if (currentAppInfoDialog != null) {
-        val app = currentAppInfoDialog!!
+      if (currentAppModal != null) {
+        val app = currentAppModal!!
         AppModal(
           app = app,
           onEvent = viewModel::onEvent,
           onConfirmation = {
             viewModel.onEvent(Event.LaunchActivity(app))
-            currentAppInfoDialog = null
+            currentAppModal = null
           },
           onDismiss = {
-            // lock screen
+            val isAccessibilityServiceEnabled =
+              isAccessibilityServiceEnabled(mContext, MinuteAccessibilityService::class.java)
+            if (isAccessibilityServiceEnabled) {
+              MinuteAccessibilityService.turnScreenOff()
+              currentAppModal = null
+            } else {
+              val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+              ContextCompat.startActivity(mContext, intent, null)
+            }
           }
         )
       }
-      if (currentAppConfirmationDialog != null) {
-        val app = currentAppConfirmationDialog!!
-        AppConfirmation(
-          app = app,
-          onConfirmation = {
-            viewModel.onEvent(Event.LaunchActivity(app))
-            currentAppConfirmationDialog = null
-          },
-          onDismiss = {
-            coroutineScope.launch { dialogSheetScaffoldState.hide() }
-            currentAppConfirmationDialog = null
-          }
-        )
-      }
-      Spacer(modifier = Modifier.height(16.dp))
     }
   ) {
     BottomSheetScaffold(
@@ -136,7 +127,6 @@ fun MainScreen(
         AppList(
           focusRequester = focusRequester,
           onAppPress = { viewModel.onEvent(Event.OpenApplication(it)) },
-          onAppLongPress = { currentAppInfoDialog = it },
           onBackPressed = {
             coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() }
             viewModel.onEvent(Event.UpdateSearch(""))
@@ -145,7 +135,6 @@ fun MainScreen(
       },
     ) {
       FavoriteApps(
-        onAppPressed = { currentAppInfoDialog = it },
         onNavigate = onNavigate
       )
     }
