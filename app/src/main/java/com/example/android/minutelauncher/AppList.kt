@@ -53,9 +53,7 @@ fun AppList(
   }) { paddingValues ->
     Surface(modifier = Modifier.padding(paddingValues)) {
       Column {
-        Row(
-          Modifier.statusBarsPadding()
-        ) {
+        Row {
           TextField(
             value = searchText,
             onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
