@@ -3,35 +3,46 @@ package com.example.android.minutelauncher
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.android.minutelauncher.db.App
 
 
 @Composable
 fun AppModal(
-  app: UserApp,
+  app: App,
   onEvent: (Event) -> Unit,
   onConfirmation: () -> Unit,
   onDismiss: () -> Unit,
   viewModel: LauncherViewModel = hiltViewModel(),
 ) {
   val mContext = LocalContext.current
-  val appUsage = viewModel.getUsageForApp(app).value
-  val uiState = viewModel.uiState.collectAsState()
-  val favoriteApps = uiState.value.favoriteApps.collectAsState(initial = emptyList())
-  val isFavorite = favoriteApps.value.any { it.packageName == app.packageName }
+  val appUsage = viewModel.getUsageForApp(app).longValue
+  val favoriteApps by viewModel.favoriteApps.collectAsState(initial = emptyList())
+  val isFavorite = favoriteApps.any { it.app.packageName == app.packageName }
   val favoriteIcon = if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder
 
   Surface {
@@ -59,7 +70,7 @@ fun AppModal(
             action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
             data = Uri.fromParts("package", app.packageName, null)
           }
-          startActivity(mContext,intent, null)
+          startActivity(mContext, intent, null)
         }) {
           Icon(imageVector = Icons.Default.Info, contentDescription = "App Info")
         }
