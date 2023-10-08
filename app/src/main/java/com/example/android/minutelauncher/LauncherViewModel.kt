@@ -5,64 +5,87 @@ import android.app.usage.UsageStatsManager
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.db.LauncherRepository
+import com.example.android.minutelauncher.db.SwipeApp
+import com.example.android.minutelauncher.db.toApp
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.mutate
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
-import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.util.Calendar
+import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
 class LauncherViewModel @Inject constructor(
   private val application: Application,
+  private val repo: LauncherRepository
 ) : ViewModel() {
   private val _uiEvent = MutableSharedFlow<UiEvent>()
   val uiEvent = _uiEvent.asSharedFlow()
-    .onSubscription { Log.d("UI_EVENT", "New subscriber") }
-    .onCompletion { Log.d("UI_EVENT", "Completed") }
-    .onEach { Log.d("UI_EVENT", it.toString()) }
+    .onEach { Timber.d(it.toString()) }
 
   private val pm = application.applicationContext.packageManager
-  private val installedApps = pm.queryIntentActivities(
-    Intent().apply { action = Intent.ACTION_MAIN; addCategory(Intent.CATEGORY_LAUNCHER) },
-    0
-  ).sortedBy { it.loadLabel(pm).toString().lowercase() }.map { it.toUserApp(pm) }
 
-  private val _uiState = MutableStateFlow(
-    UiState(
-      installedApps = installedApps,
-      filteredApps = installedApps,
-      gestureApps = channelFlow {
-        application.applicationContext.datastore.data.collectLatest { appSettings ->
-          send(appSettings.gestureApps)
-        }
-      },
-      favoriteApps = channelFlow {
-        application.applicationContext.datastore.data.collectLatest { appSettings ->
-          send(appSettings.favoriteApps)
-        }
-      },
-      usage = queryUsageStats()
-    )
-  )
-  val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+  private val _usageStats = MutableStateFlow(queryUsageStats())
+  val usageStats = _usageStats.asStateFlow()
+
+  private val _searchTerm = MutableStateFlow("")
+  val searchTerm = _searchTerm.asStateFlow()
+
+  val gestureApps = repo.gestureApps()
+  val favoriteApps = repo.favoriteApps()
+  val filteredApps = combine(
+    repo.appList(),
+    searchTerm
+  ) { apps, searchTerm ->
+    apps.filter { app ->
+      app.appTitle.lowercase().filterNot { it.isWhitespace() }.contains(
+        searchTerm.lowercase().filterNot { it.isWhitespace() }
+      )
+    }.sortedBy { it.appTitle }
+  }
 
   private val handler = Handler(Looper.getMainLooper())
   private var usageQueryRunnable = Runnable { handlerTest() }
 
   init {
-    Log.d("VIEW_MODEL", "INIT.")
+    Timber.d("INIT.")
     handler.removeCallbacksAndMessages(null)
     usageQueryRunnable.run()
+    updateDatabase()
+  }
+
+  private fun updateDatabase() {
+    val installedApps = pm.queryIntentActivities(
+      Intent().apply { action = Intent.ACTION_MAIN; addCategory(Intent.CATEGORY_LAUNCHER) },
+      0
+    ).sortedBy { it.loadLabel(pm).toString().lowercase() }.map { it.toApp(pm) }
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        installedApps.forEach { app ->
+          repo.insertApp(app)
+        }
+      }
+    }
   }
 
   fun onEvent(event: Event) {
-    Log.d("VIEW_MODEL", event.toString())
+    Timber.d(event.toString())
     when (event) {
       is Event.OpenApplication -> openApplication(event.app)
       is Event.LaunchActivity -> launchActivity(event.app)
@@ -74,46 +97,36 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
-  fun getUsageForApp(app: UserApp) =
-    mutableStateOf(uiState.value.usage[app.packageName] ?: 0)
+  fun getUsageForApp(app: App) =
+    mutableLongStateOf(usageStats.value[app.packageName] ?: 0)
 
-  fun getTotalUsage() = mutableStateOf(uiState.value.usage.values.sum())
+  fun getTotalUsage() = mutableLongStateOf(usageStats.value.values.sum())
 
   private fun handleGesture(gestureDirection: GestureDirection) {
-    Log.d("VIEW_MODEL", "Gesture handled, $gestureDirection")
+    Timber.d("Gesture handled, $gestureDirection")
     when (gestureDirection) {
       GestureDirection.UP -> sendUiEvent(UiEvent.OpenAppDrawer)
       GestureDirection.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
-      else -> viewModelScope.launch {
-        application.applicationContext.datastore.data.collectLatest { appSettings ->
-          appSettings.gestureApps[gestureDirection]?.let { openApplication(it) }
-          cancel()
+      else -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            repo.getAppForGesture(gestureDirection)?.let {
+              openApplication(it.app)
+            }
+          }
         }
       }
     }
   }
 
   private fun updateSearch(text: String?) {
-    Log.d("VIEW_MODEL", "Update search with $text")
-    val textString = text ?: ""
-    viewModelScope.apply {
-      _uiState.update {
-        it.copy(
-          filteredApps = installedApps.filter { app ->
-            app.appTitle
-              .replace(" ", "")
-              .replace("-", "")
-              .contains(textString.trim(), true)
-          },
-          searchTerm = textString
-        )
-      }
-    }
+    Timber.d("Update search with $text")
+    _searchTerm.value = text ?: ""
   }
 
   private fun handlerTest() {
-    Log.d("VIEW_MODEL", "Usage queried.")
-    _uiState.update { it.copy(usage = queryUsageStats()) }
+    Timber.d("Usage queried.")
+    _usageStats.value = queryUsageStats()
     handler.postDelayed(usageQueryRunnable, 60000)
   }
 
@@ -139,8 +152,7 @@ class LauncherViewModel @Inject constructor(
       .sortedBy {
         it.totalTimeInForeground
       }.forEach {
-        Log.d(
-          "VIEW_MODEL",
+        Timber.d(
           "Package: ${it.packageName} time: ${it.firstTimeStamp}, usage: ${it.totalTimeInForeground.toTimeUsed()}"
         )
       }
@@ -150,62 +162,45 @@ class LauncherViewModel @Inject constructor(
       .mapValues { it.value.totalTimeInForeground }
   }
 
-  private fun setGestureApp(app: UserApp, gesture: GestureDirection) {
+  private fun setGestureApp(app: App, gesture: GestureDirection) {
     viewModelScope.launch {
-      application.applicationContext.datastore.updateData {
-        it.copy(
-          gestureApps = it.gestureApps.mutate { map ->
-            if (map.contains(gesture)) {
-              map.replace(gesture, app)
-            } else {
-              map[gesture] = app
-            }
-          }
-        )
+      withContext(Dispatchers.IO) {
+        repo.insertGestureApp(SwipeApp(gesture, app))
       }
     }
   }
 
   private fun clearGestureApp(gesture: GestureDirection) {
     viewModelScope.launch {
-      application.applicationContext.datastore.updateData {
-        it.copy(
-          gestureApps = it.gestureApps.mutate { map ->
-            map.remove(gesture)
-          }
-        )
+      withContext(Dispatchers.IO) {
+        repo.removeAppForGesture(gesture)
       }
     }
   }
 
-  private fun toggleFavorite(app: UserApp) {
+  private fun toggleFavorite(app: App) {
     viewModelScope.launch {
-      application.applicationContext.datastore.updateData {
-        it.copy(
-          favoriteApps = it.favoriteApps.mutate { list ->
-            if (!list.contains(app)) list.add(app)
-            else list.remove(app)
-            Log.d("VIEW_MODEL", "Toggled favorite: ${app.packageName}")
-          }
-        )
+      withContext(Dispatchers.IO) {
+        Timber.d("Toggle favorite app ${app.appTitle}")
+        repo.toggleFavorite(app)
       }
     }
   }
 
-  private fun openApplication(app: UserApp) {
-    Log.d("VIEW_MODEL", "Open Application ${app.appTitle}")
+  private fun openApplication(app: App) {
+    Timber.d("Open Application ${app.appTitle}")
     sendUiEvent(UiEvent.OpenApplication(app))
   }
 
-  private fun launchActivity(app: UserApp) {
-    Log.d("VIEW_MODEL", "Launch Activity ${app.appTitle}")
+  private fun launchActivity(app: App) {
+    Timber.d("Launch Activity ${app.appTitle}")
     pm.getLaunchIntentForPackage(app.packageName)?.apply {
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
     }?.let { intent ->
       sendUiEvent(UiEvent.LaunchActivity(intent))
       sendUiEvent(
         UiEvent.ShowToast(
-          "${app.appTitle} used for ${getUsageForApp(app).value.toTimeUsed(false)}"
+          "${app.appTitle} used for ${getUsageForApp(app).longValue.toTimeUsed(false)}"
         )
       )
       viewModelScope.launch { delay(100); updateSearch("") }
@@ -217,13 +212,4 @@ class LauncherViewModel @Inject constructor(
       _uiEvent.emit(event)
     }
   }
-
-  data class UiState(
-    val installedApps: List<UserApp>,
-    val filteredApps: List<UserApp>,
-    val favoriteApps: Flow<List<UserApp>>,
-    val gestureApps: Flow<Map<GestureDirection, UserApp>>,
-    val usage: Map<String, Long>,
-    val searchTerm: String = ""
-  )
 }

@@ -1,6 +1,5 @@
 package com.example.android.minutelauncher
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,27 +22,27 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.android.minutelauncher.db.App
+import timber.log.Timber
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppList(
   viewModel: LauncherViewModel = hiltViewModel(),
   focusRequester: FocusRequester = remember { FocusRequester() },
-  onAppPress: (UserApp) -> Unit = {},
+  onAppPress: (App) -> Unit = {},
   onBackPressed: () -> Unit = {}
 ) {
-  val uiState by viewModel.uiState.collectAsState()
-  val apps = uiState.filteredApps
-  val searchText = uiState.searchTerm
+  val apps by viewModel.filteredApps.collectAsState(emptyList())
+  val searchText by viewModel.searchTerm.collectAsState()
 
   BackHandler(true) {
-    Log.d("NAV", "back pressed")
+    Timber.d("back pressed")
     onBackPressed()
   }
 
   Scaffold(floatingActionButton = {
     FloatingActionButton(onClick = {
-      Log.d("APP_LIST", "Search focused")
+      Timber.d("Search focused")
       focusRequester.requestFocus()
     }) {
       Icon(
@@ -67,7 +66,7 @@ fun AppList(
                 viewModel.onEvent(Event.OpenApplication(it))
               }
             }),
-            colors = TextFieldDefaults.outlinedTextFieldColors(),
+            colors = OutlinedTextFieldDefaults.colors(),
             placeholder = {
               Text(
                 text = "search", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()

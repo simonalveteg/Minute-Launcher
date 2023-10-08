@@ -4,14 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
@@ -22,11 +20,13 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.android.minutelauncher.db.App
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.lang.reflect.Method
 
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainScreen(
   onNavigate: (String) -> Unit,
@@ -39,7 +39,7 @@ fun MainScreen(
   val coroutineScope = rememberCoroutineScope()
   val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
     bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed) {
-      Log.d("MAIN_SCREEN", it.name)
+      Timber.d(it.name)
       // When sheet is dragged into a collapsed state the keyboard should be hidden
       if (it.name != BottomSheetValue.Expanded.name) {
         focusRequester.freeFocus()
@@ -50,7 +50,7 @@ fun MainScreen(
     }
   )
 
-  var currentAppModal by remember { mutableStateOf<UserApp?>(null) }
+  var currentAppModal by remember { mutableStateOf<App?>(null) }
 
   val dialogSheetScaffoldState =
     rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden) {
@@ -58,22 +58,24 @@ fun MainScreen(
       true
     }
   LaunchedEffect(key1 = true) {
-    Log.d("MAIN_SCREEN", "launched effect")
+    Timber.d("launched effect")
     viewModel.uiEvent.collect { event ->
-      Log.d("MAIN_SCREEN", "event: $event")
+      Timber.d("event: $event")
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
         is UiEvent.OpenApplication -> {
           currentAppModal = event.app
           hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
+
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.OpenAppDrawer -> {
           launch { bottomSheetScaffoldState.bottomSheetState.expand() }
           focusRequester.requestFocus()
         }
+
         is UiEvent.ExpandNotifications -> {
-          setExpandNotificationDrawer(mContext,true)
+          setExpandNotificationDrawer(mContext, true)
           hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
       }

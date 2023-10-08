@@ -1,6 +1,5 @@
 package com.example.android.minutelauncher
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -21,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import timber.log.Timber
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -29,7 +29,7 @@ fun FavoriteApps(
   onNavigate: (String) -> Unit
 ) {
   val totalUsage by viewModel.getTotalUsage()
-  val favorites by viewModel.uiState.collectAsState().value.favoriteApps.collectAsState(initial = emptyList())
+  val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
   var gestureDirection: GestureDirection? = null
   val gestureThreshold = 10f
   Surface(
@@ -42,7 +42,7 @@ fun FavoriteApps(
         modifier = Modifier
           .fillMaxSize()
           .combinedClickable(onLongClick = {
-            Log.d("LONG_PRESS", "Long press on home screen")
+            Timber.d("Long press on home screen")
             onNavigate("settings")
           }) {}
           .pointerInput(Unit) {
@@ -50,7 +50,7 @@ fun FavoriteApps(
               onDragEnd = { gestureDirection?.let { viewModel.onEvent(Event.HandleGesture(it)) } }
             ) { change, dragAmount ->
               change.consume()
-              Log.d("SWIPE", "position: ${change.position}") // height: 0-2399f
+              Timber.d("position: ${change.position}") // height: 0-2399f
               val gestureZone =
                 if (change.position.y < 2399 / 2) GestureZone.UPPER else GestureZone.LOWER
               gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let {
@@ -63,6 +63,7 @@ fun FavoriteApps(
       ) {
         Text(totalUsage.toTimeUsed())
         favorites.forEach { app ->
+          val app = app.app
           val appUsage by viewModel.getUsageForApp(app)
           AppCard(app.appTitle, appUsage) {
             viewModel.onEvent(Event.OpenApplication(app))

@@ -1,6 +1,5 @@
 package com.example.android.minutelauncher
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -15,16 +14,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.android.minutelauncher.db.App
+import timber.log.Timber
 
 @Composable
 fun SettingsScreen(
   viewModel: LauncherViewModel = hiltViewModel(),
   onNavigate: (String) -> Unit
 ) {
-  val uiState by viewModel.uiState.collectAsState()
-  val gestureApps = uiState.gestureApps.collectAsState(initial = emptyMap())
+  val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
   val appSelectorVisible = remember { mutableStateOf(false) }
-  var selectedDirection = remember {
+  val selectedDirection = remember {
     mutableStateOf<GestureDirection?>(null)
   }
 
@@ -41,10 +41,10 @@ fun SettingsScreen(
         columns = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.Center,
         verticalArrangement = Arrangement.Center
-      ){
+      ) {
         item {
           val gestureDirection = GestureDirection.UPPER_RIGHT
-          val app = gestureApps.value[gestureDirection]
+          val app = gestureApps[gestureDirection]
           GestureAppCard(
             app = app,
             onLongClick = {
@@ -57,7 +57,7 @@ fun SettingsScreen(
         }
         item {
           val gestureDirection = GestureDirection.UPPER_LEFT
-          val app = gestureApps.value[gestureDirection]
+          val app = gestureApps[gestureDirection]
           GestureAppCard(
             app = app,
             onLongClick = {
@@ -70,7 +70,7 @@ fun SettingsScreen(
         }
         item {
           val gestureDirection = GestureDirection.LOWER_RIGHT
-          val app = gestureApps.value[gestureDirection]
+          val app = gestureApps[gestureDirection]
           GestureAppCard(
             app = app,
             onLongClick = {
@@ -83,13 +83,13 @@ fun SettingsScreen(
         }
         item {
           val gestureDirection = GestureDirection.LOWER_LEFT
-          val app = gestureApps.value[gestureDirection]
+          val app = gestureApps[gestureDirection]
           GestureAppCard(
             app = app,
             onLongClick = {
               app?.let { viewModel.onEvent(Event.ClearAppGesture(gestureDirection)) }
             }
-            ) {
+          ) {
             selectedDirection.value = gestureDirection
             appSelectorVisible.value = true
           }
@@ -105,7 +105,7 @@ fun SettingsScreen(
         AppList(
           onAppPress = { app ->
             selectedDirection.value?.let {
-              Log.d("SETTINGS","Selected ${app.appTitle} in direction $it")
+              Timber.d("Selected ${app.appTitle} in direction $it")
               viewModel.onEvent(Event.SetAppGesture(app, it))
             }
             viewModel.onEvent(Event.UpdateSearch(""))
@@ -122,7 +122,7 @@ fun SettingsScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun GestureAppCard(app: UserApp?, onLongClick: () -> Unit, onClick: () -> Unit) {
+fun GestureAppCard(app: App?, onLongClick: () -> Unit, onClick: () -> Unit) {
   Surface(
     tonalElevation = 4.dp,
     modifier = Modifier

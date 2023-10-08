@@ -11,12 +11,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
-import androidx.datastore.dataStore
 import androidx.navigation.compose.rememberNavController
 import com.example.android.minutelauncher.ui.theme.MinuteLauncherTheme
 import dagger.hilt.android.AndroidEntryPoint
-
-val Context.datastore by dataStore("app_settings.json", AppSettingsSerializer)
+import timber.log.Timber
 
 @ExperimentalMaterial3Api
 @AndroidEntryPoint
@@ -24,6 +22,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    Timber.plant(Timber.DebugTree())
     setContent {
       MinuteLauncherTheme {
         val navController = rememberNavController()
