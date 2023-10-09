@@ -42,6 +42,8 @@ import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.rememberBottomSheetState
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.ripple.LocalRippleTheme
+import androidx.compose.material.ripple.RippleAlpha
+import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -443,4 +445,14 @@ fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
   } catch (e: Exception) {
     e.printStackTrace()
   }
+}
+
+object ClearRippleTheme : RippleTheme {
+  @Composable
+  override fun defaultColor(): Color = Color.Transparent
+
+  @Composable
+  override fun rippleAlpha() = RippleAlpha(
+    draggedAlpha = 0f, focusedAlpha = 0f, hoveredAlpha = 0f, pressedAlpha = 0f
+  )
 }
