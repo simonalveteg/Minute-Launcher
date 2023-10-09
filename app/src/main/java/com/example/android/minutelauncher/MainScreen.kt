@@ -384,7 +384,7 @@ fun GestureColumn(
     apps.forEach { entry ->
       val app = entry.value
       val direction = entry.key
-      val title = app?.appTitle ?: "Click to set shortcut"
+      val title = app?.appTitle ?: ""
       Surface(
         modifier = Modifier
           .fillMaxWidth()
@@ -393,7 +393,6 @@ fun GestureColumn(
         shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart),
         tonalElevation = 4.dp,
         onClick = {
-          Timber.d("GestureApp pressed, direction $direction")
           onClick(direction)
         }
       ) {

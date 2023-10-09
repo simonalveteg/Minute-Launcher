@@ -100,7 +100,11 @@ class LauncherViewModel @Inject constructor(
   }
 
   private fun updateFavoriteOrder(favorites: List<FavoriteAppWithApp>) {
-
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        repo.updateFavoritesOrder(favorites)
+      }
+    }
   }
 
   fun getUsageForApp(app: App) =
