@@ -20,13 +20,13 @@ interface LauncherDAO {
   fun getGestureApps(): Flow<List<SwipeAppWithApp>>
 
   @Transaction
-  @Query("SELECT * FROM FavoriteApp")
+  @Query("SELECT * FROM FavoriteApp ORDER BY `order` ASC")
   fun getFavoriteApps(): Flow<List<FavoriteAppWithApp>>
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertApp(app: App)
 
-  @Insert(onConflict = OnConflictStrategy.IGNORE)
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insertFavoriteApp(app: FavoriteApp)
 
   @Delete
@@ -34,15 +34,23 @@ interface LauncherDAO {
 
   @Transaction
   fun toggleFavoriteApp(app: App) {
-    if (isFavoriteApp(app.id)) {
-      deleteFavoriteApp(FavoriteApp(app.id))
+    val fApp = getFavoriteById(app.id)
+    if (fApp != null) {
+      deleteFavoriteApp(fApp)
     } else {
-      insertFavoriteApp(FavoriteApp(app.id))
+      val order = getMaxFavoriteOrder()
+      insertFavoriteApp(FavoriteApp(app.id, order))
     }
   }
 
+  @Query("SELECT 'MAX(order)' FROM FavoriteApp")
+  fun getMaxFavoriteOrder(): Int
+
   @Query("SELECT * FROM FavoriteApp WHERE app_id = :id")
-  fun isFavoriteApp(id: Int): Boolean
+  fun getFavoriteById(id: Int): FavoriteApp?
+
+  @Query("SELECT 'order' FROM FavoriteApp WHERE app_id = :id")
+  fun getOrderForFavoriteById(id: Int): Int
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insertGestureApp(swipeApp: SwipeApp)
@@ -53,5 +61,4 @@ interface LauncherDAO {
   @Transaction
   @Query("SELECT * FROM SwipeApp WHERE swipeDirection = :direction")
   fun getAppForGesture(direction: String): SwipeAppWithApp?
-
 }

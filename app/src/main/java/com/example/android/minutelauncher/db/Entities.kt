@@ -62,7 +62,8 @@ data class SwipeAppWithApp(
   )]
 )
 data class FavoriteApp(
-  @ColumnInfo(name = "app_id") val appId: Int
+  @ColumnInfo(name = "app_id") val appId: Int,
+  val order: Int
 )
 
 data class FavoriteAppWithApp(

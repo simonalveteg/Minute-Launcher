@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.db.FavoriteAppWithApp
 import com.example.android.minutelauncher.db.LauncherRepository
 import com.example.android.minutelauncher.db.SwipeApp
 import com.example.android.minutelauncher.db.toApp
@@ -94,6 +95,15 @@ class LauncherViewModel @Inject constructor(
       is Event.HandleGesture -> handleGesture(event.gesture)
       is Event.SetAppGesture -> setGestureApp(event.app, event.gesture)
       is Event.ClearAppGesture -> clearGestureApp(event.gesture)
+      is Event.UpdateFavoriteOrder -> updateFavoriteOrder(event.favorites)
+    }
+  }
+
+  private fun updateFavoriteOrder(favorites: List<FavoriteAppWithApp>) {
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        repo.updateFavoritesOrder(favorites)
+      }
     }
   }
 

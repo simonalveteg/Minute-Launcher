@@ -1,6 +1,7 @@
 package com.example.android.minutelauncher
 
 import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.db.FavoriteAppWithApp
 
 
 sealed class Event {
@@ -11,4 +12,5 @@ sealed class Event {
   data class HandleGesture(val gesture: GestureDirection) : Event()
   data class SetAppGesture(val app: App, val gesture: GestureDirection) : Event()
   data class ClearAppGesture(val gesture: GestureDirection) : Event()
+  data class UpdateFavoriteOrder(val favorites: List<FavoriteAppWithApp>) : Event()
 }

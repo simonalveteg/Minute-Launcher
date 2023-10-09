@@ -16,10 +16,5 @@ fun LauncherNavHost(
         navController.navigate(it)
       })
     }
-    composable("settings") {
-      SettingsScreen(onNavigate = {
-        navController.navigate(it)
-      })
-    }
   }
 }
