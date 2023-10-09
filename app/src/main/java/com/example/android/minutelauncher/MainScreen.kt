@@ -5,28 +5,73 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.BottomSheetValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material.rememberBottomSheetState
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.reorderableList.ReorderableItem
+import com.example.android.minutelauncher.reorderableList.detectReorder
+import com.example.android.minutelauncher.reorderableList.rememberReorderableLazyListState
+import com.example.android.minutelauncher.reorderableList.reorderable
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.lang.reflect.Method
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
   onNavigate: (String) -> Unit,
@@ -49,14 +94,17 @@ fun MainScreen(
       true
     }
   )
+  val appSelectorVisible = remember { mutableStateOf(false) }
+  val selectedDirection = remember { mutableStateOf<GestureDirection?>(null) }
 
   var currentAppModal by remember { mutableStateOf<App?>(null) }
-
   val dialogSheetScaffoldState =
-    rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden) {
-      if (it == ModalBottomSheetValue.Hidden) currentAppModal = null
-      true
-    }
+    rememberModalBottomSheetState(
+      initialValue = ModalBottomSheetValue.Hidden,
+      confirmValueChange = {
+        if (it == ModalBottomSheetValue.Hidden) currentAppModal = null
+        true
+      })
   LaunchedEffect(key1 = true) {
     Timber.d("launched effect")
     viewModel.uiEvent.collect { event ->
@@ -136,12 +184,253 @@ fun MainScreen(
         )
       },
     ) {
-      FavoriteApps(
-        onNavigate = onNavigate
-      )
+      Surface {
+        BoxWithConstraints(
+          modifier = Modifier.statusBarsPadding()
+        ) {
+          var state by remember { mutableStateOf(MainScreenState.NORMAL) }
+          val sideWidth by animateDpAsState(
+            targetValue =
+            when (state) {
+              MainScreenState.NORMAL -> 0.dp
+              MainScreenState.EDIT -> 60.dp
+            }, label = "",
+            animationSpec = spring(
+              Spring.DampingRatioLowBouncy
+            )
+          )
+          val middleWidth = maxWidth - sideWidth.times(2)
+          val gestureHeight = maxHeight.div(2)
+          val bottomHeight = maxHeight.div(6)
+
+          val totalUsage by viewModel.getTotalUsage()
+          val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
+          val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
+          var gestureDirection: GestureDirection? = null
+          val gestureThreshold = 10f
+
+          Row(
+            modifier = Modifier
+              .fillMaxSize()
+              .thenIf(state.isNormal()) {
+                pointerInput(Unit) {
+                  detectDragGestures(
+                    onDragEnd = {
+                      gestureDirection?.let {
+                        viewModel.onEvent(Event.HandleGesture(it))
+                      }
+                    }
+                  ) { change, dragAmount ->
+                    change.consume()
+                    Timber.d("position: ${change.position}") // height: 0-2399f
+                    val gestureZone =
+                      if (change.position.y < 2399 / 2) GestureZone.UPPER else GestureZone.LOWER
+                    gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let {
+                      gestureDirection = it
+                    }
+                  }
+                }
+              },
+            horizontalArrangement = Arrangement.SpaceBetween
+          ) {
+            GestureColumn(
+              height = gestureHeight,
+              width = sideWidth,
+              side = Alignment.Start,
+              gestureApps = gestureApps,
+              onClick =  {
+                selectedDirection.value = it
+                Timber.d("Selected direction: ${selectedDirection.value}")
+                appSelectorVisible.value = true
+              }
+            )
+            CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
+              Column(
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                  .fillMaxHeight()
+                  .width(middleWidth)
+                  .combinedClickable(onLongClick = {
+                    Timber.d("Long press on home screen")
+                    state = state.next()
+                  }) {}
+              ) {
+                AnimatedVisibility(
+                  visible = !state.isEdit(),
+                  enter = fadeIn(tween(500, 600)),
+                  exit = fadeOut(tween(150))
+                ) {
+                  Text(totalUsage.toTimeUsed())
+                }
+                val data = remember { mutableStateOf(favorites) }
+                LaunchedEffect(favorites) {
+                  if (favorites.size != data.value.size) {
+                    data.value = favorites
+                  }
+                }
+                Timber.d("Favorites size: ${favorites.size} Data size: ${data.value.size}")
+                val reorderableState = rememberReorderableLazyListState(onMove = { from, to ->
+                  data.value = data.value.toMutableList().apply {
+                    add(to.index, removeAt(from.index))
+                  }
+                  viewModel.onEvent(Event.UpdateFavoriteOrder(data.value))
+                })
+                LazyColumn(
+                  state = reorderableState.listState,
+                  horizontalAlignment = Alignment.CenterHorizontally,
+                  userScrollEnabled = false,
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .thenIf(state.isEdit()) { detectReorder(reorderableState) }
+                    .thenIf(state.isEdit()) { reorderable(reorderableState) }
+                ) {
+                  items(data.value, { it.app.id }) { item ->
+                    ReorderableItem(reorderableState, key = item.app.id) { isDragged ->
+                      val appUsage by viewModel.getUsageForApp(item.app)
+                      AppCard(
+                        appTitle = item.app.appTitle,
+                        appUsage = appUsage,
+                        state.isEdit(),
+                        isDragged
+                      ) {
+                        if (state == MainScreenState.NORMAL) {
+                          viewModel.onEvent(Event.OpenApplication(item.app))
+                        }
+                      }
+                    }
+                  }
+                }
+                Spacer(modifier = Modifier.height(bottomHeight))
+              }
+            }
+            GestureColumn(
+              height = gestureHeight,
+              width = sideWidth,
+              side = Alignment.End,
+              gestureApps = gestureApps
+            ) {
+              selectedDirection.value = it
+              Timber.d("Selected direction: ${selectedDirection.value}")
+              appSelectorVisible.value = true
+            }
+          }
+        }
+      }
+    }
+  }
+  AnimatedVisibility(
+    visible = appSelectorVisible.value,
+    enter = fadeIn(),
+    exit = fadeOut()
+  ) {
+    Surface {
+      AppList(
+        onAppPress = { app ->
+          Timber.d("App pressed: ${app.appTitle}")
+          selectedDirection.value?.let {
+            Timber.d("Selected ${app.appTitle} in direction $it")
+            viewModel.onEvent(Event.SetAppGesture(app, it))
+          }
+          appSelectorVisible.value = false
+          viewModel.onEvent(Event.UpdateSearch(""))
+        }
+      ) {
+        appSelectorVisible.value = false
+        viewModel.onEvent(Event.UpdateSearch(""))
+      }
     }
   }
 }
+
+@Composable
+fun GestureColumn(
+  height: Dp,
+  width: Dp,
+  side: Alignment.Horizontal,
+  gestureApps: Map<GestureDirection, App?>,
+  onClick: (GestureDirection) -> Unit,
+) {
+  var (topStart, topEnd, bottomStart, bottomEnd) = listOf(0.dp, 0.dp, 0.dp, 0.dp)
+  val corner = 64.dp
+  var apps = mutableMapOf<GestureDirection, App?>()
+  when (side) {
+    Alignment.Start -> {
+      topEnd = corner
+      bottomEnd = corner
+      apps = mutableMapOf(
+        GestureDirection.UPPER_RIGHT to gestureApps[GestureDirection.UPPER_RIGHT],
+        GestureDirection.LOWER_RIGHT to gestureApps[GestureDirection.LOWER_RIGHT]
+      )
+    }
+    Alignment.End -> {
+      bottomStart = corner
+      topStart = corner
+
+      apps = mutableMapOf(
+        GestureDirection.UPPER_LEFT to gestureApps[GestureDirection.UPPER_LEFT],
+        GestureDirection.LOWER_LEFT to gestureApps[GestureDirection.LOWER_LEFT]
+      )
+    }
+  }
+
+  Column(
+    modifier = Modifier
+      .width(width)
+      .fillMaxHeight()
+  ) {
+    apps.forEach { entry ->
+      val app = entry.value
+      val direction = entry.key
+      val title = app?.appTitle ?: "Click to set shortcut"
+      Surface(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(height)
+          .padding(vertical = 24.dp),
+        shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart),
+        tonalElevation = 4.dp,
+        onClick = {
+          Timber.d("GestureApp pressed, direction $direction")
+          onClick(direction)
+        }
+      ) {
+        Column(
+          verticalArrangement = Arrangement.Center,
+        ) {
+          title.forEach { char ->
+            Text(
+              text = char.toString(),
+              textAlign = TextAlign.Center,
+              style = MaterialTheme.typography.titleMedium,
+              modifier = Modifier.fillMaxWidth()
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+enum class MainScreenState {
+  NORMAL, EDIT;
+
+  fun next(): MainScreenState {
+    return when (this) {
+      NORMAL -> EDIT
+      EDIT -> NORMAL
+    }
+  }
+
+  fun isEdit(): Boolean = this == EDIT
+  fun isNormal(): Boolean = this == NORMAL
+}
+
+inline fun Modifier.thenIf(
+  condition: Boolean,
+  crossinline other: Modifier.() -> Modifier,
+) = if (condition) other() else this
+
 
 @SuppressLint("WrongConstant")
 fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
