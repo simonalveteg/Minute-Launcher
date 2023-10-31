@@ -7,7 +7,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
-import timber.log.Timber
 
 @Dao
 interface LauncherDAO {
@@ -26,7 +25,7 @@ interface LauncherDAO {
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertApp(app: App)
 
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertFavoriteApp(app: FavoriteApp)
 
   @Delete
@@ -52,7 +51,7 @@ interface LauncherDAO {
   @Query("SELECT 'order' FROM FavoriteApp WHERE app_id = :id")
   fun getOrderForFavoriteById(id: Int): Int
 
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertGestureApp(swipeApp: SwipeApp)
 
   @Query("DELETE FROM SwipeApp WHERE swipeDirection = :direction")
