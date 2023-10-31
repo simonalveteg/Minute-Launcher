@@ -1,7 +1,6 @@
 package com.example.android.minutelauncher
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -12,9 +11,7 @@ fun LauncherNavHost(
 ) {
   NavHost(navController = navController, startDestination = "main") {
     composable("main") {
-      MainScreen(onNavigate = {
-        navController.navigate(it)
-      })
+      MainScreen()
     }
   }
 }

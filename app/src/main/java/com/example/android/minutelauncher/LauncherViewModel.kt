@@ -64,6 +64,9 @@ class LauncherViewModel @Inject constructor(
   private val handler = Handler(Looper.getMainLooper())
   private var usageQueryRunnable = Runnable { handlerTest() }
 
+  private val _screenState = MutableStateFlow(ScreenState.FAVORITES)
+  val screenState = _screenState.asStateFlow()
+
   init {
     Timber.d("INIT.")
     handler.removeCallbacksAndMessages(null)
@@ -96,6 +99,7 @@ class LauncherViewModel @Inject constructor(
       is Event.SetAppGesture -> setGestureApp(event.app, event.gesture)
       is Event.ClearAppGesture -> clearGestureApp(event.gesture)
       is Event.UpdateFavoriteOrder -> updateFavoriteOrder(event.favorites)
+      is Event.ChangeScreenState -> _screenState.value = event.state
     }
   }
 
@@ -115,7 +119,7 @@ class LauncherViewModel @Inject constructor(
   private fun handleGesture(gestureDirection: GestureDirection) {
     Timber.d("Gesture handled, $gestureDirection")
     when (gestureDirection) {
-      GestureDirection.UP -> sendUiEvent(UiEvent.OpenAppDrawer)
+      GestureDirection.UP -> _screenState.value = ScreenState.APPS
       GestureDirection.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
       else -> {
         viewModelScope.launch {
@@ -148,13 +152,6 @@ class LauncherViewModel @Inject constructor(
       .apply {
         timeZone = TimeZone.getDefault()
         set(Calendar.HOUR_OF_DAY, 4)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-      }.timeInMillis
-    val yesterday = Calendar.getInstance()
-      .apply {
-        timeZone = TimeZone.getDefault()
-        set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
       }.timeInMillis
