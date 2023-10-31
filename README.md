@@ -1,18 +1,23 @@
 # Minute-Launcher
-Open source minimal digital wellbeing launcher for android. No unneccessary bloat. Very early in development.
+This is an open source minimal digital wellbeing launcher for Android with no unneccessary bloat and no paywalls, written with Jetpack Compose. After having tried almost all minimal launchers on the Play Store I found that none of them were really what I was looking for. This launcher is still in development, but it has all the basic functionalities and I personally use it as my daily driver. 
 
-# Planned functionality
+Current features:
+- Usage statistics right on the homescreen
+- No arbitrary limit on amount of favorite apps
+- Six different gesture zones
+  - Swipe up = open app drawer
+  - Swipe down = expand notifications drawer
+  - Swipe left or right on upper or lower part of screen = settable shortcuts to any apps of your choice (four in total)
+- Big *pulsating* button that prompts you to put down your phone instead of opening whatever app you're trying to open
+  - Pressing it instantly locks your screen without you having to press the power button.
+- Countdown timer before being allowed to open an app
 
-- [x] Usage time displayed underneath every app
-- [x] Total usage time visible on home screen
-- [x] Swipe gestures on homescreen, different on upper and lower half of screen
-- [x] Confirmation dialog when opening an app
-- [ ] Usage alerts when opening an app that's already been used a lot
-- [ ] Show weekly usage on confirmation dialog when opening an app
-- [ ] Finalize UI
+The idea is that by using a stripped down, minimal launcher that constantly reminds you of your phone usage and gives you opportunities to "disconnect", it might become easier to reduce the time spent scrolling mindlessly. A phone is a tool and should be used with intent and purpose. Sometimes that purpose is to get some mindless entertainment, but when it isn't it should be easy to break free. 
 
-If you want to help out with improvements or new ideas you're very welcome to submit a pull request!
+# Short demo
+<video src="https://github.com/simonalveteg/Minute-Launcher/assets/41792248/4253d1f7-4ab8-42ee-82e8-e31f8b9b22ed"></video>
 
-# Proof of concept
-<video src="https://user-images.githubusercontent.com/41792248/197416287-b89e48f8-414d-4d89-a5d9-095cea1702e7.mp4"></video>
+
+
+
 
