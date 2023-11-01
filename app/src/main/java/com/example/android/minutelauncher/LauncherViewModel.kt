@@ -48,6 +48,10 @@ class LauncherViewModel @Inject constructor(
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
+  private val _currentModalId = MutableStateFlow<Int?>(null)
+  private val _currentModal = MutableStateFlow<App?>(null)
+  val currentModal = _currentModal.asStateFlow()
+
   val gestureApps = repo.gestureApps()
   val favoriteApps = repo.favoriteApps()
   val filteredApps = combine(
@@ -58,7 +62,7 @@ class LauncherViewModel @Inject constructor(
       app.appTitle.lowercase().filterNot { it.isWhitespace() }.contains(
         searchTerm.lowercase().filterNot { it.isWhitespace() }
       )
-    }.sortedBy { it.appTitle }
+    }.sortedBy { it.appTitle.lowercase() }
   }
 
   private val handler = Handler(Looper.getMainLooper())
@@ -72,6 +76,14 @@ class LauncherViewModel @Inject constructor(
     handler.removeCallbacksAndMessages(null)
     usageQueryRunnable.run()
     updateDatabase()
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        _currentModalId.collect { appModalId ->
+          Timber.d("CurrentModalId: $appModalId")
+          _currentModal.value = if (appModalId == null) null else repo.getAppById(appModalId)
+        }
+      }
+    }
   }
 
   private fun updateDatabase() {
@@ -100,6 +112,15 @@ class LauncherViewModel @Inject constructor(
       is Event.ClearAppGesture -> clearGestureApp(event.gesture)
       is Event.UpdateFavoriteOrder -> updateFavoriteOrder(event.favorites)
       is Event.ChangeScreenState -> _screenState.value = event.state
+      is Event.UpdateApp -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            repo.updateApp(event.app)
+          }
+        }
+      }
+
+      is Event.ClearModal -> _currentModalId.value = null
     }
   }
 
@@ -196,6 +217,7 @@ class LauncherViewModel @Inject constructor(
 
   private fun openApplication(app: App) {
     Timber.d("Open Application ${app.appTitle}")
+    _currentModalId.value = app.id
     sendUiEvent(UiEvent.OpenApplication(app))
   }
 

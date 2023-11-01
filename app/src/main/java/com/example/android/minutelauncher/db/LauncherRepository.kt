@@ -13,17 +13,23 @@ class LauncherRepository @Inject constructor(private val dao: LauncherDAO) {
 
   fun favoriteApps() = dao.getFavoriteApps()
   fun insertApp(app: App) = dao.insertApp(app)
+  fun updateApp(app: App) {
+    dao.updateAppTimer(app.id, app.timer)
+  }
+
+  fun getAppById(id: Int) = dao.getAppById(id)
   fun toggleFavorite(app: App) = dao.toggleFavoriteApp(app)
   fun insertGestureApp(swipeApp: SwipeApp) {
     dao.removeAppForGesture(swipeApp.swipeDirection.toString())
     dao.insertGestureApp(swipeApp)
   }
+
   fun removeAppForGesture(gesture: GestureDirection) = dao.removeAppForGesture(gesture.toString())
   fun getAppForGesture(gesture: GestureDirection) = dao.getAppForGesture(gesture.toString())
   fun updateFavoritesOrder(new: List<FavoriteAppWithApp>) {
     new.forEachIndexed { index, app ->
       Timber.d("Updating order for: ${app.app.appTitle} from ${dao.getOrderForFavoriteById(app.app.id)} to $index")
-      dao.insertFavoriteApp(FavoriteApp(app.favoriteApp.appId, index))
+      dao.updateFavoriteOrder(app.favoriteApp.appId, index)
     }
   }
 }

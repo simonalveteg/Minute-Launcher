@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.EaseInOutQuad
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -95,14 +96,23 @@ fun MainScreen(
   val selectedDirection = remember { mutableStateOf<GestureDirection?>(null) }
   val coroutineScope = rememberCoroutineScope()
   val screenState by viewModel.screenState.collectAsState()
-  var currentAppModal by remember { mutableStateOf<App?>(null) }
+  val currentAppModal by viewModel.currentModal.collectAsState()
   val dialogSheetScaffoldState =
     rememberModalBottomSheetState(
       initialValue = ModalBottomSheetValue.Hidden,
       confirmValueChange = {
-        if (it == ModalBottomSheetValue.Hidden) currentAppModal = null
+        if (it == ModalBottomSheetValue.Hidden) viewModel.onEvent(Event.ClearModal)
         true
       })
+  val backgroundColor by animateColorAsState(
+    targetValue = when (screenState) {
+      ScreenState.FAVORITES -> MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+      ScreenState.MODIFY -> MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+      ScreenState.APPS -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+    },
+    label = ""
+  )
+
   LaunchedEffect(key1 = true) {
     Timber.d("launched effect")
     viewModel.uiEvent.collect { event ->
@@ -110,7 +120,6 @@ fun MainScreen(
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
         is UiEvent.OpenApplication -> {
-          currentAppModal = event.app
           hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
 
@@ -136,6 +145,7 @@ fun MainScreen(
           Timber.d("Request focus failed: not in composition?")
         }
       }
+
       else -> Unit
     }
   }
@@ -173,27 +183,30 @@ fun MainScreen(
   ModalBottomSheetLayout(
     sheetState = dialogSheetScaffoldState,
     sheetBackgroundColor = MaterialTheme.colorScheme.background,
-    sheetShape = MaterialTheme.shapes.large.copy(bottomStart = CornerSize(0), bottomEnd = CornerSize(0)),
+    sheetShape = MaterialTheme.shapes.large.copy(
+      bottomStart = CornerSize(0),
+      bottomEnd = CornerSize(0)
+    ),
     sheetContent = {
       Spacer(modifier = Modifier.height(4.dp))
       if (currentAppModal != null) {
         val app = currentAppModal!!
         BackHandler(true) {
-          currentAppModal = null
+          viewModel.onEvent(Event.ClearModal)
         }
         AppModal(
           app = app,
           onEvent = viewModel::onEvent,
           onConfirmation = {
             viewModel.onEvent(Event.LaunchActivity(app))
-            currentAppModal = null
+            viewModel.onEvent(Event.ClearModal)
           },
           onDismiss = {
             val isAccessibilityServiceEnabled =
               isAccessibilityServiceEnabled(mContext, MinuteAccessibilityService::class.java)
             if (isAccessibilityServiceEnabled) {
               MinuteAccessibilityService.turnScreenOff()
-              currentAppModal = null
+              viewModel.onEvent(Event.ClearModal)
             } else {
               val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
               ContextCompat.startActivity(mContext, intent, null)
@@ -205,7 +218,7 @@ fun MainScreen(
   ) {
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
       Surface(
-        color = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
+        color = backgroundColor,
       ) {
         Box(
           modifier = Modifier

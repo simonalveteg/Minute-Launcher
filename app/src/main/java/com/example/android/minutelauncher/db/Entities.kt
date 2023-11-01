@@ -15,7 +15,8 @@ import com.example.android.minutelauncher.GestureDirection
 data class App(
   @PrimaryKey(autoGenerate = true) val id: Int, // hashcode of package name
   val packageName: String,
-  val appTitle: String
+  val appTitle: String,
+  val timer: Int = 10
 )
 fun ResolveInfo.toApp(packageManager: PackageManager) =
   App(

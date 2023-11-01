@@ -3,18 +3,20 @@ package com.example.android.minutelauncher
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +42,7 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.android.minutelauncher.db.App
 import kotlinx.coroutines.delay
+import timber.log.Timber
 
 
 @Composable
@@ -61,16 +64,18 @@ fun AppModal(
   var timer by remember { mutableIntStateOf(0) }
   var openText by remember { mutableStateOf("") }
   val animationPeriod = 350
-
   val scale = remember { Animatable(1f) }
 
-  LaunchedEffect(favoriteApps, gestureApps) {
-    timer = if (isFavorite) 3 else if (isGesture) 1 else 8
+  var modify by remember { mutableStateOf(false) }
+
+  LaunchedEffect(app) {
+    Timber.d("New timer: ${app.timer}")
+    timer = app.timer
   }
 
   LaunchedEffect(key1 = timer) {
     openText = "Wait ${timer}s.."
-    if (timer > 0) {
+    if (timer > 0 && !enabled) {
       delay(1000L)
       timer -= 1
     } else {
@@ -115,53 +120,97 @@ fun AppModal(
         verticalAlignment = Alignment.CenterVertically
       ) {
         IconButton(
-          enabled = !isGesture && enabled,
+          enabled = enabled,
+          onClick = {
+            modify = !modify
+          }
+        ) {
+          Icon(imageVector = Icons.Default.Tune, contentDescription = "Modify app settings")
+        }
+        Text(
+          text = app.appTitle, style = MaterialTheme.typography.headlineSmall
+        )
+        IconButton(
+          enabled = !isGesture,
           onClick = {
             onEvent(Event.ToggleFavorite(app))
           }
         ) {
           Icon(imageVector = favoriteIcon, contentDescription = "Favorite")
         }
-        Text(
-          text = app.appTitle, style = MaterialTheme.typography.headlineSmall
-        )
-        IconButton(
-          enabled = enabled,
-          onClick = {
+      }
+      AnimatedVisibility(visible = !modify) {
+        Column {
+          Text(
+            text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}",
+            modifier = Modifier.padding(64.dp)
+          )
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(bottom = 22.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Bottom
+          ) {
+            TextButton(onClick = onConfirmation, enabled = enabled) {
+              Box(contentAlignment = Alignment.Center) {
+                Text(text = "Open Anyway", color = Color.Transparent) // for alignment consistency
+                Text(text = openText)
+              }
+            }
+            Button(
+              modifier = Modifier.scale(scale.value),
+              onClick = onDismiss
+            ) {
+              Text(text = "Put the phone down")
+            }
+          }
+        }
+      }
+      AnimatedVisibility(visible = modify) {
+        Column(
+          modifier = Modifier
+            .padding(vertical = 16.dp, horizontal = 32.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          AppProperty(label = "App timer") {
+            SegmentedControl(
+              items = setOf(0, 2, 5, 10, 15),
+              selectedItem = app.timer,
+              onItemSelection = {
+                viewModel.onEvent(
+                  Event.UpdateApp(
+                    app.copy(timer = it)
+                  )
+                )
+              }
+            )
+          }
+          TextButton(onClick = {
             val intent = Intent().apply {
               action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
               data = Uri.fromParts("package", app.packageName, null)
             }
             startActivity(mContext, intent, null)
+          }) {
+            Text(text = "Open App Info")
           }
-        ) {
-          Icon(imageVector = Icons.Default.Info, contentDescription = "App Info")
-        }
-      }
-      Text(
-        text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}",
-        modifier = Modifier.padding(64.dp)
-      )
-      Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(bottom = 22.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.Bottom
-      ) {
-        TextButton(onClick = onConfirmation, enabled = enabled) {
-          Box(contentAlignment = Alignment.Center) {
-            Text(text = "Open Anyway", color = Color.Transparent) // for alignment consistency
-            Text(text = openText)
-          }
-        }
-        Button(
-          modifier = Modifier.scale(scale.value),
-          onClick = onDismiss
-        ) {
-          Text(text = "Put the phone down")
         }
       }
     }
+  }
+}
+
+@Composable
+fun AppProperty(
+  label: String,
+  content: @Composable ColumnScope.() -> Unit
+) {
+  Column {
+    Text(
+      text = label.uppercase(),
+      style = MaterialTheme.typography.labelMedium
+    )
+    content()
   }
 }

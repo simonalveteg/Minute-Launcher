@@ -14,4 +14,6 @@ sealed class Event {
   data class ClearAppGesture(val gesture: GestureDirection) : Event()
   data class UpdateFavoriteOrder(val favorites: List<FavoriteAppWithApp>) : Event()
   data class ChangeScreenState(val state: ScreenState) : Event()
+  data class UpdateApp(val app: App) : Event()
+  object ClearModal : Event()
 }
