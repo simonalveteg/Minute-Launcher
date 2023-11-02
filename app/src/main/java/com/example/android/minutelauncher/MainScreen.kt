@@ -122,14 +122,12 @@ fun MainScreen(
       Timber.d("event: $event")
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-        is UiEvent.OpenApplication -> {
+        is UiEvent.VibrateLongPress -> {
           hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
-
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.ExpandNotifications -> {
           setExpandNotificationDrawer(mContext, true)
-          hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
       }
     }
@@ -337,9 +335,8 @@ fun MainScreen(
                     ) { _, dragAmount ->
                       val originalY = offsetY.value
                       val threshold = 100f
-                      val newValue = originalY + dragAmount
-                      val weight = (abs(newValue) - threshold) / threshold
-                      val easingFactor = (1 - weight * 0.3f) * 0.5f
+                      val weight = (abs(originalY) - threshold) / threshold
+                      val easingFactor = (1 - weight * 0.7f) * 0.5f
                       val easedDragAmount = dragAmount * easingFactor
                       coroutineScope.launch {
                         offsetY.snapTo(originalY + easedDragAmount)

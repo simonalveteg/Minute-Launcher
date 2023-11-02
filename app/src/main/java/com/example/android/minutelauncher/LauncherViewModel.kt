@@ -154,6 +154,7 @@ class LauncherViewModel @Inject constructor(
         }
       }
     }
+    sendUiEvent(UiEvent.VibrateLongPress)
   }
 
   private fun updateSearch(text: String?) {
@@ -220,7 +221,7 @@ class LauncherViewModel @Inject constructor(
   private fun openApplication(app: App) {
     Timber.d("Open Application ${app.appTitle}")
     _currentModalId.value = app.id
-    sendUiEvent(UiEvent.OpenApplication(app))
+    sendUiEvent(UiEvent.VibrateLongPress)
   }
 
   private fun launchActivity(app: App) {
