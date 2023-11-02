@@ -139,9 +139,10 @@ class LauncherViewModel @Inject constructor(
 
   private fun handleGesture(gesture: Gesture) {
     if (!screenState.value.isFavorites()) return
+    var vibrate = true
     Timber.d("Gesture handled, $gesture")
     when (gesture) {
-      Gesture.NONE -> Unit
+      Gesture.NONE -> vibrate = false
       Gesture.UP -> _screenState.value = ScreenState.APPS
       Gesture.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
       else -> {
@@ -154,7 +155,7 @@ class LauncherViewModel @Inject constructor(
         }
       }
     }
-    sendUiEvent(UiEvent.VibrateLongPress)
+    if (vibrate) sendUiEvent(UiEvent.VibrateLongPress)
   }
 
   private fun updateSearch(text: String?) {

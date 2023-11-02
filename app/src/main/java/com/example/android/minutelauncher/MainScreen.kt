@@ -125,6 +125,7 @@ fun MainScreen(
         is UiEvent.VibrateLongPress -> {
           hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
+
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.ExpandNotifications -> {
           setExpandNotificationDrawer(mContext, true)
@@ -282,6 +283,7 @@ fun MainScreen(
                               else -> Gesture.NONE
                             }
                           }
+
                           GestureZone.LOWER -> {
                             when (currentDirection) {
                               GestureDirection.RIGHT -> Gesture.LOWER_RIGHT
@@ -289,6 +291,7 @@ fun MainScreen(
                               else -> Gesture.NONE
                             }
                           }
+
                           else -> Gesture.NONE
                         }
                         currentZone = GestureZone.NONE
@@ -328,7 +331,6 @@ fun MainScreen(
                     detectVerticalDragGestures(
                       onDragCancel = { onDragEnd() },
                       onDragEnd = {
-                        gesture = if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
                         onDragEnd()
                         viewModel.onEvent(Event.HandleGesture(gesture))
                       },
@@ -336,11 +338,14 @@ fun MainScreen(
                       val originalY = offsetY.value
                       val threshold = 100f
                       val weight = (abs(originalY) - threshold) / threshold
-                      val easingFactor = (1 - weight * 0.7f) * 0.5f
+                      val easingFactor = (1 - weight * 0.75f) * 0.5f
                       val easedDragAmount = dragAmount * easingFactor
                       coroutineScope.launch {
                         offsetY.snapTo(originalY + easedDragAmount)
                       }
+                      gesture = if (easingFactor < 0.2) {
+                        if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
+                      } else Gesture.NONE
                     }
                   },
                 horizontalArrangement = Arrangement.SpaceBetween
