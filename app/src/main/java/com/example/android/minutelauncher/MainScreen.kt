@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOutQuad
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -18,7 +19,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -67,6 +70,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -79,11 +83,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.lang.reflect.Method
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
-
-@OptIn(
-  ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
-)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
   viewModel: LauncherViewModel = hiltViewModel()
@@ -93,7 +96,7 @@ fun MainScreen(
   val keyboardController = LocalSoftwareKeyboardController.current
   val focusRequester = remember { FocusRequester() }
   val appSelectorVisible = remember { mutableStateOf(false) }
-  val selectedDirection = remember { mutableStateOf<GestureDirection?>(null) }
+  val selectedDirection = remember { mutableStateOf<Gesture?>(null) }
   val coroutineScope = rememberCoroutineScope()
   val screenState by viewModel.screenState.collectAsState()
   val currentAppModal by viewModel.currentModal.collectAsState()
@@ -242,42 +245,111 @@ fun MainScreen(
                 animationSpec = tween(200, 0, EaseInOutQuad)
               )
               val middleWidth = maxWidth - sideWidth.times(2)
-              val gestureHeight = maxHeight.div(2)
+              val zoneHeight = maxHeight.div(2)
               val bottomHeight = maxHeight.div(6)
 
               val totalUsage by viewModel.getTotalUsage()
               val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
               val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
-              var gestureDirection: GestureDirection? = null
-              val gestureThreshold = 10f
+              var gesture by remember { mutableStateOf(Gesture.NONE) }
+
+              val offsetY = remember { Animatable(0f) }
+              val onDragEnd = {
+                coroutineScope.launch {
+                  offsetY.animateTo(
+                    0f, spring(0.7f, 500f)
+                  )
+                }
+              }
+              var currentZone by remember { mutableStateOf(GestureZone.NONE) }
+              var currentDirection by remember { mutableStateOf(GestureDirection.NONE) }
 
               Row(
                 modifier = Modifier
                   .fillMaxWidth()
                   .height(LocalConfiguration.current.screenHeightDp.dp)
-                  .thenIf(screenState.isFavorites()) {
-                    pointerInput(Unit) {
-                      detectDragGestures(
-                        onDragEnd = {
-                          gestureDirection?.let {
-                            viewModel.onEvent(Event.HandleGesture(it))
+                  .offset { IntOffset(x = 0, y = offsetY.value.roundToInt()) }
+                  .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                      onDragCancel = {
+                        currentZone = GestureZone.NONE
+                        currentDirection = GestureDirection.NONE
+                      },
+                      onDragEnd = {
+                        gesture = when (currentZone) {
+                          GestureZone.UPPER -> {
+                            when (currentDirection) {
+                              GestureDirection.RIGHT -> Gesture.UPPER_RIGHT
+                              GestureDirection.LEFT -> Gesture.UPPER_LEFT
+                              else -> Gesture.NONE
+                            }
                           }
+                          GestureZone.LOWER -> {
+                            when (currentDirection) {
+                              GestureDirection.RIGHT -> Gesture.LOWER_RIGHT
+                              GestureDirection.LEFT -> Gesture.LOWER_LEFT
+                              else -> Gesture.NONE
+                            }
+                          }
+                          else -> Gesture.NONE
                         }
-                      ) { change, dragAmount ->
-                        change.consume()
-                        Timber.d("position: ${change.position}") // height: 0-2399f
-                        val gestureZone =
-                          if (change.position.y < 2399 / 2) GestureZone.UPPER else GestureZone.LOWER
-                        gestureHandler(dragAmount, gestureThreshold, gestureZone)?.let {
-                          gestureDirection = it
+                        currentZone = GestureZone.NONE
+                        currentDirection = GestureDirection.NONE
+                        viewModel.onEvent(Event.HandleGesture(gesture))
+                      },
+                    ) { change, dragAmount ->
+                      currentDirection = if (dragAmount > 0) {
+                        when (currentDirection) {
+                          GestureDirection.NONE -> GestureDirection.RIGHT
+                          GestureDirection.LEFT -> GestureDirection.INVALID
+                          else -> currentDirection
                         }
+                      } else {
+                        when (currentDirection) {
+                          GestureDirection.NONE -> GestureDirection.LEFT
+                          GestureDirection.RIGHT -> GestureDirection.INVALID
+                          else -> currentDirection
+                        }
+                      }
+                      currentZone = if (change.position.y < zoneHeight.value) {
+                        when (currentZone) {
+                          GestureZone.UPPER -> GestureZone.UPPER
+                          GestureZone.NONE -> GestureZone.UPPER
+                          else -> GestureZone.INVALID
+                        }
+                      } else {
+                        when (currentZone) {
+                          GestureZone.LOWER -> GestureZone.LOWER
+                          GestureZone.NONE -> GestureZone.LOWER
+                          else -> GestureZone.INVALID
+                        }
+                      }
+                    }
+                  }
+                  .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                      onDragCancel = { onDragEnd() },
+                      onDragEnd = {
+                        gesture = if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
+                        onDragEnd()
+                        viewModel.onEvent(Event.HandleGesture(gesture))
+                      },
+                    ) { _, dragAmount ->
+                      val originalY = offsetY.value
+                      val threshold = 100f
+                      val newValue = originalY + dragAmount
+                      val weight = (abs(newValue) - threshold) / threshold
+                      val easingFactor = (1 - weight * 0.3f) * 0.5f
+                      val easedDragAmount = dragAmount * easingFactor
+                      coroutineScope.launch {
+                        offsetY.snapTo(originalY + easedDragAmount)
                       }
                     }
                   },
                 horizontalArrangement = Arrangement.SpaceBetween
               ) {
                 GestureColumn(
-                  height = gestureHeight,
+                  height = zoneHeight,
                   width = sideWidth,
                   side = Alignment.Start,
                   gestureApps = gestureApps,
@@ -350,7 +422,7 @@ fun MainScreen(
                   }
                 }
                 GestureColumn(
-                  height = gestureHeight,
+                  height = zoneHeight,
                   width = sideWidth,
                   side = Alignment.End,
                   gestureApps = gestureApps
@@ -461,19 +533,19 @@ fun GestureColumn(
   height: Dp,
   width: Dp,
   side: Alignment.Horizontal,
-  gestureApps: Map<GestureDirection, App?>,
-  onClick: (GestureDirection) -> Unit,
+  gestureApps: Map<Gesture, App?>,
+  onClick: (Gesture) -> Unit,
 ) {
   var (topStart, topEnd, bottomStart, bottomEnd) = listOf(0.dp, 0.dp, 0.dp, 0.dp)
   val corner = 64.dp
-  var apps = mutableMapOf<GestureDirection, App?>()
+  var apps = mutableMapOf<Gesture, App?>()
   when (side) {
     Alignment.Start -> {
       topEnd = corner
       bottomEnd = corner
       apps = mutableMapOf(
-        GestureDirection.UPPER_RIGHT to gestureApps[GestureDirection.UPPER_RIGHT],
-        GestureDirection.LOWER_RIGHT to gestureApps[GestureDirection.LOWER_RIGHT]
+        Gesture.UPPER_RIGHT to gestureApps[Gesture.UPPER_RIGHT],
+        Gesture.LOWER_RIGHT to gestureApps[Gesture.LOWER_RIGHT]
       )
     }
 
@@ -482,8 +554,8 @@ fun GestureColumn(
       topStart = corner
 
       apps = mutableMapOf(
-        GestureDirection.UPPER_LEFT to gestureApps[GestureDirection.UPPER_LEFT],
-        GestureDirection.LOWER_LEFT to gestureApps[GestureDirection.LOWER_LEFT]
+        Gesture.UPPER_LEFT to gestureApps[Gesture.UPPER_LEFT],
+        Gesture.LOWER_LEFT to gestureApps[Gesture.LOWER_LEFT]
       )
     }
   }

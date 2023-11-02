@@ -1,6 +1,6 @@
 package com.example.android.minutelauncher.db
 
-import com.example.android.minutelauncher.GestureDirection
+import com.example.android.minutelauncher.Gesture
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
@@ -24,8 +24,8 @@ class LauncherRepository @Inject constructor(private val dao: LauncherDAO) {
     dao.insertGestureApp(swipeApp)
   }
 
-  fun removeAppForGesture(gesture: GestureDirection) = dao.removeAppForGesture(gesture.toString())
-  fun getAppForGesture(gesture: GestureDirection) = dao.getAppForGesture(gesture.toString())
+  fun removeAppForGesture(gesture: Gesture) = dao.removeAppForGesture(gesture.toString())
+  fun getAppForGesture(gesture: Gesture) = dao.getAppForGesture(gesture.toString())
   fun updateFavoritesOrder(new: List<FavoriteAppWithApp>) {
     new.forEachIndexed { index, app ->
       Timber.d("Updating order for: ${app.app.appTitle} from ${dao.getOrderForFavoriteById(app.app.id)} to $index")

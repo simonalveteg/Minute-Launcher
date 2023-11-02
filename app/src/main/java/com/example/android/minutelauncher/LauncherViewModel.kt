@@ -137,15 +137,17 @@ class LauncherViewModel @Inject constructor(
 
   fun getTotalUsage() = mutableLongStateOf(usageStats.value.values.sum())
 
-  private fun handleGesture(gestureDirection: GestureDirection) {
-    Timber.d("Gesture handled, $gestureDirection")
-    when (gestureDirection) {
-      GestureDirection.UP -> _screenState.value = ScreenState.APPS
-      GestureDirection.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
+  private fun handleGesture(gesture: Gesture) {
+    if (!screenState.value.isFavorites()) return
+    Timber.d("Gesture handled, $gesture")
+    when (gesture) {
+      Gesture.NONE -> Unit
+      Gesture.UP -> _screenState.value = ScreenState.APPS
+      Gesture.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
       else -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            repo.getAppForGesture(gestureDirection)?.let {
+            repo.getAppForGesture(gesture)?.let {
               openApplication(it.app)
             }
           }
@@ -190,7 +192,7 @@ class LauncherViewModel @Inject constructor(
       .mapValues { it.value.totalTimeInForeground }
   }
 
-  private fun setGestureApp(app: App, gesture: GestureDirection) {
+  private fun setGestureApp(app: App, gesture: Gesture) {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         repo.insertGestureApp(SwipeApp(gesture, app))
@@ -198,7 +200,7 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
-  private fun clearGestureApp(gesture: GestureDirection) {
+  private fun clearGestureApp(gesture: Gesture) {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         repo.removeAppForGesture(gesture)
