@@ -63,6 +63,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -244,8 +245,9 @@ fun MainScreen(
                 animationSpec = tween(200, 0, EaseInOutQuad)
               )
               val middleWidth = maxWidth - sideWidth.times(2)
-              val zoneHeight = maxHeight.div(2)
+              val halfHeight = maxHeight.div(2)
               val bottomHeight = maxHeight.div(6)
+              var zoneHeight by remember { mutableStateOf(0f) }
 
               val totalUsage by viewModel.getTotalUsage()
               val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
@@ -267,6 +269,11 @@ fun MainScreen(
                 modifier = Modifier
                   .fillMaxWidth()
                   .height(LocalConfiguration.current.screenHeightDp.dp)
+                  .onGloballyPositioned {
+                    zoneHeight = it.size.height
+                      .toFloat()
+                      .div(2)
+                  }
                   .offset { IntOffset(x = 0, y = offsetY.value.roundToInt()) }
                   .pointerInput(Unit) {
                     detectHorizontalDragGestures(
@@ -283,7 +290,6 @@ fun MainScreen(
                               else -> Gesture.NONE
                             }
                           }
-
                           GestureZone.LOWER -> {
                             when (currentDirection) {
                               GestureDirection.RIGHT -> Gesture.LOWER_RIGHT
@@ -291,7 +297,6 @@ fun MainScreen(
                               else -> Gesture.NONE
                             }
                           }
-
                           else -> Gesture.NONE
                         }
                         currentZone = GestureZone.NONE
@@ -312,7 +317,7 @@ fun MainScreen(
                           else -> currentDirection
                         }
                       }
-                      currentZone = if (change.position.y < zoneHeight.value) {
+                      currentZone = if (change.position.y < zoneHeight) {
                         when (currentZone) {
                           GestureZone.UPPER -> GestureZone.UPPER
                           GestureZone.NONE -> GestureZone.UPPER
@@ -325,6 +330,7 @@ fun MainScreen(
                           else -> GestureZone.INVALID
                         }
                       }
+                      Timber.d("Direction: $gesture")
                     }
                   }
                   .pointerInput(Unit) {
@@ -351,7 +357,7 @@ fun MainScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
               ) {
                 GestureColumn(
-                  height = zoneHeight,
+                  height = halfHeight,
                   width = sideWidth,
                   side = Alignment.Start,
                   gestureApps = gestureApps,
@@ -386,7 +392,6 @@ fun MainScreen(
                         data.value = favorites
                       }
                     }
-                    Timber.d("Favorites size: ${favorites.size} Data size: ${data.value.size}")
                     val reorderableState = rememberReorderableLazyListState(
                       onMove = { from, to ->
                         data.value = data.value.toMutableList().apply {
@@ -424,7 +429,7 @@ fun MainScreen(
                   }
                 }
                 GestureColumn(
-                  height = zoneHeight,
+                  height = halfHeight,
                   width = sideWidth,
                   side = Alignment.End,
                   gestureApps = gestureApps
