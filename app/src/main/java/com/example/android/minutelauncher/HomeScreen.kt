@@ -14,6 +14,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -25,10 +26,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
@@ -58,6 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -71,10 +75,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ChainStyle
+import androidx.constraintlayout.compose.ConstrainScope
+import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintLayoutBaseScope
+import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
+import androidx.constraintlayout.compose.HorizontalAnchorable
+import androidx.constraintlayout.compose.VerticalAnchorable
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.component1
+import androidx.core.graphics.component2
+import androidx.core.graphics.component3
+import androidx.core.graphics.component4
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.android.minutelauncher.db.App
 import com.example.android.minutelauncher.reorderableList.ReorderableItem
 import com.example.android.minutelauncher.reorderableList.detectReorder
 import com.example.android.minutelauncher.reorderableList.rememberReorderableLazyListState
@@ -94,6 +110,7 @@ fun HomeScreen(
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
   val keyboardController = LocalSoftwareKeyboardController.current
+  val density = LocalDensity.current
   val focusRequester = remember { FocusRequester() }
   val appListState = rememberLazyListState()
   val appSelectorVisible = remember { mutableStateOf(false) }
@@ -267,13 +284,17 @@ fun HomeScreen(
                 .constrainAs(favList) {
                   top.linkTo(parent.top)
                   bottom.linkTo(parent.bottom)
-                  start.linkTo(parent.start)
-                  end.linkTo(parent.end)
+                  start.linkTo(topLeft.end)
+                  end.linkTo(topRight.start)
+                  width = Dimension.fillToConstraints
                 }
                 .fillMaxSize()
                 .graphicsLayer {
                   alpha = favoritesAlpha
                 }
+                .combinedClickable(onLongClick = {
+                  viewModel.onEvent(Event.ChangeScreenState(screenState.toggleModify()))
+                }) {}
                 .offset { IntOffset(x = 0, y = offsetY.value.roundToInt()) }
                 .pointerInput(Unit) {
                   detectHorizontalDragGestures(
@@ -399,7 +420,6 @@ fun HomeScreen(
                   }
                 }
               }
-              val density = LocalDensity.current
               val bottomHeightDp = with(density) { bottomHeight.toDp() }
               Spacer(modifier = Modifier.height(bottomHeightDp))
             }
@@ -480,8 +500,127 @@ fun HomeScreen(
               textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
             )
           }
+
+          gestureApps.forEach { (gesture, app) ->
+            val onClick: (Gesture) -> Unit = {
+              selectedDirection.value = it
+              Timber.d("Selected direction: ${selectedDirection.value}")
+              appSelectorVisible.value = true
+            }
+            val width = sideWidth.dp
+            val height = with(density) { screenHeight.div(2).toDp() - 80.dp }
+            val corner = 64.dp
+            val leftShape = RoundedCornerShape(0.dp, corner, corner, 0.dp)
+            val rightShape = RoundedCornerShape(corner, 0.dp, 0.dp, corner)
+            when (gesture) {
+              Gesture.UPPER_LEFT -> {
+                GestureCard(
+                  app = app,
+                  direction = gesture,
+                  height = height,
+                  width = width,
+                  shape = leftShape,
+                  constraintReference = topLeft,
+                  constraints = {
+                    start.linkTo(parent.start)
+                    top.linkTo(parent.top)
+                  },
+                  onClick = onClick
+                )
+              }
+              Gesture.UPPER_RIGHT -> {
+                GestureCard(
+                  app = app,
+                  direction = gesture,
+                  height = height,
+                  width = width,
+                  shape = rightShape,
+                  constraintReference = topRight,
+                  constraints = {
+                    end.linkTo(parent.end)
+                    top.linkTo(parent.top)
+                  },
+                  onClick = onClick
+                )
+              }
+              Gesture.LOWER_LEFT -> {
+                GestureCard(
+                  app = app,
+                  direction = gesture,
+                  height = height,
+                  width = width,
+                  shape = leftShape,
+                  constraintReference = bottomLeft,
+                  constraints = {
+                    start.linkTo(parent.start)
+                    bottom.linkTo(parent.bottom)
+                  },
+                  onClick = onClick
+                )
+              }
+              Gesture.LOWER_RIGHT -> {
+                GestureCard(
+                  app = app,
+                  direction = gesture,
+                  height = height,
+                  width = width,
+                  shape = rightShape,
+                  constraintReference = bottomRight,
+                  constraints = {
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                  },
+                  onClick = onClick
+                )
+              }
+              else -> Unit
+            }
+          }
+          createVerticalChain(topLeft, bottomLeft, chainStyle = ChainStyle.Spread)
+          createVerticalChain(topRight, bottomRight, chainStyle = ChainStyle.Spread)
         }
       }
     }
   }
+}
+
+@Composable
+fun ConstraintLayoutScope.GestureCard(
+  app: App,
+  direction: Gesture,
+  height: Dp,
+  width: Dp,
+  shape: Shape,
+  constraintReference: ConstrainedLayoutReference,
+  constraints: ConstrainScope.() -> Unit,
+  onClick: (Gesture) -> Unit
+) {
+  val title = app.appTitle
+  Surface(
+    modifier = Modifier
+      .width(width)
+      .height(height)
+      .padding(vertical = 24.dp)
+      .constrainAs(constraintReference) { constraints() },
+    shape = shape,
+    tonalElevation = 1.dp,
+    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+    onClick = {
+      onClick(direction)
+    }
+  ) {
+    Column(
+      verticalArrangement = Arrangement.Center,
+    ) {
+      title.forEach { char ->
+        Text(
+          text = char.toString(),
+          textAlign = TextAlign.Center,
+          style = MaterialTheme.typography.titleMedium,
+          modifier = Modifier.fillMaxWidth()
+        )
+      }
+    }
+  }
+
 }
