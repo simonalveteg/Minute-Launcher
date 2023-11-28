@@ -174,7 +174,6 @@ fun MainScreen(
     }
   }
 
-
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
 
@@ -270,9 +269,7 @@ fun MainScreen(
                   .fillMaxWidth()
                   .height(LocalConfiguration.current.screenHeightDp.dp)
                   .onGloballyPositioned {
-                    zoneHeight = it.size.height
-                      .toFloat()
-                      .div(2)
+                    zoneHeight = it.size.height.toFloat().div(2)
                   }
                   .offset { IntOffset(x = 0, y = offsetY.value.roundToInt()) }
                   .pointerInput(Unit) {

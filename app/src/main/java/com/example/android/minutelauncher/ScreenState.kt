@@ -5,6 +5,7 @@ enum class ScreenState {
 
   fun isFavorites() = this == FAVORITES
   fun isModify() = this == MODIFY
+  fun isApps() = this == APPS
 
   fun toggleModify(): ScreenState {
     return when (this) {
@@ -14,4 +15,11 @@ enum class ScreenState {
     }
   }
 
+  fun toggleApps(): ScreenState {
+    return when (this) {
+      FAVORITES -> APPS
+      APPS -> FAVORITES
+      else -> this
+    }
+  }
 }

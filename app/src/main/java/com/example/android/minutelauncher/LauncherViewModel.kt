@@ -119,7 +119,6 @@ class LauncherViewModel @Inject constructor(
           }
         }
       }
-
       is Event.ClearModal -> _currentModalId.value = null
     }
   }
