@@ -52,7 +52,7 @@ fun AppCard(
   val usageAlpha by animateFloatAsState(
     targetValue = if (editState) 0f else 1f,
     label = "",
-    animationSpec = if (editState) tween(150, 300) else tween(400, 300)
+    animationSpec = if (editState) tween(150, 300) else tween(400, 600)
   )
   val textHeight = with(LocalDensity.current) {
     LocalTextStyle.current.lineHeight.toDp()

@@ -326,10 +326,16 @@ fun HomeScreen(
             animationSpec = if (screenState.isSelector()) fastFloatSpec else slowFloatSpec
           )
           val favoritesAlpha by animateFloatAsState(
-            targetValue =
-            if (screenState.hasSearch()) 0f else 1f,
+            targetValue = if (screenState.hasSearch()) 0f else 1f,
             label = "",
             animationSpec = if (screenState.hasSearch()) fastFloatSpec else slowFloatSpec
+          )
+          val usageAlpha by animateFloatAsState(
+            targetValue = if (screenState.isFavorites()) 1f else 0f,
+            label = "",
+            animationSpec = if (!screenState.isFavorites()) fastFloatSpec else tween(
+              durationMillis = 500, delayMillis = 600
+            )
           )
 
           CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
@@ -434,7 +440,10 @@ fun HomeScreen(
               verticalArrangement = Arrangement.Bottom,
               horizontalAlignment = Alignment.CenterHorizontally
             ) {
-              Text(totalUsage.toTimeUsed())
+              Text(
+                text = totalUsage.toTimeUsed(),
+                color = LocalContentColor.current.copy(alpha = usageAlpha)
+              )
               val data = remember { mutableStateOf(favorites) }
               LaunchedEffect(favorites) {
                 if (favorites.size != data.value.size) {
