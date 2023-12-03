@@ -141,10 +141,10 @@ class LauncherViewModel @Inject constructor(
     var vibrate = true
     Timber.d("Gesture handled, $gesture")
     when (gesture) {
-      Gesture.NONE -> vibrate = false
       Gesture.UP -> _screenState.value = ScreenState.APPS
       Gesture.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
       else -> {
+        vibrate = false
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
             repo.getAppForGesture(gesture)?.let {

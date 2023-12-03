@@ -9,7 +9,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.EaseInOutQuad
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -22,10 +24,12 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -121,6 +125,24 @@ fun HomeScreen(
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
   var screenHeight by remember { mutableFloatStateOf(0f) }
   var searchHeight by remember { mutableFloatStateOf(0f) }
+  val shortcutSelectionAction: (App) -> Unit = { app ->
+    coroutineScope.launch {
+      Timber.d("App pressed: ${app.appTitle}")
+      selectedGesture.value?.let {
+        Timber.d("Selected ${app.appTitle} in direction $it")
+        viewModel.onEvent(Event.SetAppGesture(app, it))
+      }
+      viewModel.onEvent(Event.ChangeScreenState(ScreenState.MODIFY))
+      delay(500L)
+      selectedGesture.value = null
+      viewModel.onEvent(Event.UpdateSearch(""))
+    }
+    keyboardController?.hide()
+  }
+  val appListSelectionAction: (App) -> Unit = {
+    viewModel.onEvent(Event.OpenApplication(it))
+    keyboardController?.hide()
+  }
 
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {
@@ -176,12 +198,6 @@ fun HomeScreen(
   LaunchedEffect(key1 = currentAppModal) {
     if (currentAppModal != null) {
       launch { dialogSheetScaffoldState.show() }
-      keyboardController?.hide()
-      try {
-        focusRequester.freeFocus()
-      } catch (e: Exception) {
-        Timber.d("Free focus on composable failed: not in composition?")
-      }
     } else {
       launch { dialogSheetScaffoldState.hide() }
     }
@@ -272,13 +288,17 @@ fun HomeScreen(
           var currentDirection by remember { mutableStateOf(GestureDirection.NONE) }
 
           val superFastDpSpec: AnimationSpec<Dp> = tween(durationMillis = 200)
+          val fastSpringDpSpec: AnimationSpec<Dp> = tween(
+            durationMillis = 300,
+            easing = CubicBezierEasing(0.25f, 1f, 0.5f, 1f)
+          )
           val slowDpSpec: AnimationSpec<Dp> = tween(durationMillis = 1000)
           val fastFloatSpec: AnimationSpec<Float> = tween(durationMillis = 500)
           val slowFloatSpec: AnimationSpec<Float> = tween(durationMillis = 1000)
           val appListOffset by animateDpAsState(
             targetValue = if (screenState.isApps()) 0.dp else -screenHeight.dp,
             label = "",
-            animationSpec = if (screenState.isApps()) superFastDpSpec else slowDpSpec
+            animationSpec = if (screenState.isApps()) fastSpringDpSpec else slowDpSpec
           )
           val appSelectorOffset by animateDpAsState(
             targetValue = if (screenState.isSelector()) 0.dp else -screenHeight.dp,
@@ -447,9 +467,7 @@ fun HomeScreen(
                       editState = screenState.isModify(),
                       isDragged = isDragged
                     ) {
-                      if (screenState.isFavorites()) {
-                        viewModel.onEvent(Event.OpenApplication(item.app))
-                      }
+                      if (screenState.isFavorites()) appListSelectionAction(item.app)
                     }
                   }
                 }
@@ -472,19 +490,7 @@ fun HomeScreen(
               end.linkTo(topRight.start)
               height = Dimension.fillToConstraints
             },
-            onAppClick = { app ->
-              coroutineScope.launch {
-                Timber.d("App pressed: ${app.appTitle}")
-                selectedGesture.value?.let {
-                  Timber.d("Selected ${app.appTitle} in direction $it")
-                  viewModel.onEvent(Event.SetAppGesture(app, it))
-                }
-                viewModel.onEvent(Event.ChangeScreenState(ScreenState.MODIFY))
-                delay(500L)
-                selectedGesture.value = null
-                viewModel.onEvent(Event.UpdateSearch(""))
-              }
-            },
+            onAppClick = { shortcutSelectionAction(it) },
             header = {
               Surface(
                 shape = MaterialTheme.shapes.large,
@@ -515,9 +521,7 @@ fun HomeScreen(
               end.linkTo(topRight.start)
               height = Dimension.fillToConstraints
             },
-            onAppClick = {
-              viewModel.onEvent(Event.OpenApplication(it))
-            }
+            onAppClick = { appListSelectionAction(it) }
           )
 
           Surface(
@@ -549,8 +553,9 @@ fun HomeScreen(
               keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
               keyboardActions = KeyboardActions(onSearch = {
                 apps.firstOrNull()?.let {
-                  viewModel.onEvent(Event.OpenApplication(it))
+                  if (screenState.isSelector()) shortcutSelectionAction(it) else appListSelectionAction(it)
                 }
+                this.defaultKeyboardAction(ImeAction.Done)
               }),
               colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Transparent,
