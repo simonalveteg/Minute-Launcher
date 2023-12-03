@@ -1,5 +1,7 @@
 package com.example.android.minutelauncher
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.widget.Toast
@@ -26,8 +28,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CornerSize
@@ -39,6 +43,8 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.ripple.LocalRippleTheme
+import androidx.compose.material.ripple.RippleAlpha
+import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -79,16 +85,9 @@ import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.ConstraintLayoutBaseScope
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
-import androidx.constraintlayout.compose.HorizontalAnchorable
-import androidx.constraintlayout.compose.VerticalAnchorable
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.component1
-import androidx.core.graphics.component2
-import androidx.core.graphics.component3
-import androidx.core.graphics.component4
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.android.minutelauncher.db.App
 import com.example.android.minutelauncher.reorderableList.ReorderableItem
@@ -98,6 +97,7 @@ import com.example.android.minutelauncher.reorderableList.reorderable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.lang.reflect.Method
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -113,8 +113,8 @@ fun HomeScreen(
   val density = LocalDensity.current
   val focusRequester = remember { FocusRequester() }
   val appListState = rememberLazyListState()
-  val appSelectorVisible = remember { mutableStateOf(false) }
-  val selectedDirection = remember { mutableStateOf<Gesture?>(null) }
+  val selectorListState = rememberLazyListState()
+  val selectedGesture = remember { mutableStateOf<Gesture?>(null) }
   val coroutineScope = rememberCoroutineScope()
   val currentAppModal by viewModel.currentModal.collectAsState()
   val searchText by viewModel.searchTerm.collectAsState()
@@ -127,6 +127,7 @@ fun HomeScreen(
       ScreenState.FAVORITES -> MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
       ScreenState.MODIFY -> MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
       ScreenState.APPS -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+      ScreenState.SELECTOR -> MaterialTheme.colorScheme.surface.copy(alpha = 0.97f)
     },
     label = ""
   )
@@ -144,20 +145,32 @@ fun HomeScreen(
       Timber.d("event: $event")
       when (event) {
         is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
-        is UiEvent.VibrateLongPress -> {
-          hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-        }
-
+        is UiEvent.VibrateLongPress -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
-        is UiEvent.ExpandNotifications -> {
-          setExpandNotificationDrawer(mContext, true)
-        }
+        is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)
       }
     }
   }
 
   BackHandler(true) {
-    viewModel.onEvent(Event.ChangeScreenState(ScreenState.FAVORITES))
+    var nextState = ScreenState.FAVORITES
+    when (screenState) {
+      ScreenState.SELECTOR -> {
+        nextState = ScreenState.MODIFY
+        selectedGesture.value = null
+      }
+
+      else -> Unit
+    }
+    viewModel.onEvent(Event.ChangeScreenState(nextState))
+  }
+
+  LaunchedEffect(key1 = selectedGesture.value) {
+    if (selectedGesture.value == null) return@LaunchedEffect
+    when (screenState) {
+      ScreenState.MODIFY -> viewModel.onEvent(Event.ChangeScreenState(ScreenState.SELECTOR))
+      else -> Unit
+    }
   }
 
   LaunchedEffect(key1 = currentAppModal) {
@@ -175,10 +188,17 @@ fun HomeScreen(
   }
 
   LaunchedEffect(key1 = screenState) {
+    Timber.d("ScreenState is now $screenState")
     when (screenState) {
       ScreenState.FAVORITES -> {
         delay(500)
         appListState.scrollToItem(0)
+        selectorListState.scrollToItem(0)
+      }
+
+      ScreenState.SELECTOR -> {
+        delay(500)
+        selectorListState.scrollToItem(0)
       }
 
       else -> viewModel.onEvent(Event.UpdateSearch(""))
@@ -228,7 +248,7 @@ fun HomeScreen(
               screenHeight = it.size.height.toFloat()
             }
         ) {
-          val (favList, appList, searchBar, topLeft, topRight, bottomLeft, bottomRight) = createRefs()
+          val (favList, appList, appSelector, searchBar, topLeft, topRight, bottomLeft, bottomRight) = createRefs()
           val sideWidth by animateFloatAsState(
             targetValue =
             when (screenState) {
@@ -251,8 +271,7 @@ fun HomeScreen(
           var currentZone by remember { mutableStateOf(GestureZone.NONE) }
           var currentDirection by remember { mutableStateOf(GestureDirection.NONE) }
 
-          val superFastDpSpec: AnimationSpec<Dp> = tween(durationMillis = 300)
-          val fastDpSpec: AnimationSpec<Dp> = tween(durationMillis = 500)
+          val superFastDpSpec: AnimationSpec<Dp> = tween(durationMillis = 200)
           val slowDpSpec: AnimationSpec<Dp> = tween(durationMillis = 1000)
           val fastFloatSpec: AnimationSpec<Float> = tween(durationMillis = 500)
           val slowFloatSpec: AnimationSpec<Float> = tween(durationMillis = 1000)
@@ -261,21 +280,36 @@ fun HomeScreen(
             label = "",
             animationSpec = if (screenState.isApps()) superFastDpSpec else slowDpSpec
           )
-          val searchBarOffset by animateDpAsState(
-            targetValue = if (screenState.isApps()) 0.dp else searchHeight.dp,
+          val appSelectorOffset by animateDpAsState(
+            targetValue = if (screenState.isSelector()) 0.dp else -screenHeight.dp,
             label = "",
-            animationSpec = if (screenState.isApps()) fastDpSpec else slowDpSpec
+            animationSpec = if (screenState.isSelector()) superFastDpSpec else slowDpSpec
+          )
+          val searchBarOffset by animateDpAsState(
+            targetValue = if (screenState.hasSearch()) 0.dp else searchHeight.dp,
+            label = "",
+            animationSpec = if (screenState.hasSearch()) superFastDpSpec else slowDpSpec
           )
           val appsStateAlpha by animateFloatAsState(
             targetValue = if (screenState.isApps()) 1f else 0f,
             label = "",
             animationSpec = if (screenState.isApps()) fastFloatSpec else slowFloatSpec
           )
+          val searchBarAlpha by animateFloatAsState(
+            targetValue = if (screenState.hasSearch()) 1f else 0f,
+            label = "",
+            animationSpec = if (screenState.hasSearch()) fastFloatSpec else slowFloatSpec
+          )
+          val appSelectorAlpha by animateFloatAsState(
+            targetValue = if (screenState.isSelector()) 1f else 0f,
+            label = "",
+            animationSpec = if (screenState.isSelector()) fastFloatSpec else slowFloatSpec
+          )
           val favoritesAlpha by animateFloatAsState(
             targetValue =
-            if (screenState.isApps()) 0f else 1f,
+            if (screenState.hasSearch()) 0f else 1f,
             label = "",
-            animationSpec = if (screenState.isApps()) fastFloatSpec else slowFloatSpec
+            animationSpec = if (screenState.hasSearch()) fastFloatSpec else slowFloatSpec
           )
 
           CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
@@ -425,38 +459,70 @@ fun HomeScreen(
             }
           }
 
-          LazyColumn(
-            state = appListState,
-            verticalArrangement = Arrangement.Bottom,
-            reverseLayout = true,
-            modifier = Modifier
-              .constrainAs(appList) {
-                top.linkTo(parent.top)
-                bottom.linkTo(searchBar.top)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-                height = Dimension.fillToConstraints
+          AppList(
+            state = selectorListState,
+            apps = apps,
+            offset = appSelectorOffset,
+            alpha = appSelectorAlpha,
+            constraintReference = appSelector,
+            constraints = {
+              top.linkTo(parent.top)
+              bottom.linkTo(searchBar.top)
+              start.linkTo(topLeft.end)
+              end.linkTo(topRight.start)
+              height = Dimension.fillToConstraints
+            },
+            onAppClick = { app ->
+              coroutineScope.launch {
+                Timber.d("App pressed: ${app.appTitle}")
+                selectedGesture.value?.let {
+                  Timber.d("Selected ${app.appTitle} in direction $it")
+                  viewModel.onEvent(Event.SetAppGesture(app, it))
+                }
+                viewModel.onEvent(Event.ChangeScreenState(ScreenState.MODIFY))
+                delay(500L)
+                selectedGesture.value = null
+                viewModel.onEvent(Event.UpdateSearch(""))
               }
-              .graphicsLayer {
-                alpha = appsStateAlpha
-              }
-              .offset(y = appListOffset)
-          ) {
-            items(items = apps, key = { it.id }) { app ->
-              val appTitle = app.appTitle
-              val appUsage by viewModel.getUsageForApp(app)
-              Box(
-                modifier = Modifier.animateItemPlacement(
-                  animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessLow)
-                )
+            },
+            header = {
+              Surface(
+                shape = MaterialTheme.shapes.large,
+                tonalElevation = 1.dp,
               ) {
-                AppCard(appTitle, appUsage) { viewModel.onEvent(Event.OpenApplication(app)) }
+                Text(
+                  text = "SELECT SHORTCUT",
+                  textAlign = TextAlign.Center,
+                  style = MaterialTheme.typography.titleMedium,
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+                )
               }
             }
-          }
+          )
+
+          AppList(
+            state = appListState,
+            apps = apps,
+            offset = appListOffset,
+            alpha = appsStateAlpha,
+            constraintReference = appList,
+            constraints = {
+              top.linkTo(parent.top)
+              bottom.linkTo(searchBar.top)
+              start.linkTo(topLeft.end)
+              end.linkTo(topRight.start)
+              height = Dimension.fillToConstraints
+            },
+            onAppClick = {
+              viewModel.onEvent(Event.OpenApplication(it))
+            }
+          )
 
           Surface(
             shape = MaterialTheme.shapes.large,
+            tonalElevation = 1.dp,
             modifier = Modifier
               .constrainAs(searchBar) {
                 bottom.linkTo(parent.bottom)
@@ -464,7 +530,7 @@ fun HomeScreen(
                 end.linkTo(parent.end)
               }
               .graphicsLayer {
-                alpha = appsStateAlpha
+                alpha = searchBarAlpha
               }
               .padding(horizontal = 32.dp)
               .padding(bottom = 32.dp)
@@ -503,9 +569,8 @@ fun HomeScreen(
 
           gestureApps.forEach { (gesture, app) ->
             val onClick: (Gesture) -> Unit = {
-              selectedDirection.value = it
-              Timber.d("Selected direction: ${selectedDirection.value}")
-              appSelectorVisible.value = true
+              selectedGesture.value = it
+              Timber.d("Selected direction: ${selectedGesture.value}")
             }
             val width = sideWidth.dp
             val height = with(density) { screenHeight.div(2).toDp() - 80.dp }
@@ -513,7 +578,7 @@ fun HomeScreen(
             val leftShape = RoundedCornerShape(0.dp, corner, corner, 0.dp)
             val rightShape = RoundedCornerShape(corner, 0.dp, 0.dp, corner)
             when (gesture) {
-              Gesture.UPPER_LEFT -> {
+              Gesture.UPPER_RIGHT -> {
                 GestureCard(
                   app = app,
                   direction = gesture,
@@ -528,7 +593,8 @@ fun HomeScreen(
                   onClick = onClick
                 )
               }
-              Gesture.UPPER_RIGHT -> {
+
+              Gesture.UPPER_LEFT -> {
                 GestureCard(
                   app = app,
                   direction = gesture,
@@ -543,7 +609,8 @@ fun HomeScreen(
                   onClick = onClick
                 )
               }
-              Gesture.LOWER_LEFT -> {
+
+              Gesture.LOWER_RIGHT -> {
                 GestureCard(
                   app = app,
                   direction = gesture,
@@ -558,7 +625,8 @@ fun HomeScreen(
                   onClick = onClick
                 )
               }
-              Gesture.LOWER_RIGHT -> {
+
+              Gesture.LOWER_LEFT -> {
                 GestureCard(
                   app = app,
                   direction = gesture,
@@ -573,6 +641,7 @@ fun HomeScreen(
                   onClick = onClick
                 )
               }
+
               else -> Unit
             }
           }
@@ -622,5 +691,82 @@ fun ConstraintLayoutScope.GestureCard(
       }
     }
   }
+}
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ConstraintLayoutScope.AppList(
+  state: LazyListState,
+  apps: List<App>,
+  offset: Dp,
+  alpha: Float,
+  constraintReference: ConstrainedLayoutReference,
+  constraints: ConstrainScope.() -> Unit,
+  onAppClick: (App) -> Unit,
+  header: @Composable () -> Unit = {}
+) {
+  Column(
+    modifier = Modifier
+      .constrainAs(constraintReference) { constraints() }
+      .graphicsLayer {
+        this.alpha = alpha
+      }
+      .offset(y = offset)
+      .statusBarsPadding(),
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.SpaceBetween
+  ) {
+    Box(
+      modifier = Modifier.padding(horizontal = 12.dp)
+    ) {
+      header()
+    }
+    LazyColumn(
+      state = state,
+      verticalArrangement = Arrangement.Bottom,
+      reverseLayout = true,
+      modifier = Modifier.fillMaxSize()
+    ) {
+      items(items = apps, key = { it.id }) { app ->
+        val appTitle = app.appTitle
+        val appUsage = 0L // todo move into app.usage in viewModel?
+        Box(
+          modifier = Modifier.animateItemPlacement(
+            animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessLow)
+          )
+        ) {
+          AppCard(appTitle, appUsage) { onAppClick(app) }
+        }
+      }
+    }
+  }
+}
+
+inline fun Modifier.thenIf(
+  condition: Boolean,
+  crossinline other: Modifier.() -> Modifier,
+) = if (condition) other() else this
+
+
+@SuppressLint("WrongConstant")
+fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
+  try {
+    val statusBarService = context.getSystemService("statusbar")
+    val methodName = if (expand) "expandNotificationsPanel" else "collapsePanels"
+    val statusBarManager: Class<*> = Class.forName("android.app.StatusBarManager")
+    val method: Method = statusBarManager.getMethod(methodName)
+    method.invoke(statusBarService)
+  } catch (e: Exception) {
+    e.printStackTrace()
+  }
+}
+
+object ClearRippleTheme : RippleTheme {
+  @Composable
+  override fun defaultColor(): Color = Color.Transparent
+
+  @Composable
+  override fun rippleAlpha() = RippleAlpha(
+    draggedAlpha = 0f, focusedAlpha = 0f, hoveredAlpha = 0f, pressedAlpha = 0f
+  )
 }
