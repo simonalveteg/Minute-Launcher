@@ -707,55 +707,6 @@ fun ConstraintLayoutScope.GestureCard(
   }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun ConstraintLayoutScope.AppList(
-  state: LazyListState,
-  apps: List<App>,
-  offset: Dp,
-  alpha: Float,
-  constraintReference: ConstrainedLayoutReference,
-  constraints: ConstrainScope.() -> Unit,
-  onAppClick: (App) -> Unit,
-  header: @Composable () -> Unit = {}
-) {
-  Column(
-    modifier = Modifier
-      .constrainAs(constraintReference) { constraints() }
-      .graphicsLayer {
-        this.alpha = alpha
-      }
-      .offset(y = offset)
-      .statusBarsPadding(),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.SpaceBetween
-  ) {
-    Box(
-      modifier = Modifier.padding(horizontal = 12.dp)
-    ) {
-      header()
-    }
-    LazyColumn(
-      state = state,
-      verticalArrangement = Arrangement.Bottom,
-      reverseLayout = true,
-      modifier = Modifier.fillMaxSize()
-    ) {
-      items(items = apps, key = { it.id }) { app ->
-        val appTitle = app.appTitle
-        val appUsage = 0L // todo move into app.usage in viewModel?
-        Box(
-          modifier = Modifier.animateItemPlacement(
-            animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessLow)
-          )
-        ) {
-          AppCard(appTitle, appUsage) { onAppClick(app) }
-        }
-      }
-    }
-  }
-}
-
 inline fun Modifier.thenIf(
   condition: Boolean,
   crossinline other: Modifier.() -> Modifier,
