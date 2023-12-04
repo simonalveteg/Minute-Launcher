@@ -22,11 +22,20 @@ interface LauncherDAO {
   @Query("SELECT * FROM FavoriteApp ORDER BY `order` ASC")
   fun getFavoriteApps(): Flow<List<FavoriteAppWithApp>>
 
+  @Query("SELECT * FROM App WHERE id = :id")
+  fun getAppById(id: Int): App?
+
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertApp(app: App)
 
+  @Query("UPDATE App SET timer = :timer WHERE id = :appId")
+  fun updateAppTimer(appId: Int, timer: Int)
+
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertFavoriteApp(app: FavoriteApp)
+
+  @Query("UPDATE FavoriteApp SET `order` = :order WHERE app_id = :id")
+  fun updateFavoriteOrder(id: Int, order: Int)
 
   @Delete
   fun deleteFavoriteApp(app: FavoriteApp)
@@ -47,6 +56,7 @@ interface LauncherDAO {
 
   @Query("SELECT * FROM FavoriteApp WHERE app_id = :id")
   fun getFavoriteById(id: Int): FavoriteApp?
+
 
   @Query("SELECT 'order' FROM FavoriteApp WHERE app_id = :id")
   fun getOrderForFavoriteById(id: Int): Int

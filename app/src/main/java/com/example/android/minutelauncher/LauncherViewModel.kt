@@ -48,6 +48,10 @@ class LauncherViewModel @Inject constructor(
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
+  private val _currentModalId = MutableStateFlow<Int?>(null)
+  private val _currentModal = MutableStateFlow<App?>(null)
+  val currentModal = _currentModal.asStateFlow()
+
   val gestureApps = repo.gestureApps()
   val favoriteApps = repo.favoriteApps()
   val filteredApps = combine(
@@ -58,7 +62,7 @@ class LauncherViewModel @Inject constructor(
       app.appTitle.lowercase().filterNot { it.isWhitespace() }.contains(
         searchTerm.lowercase().filterNot { it.isWhitespace() }
       )
-    }.sortedBy { it.appTitle }
+    }.sortedBy { it.appTitle.lowercase() }
   }
 
   private val handler = Handler(Looper.getMainLooper())
@@ -72,6 +76,14 @@ class LauncherViewModel @Inject constructor(
     handler.removeCallbacksAndMessages(null)
     usageQueryRunnable.run()
     updateDatabase()
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        _currentModalId.collect { appModalId ->
+          Timber.d("CurrentModalId: $appModalId")
+          _currentModal.value = if (appModalId == null) null else repo.getAppById(appModalId)
+        }
+      }
+    }
   }
 
   private fun updateDatabase() {
@@ -100,6 +112,14 @@ class LauncherViewModel @Inject constructor(
       is Event.ClearAppGesture -> clearGestureApp(event.gesture)
       is Event.UpdateFavoriteOrder -> updateFavoriteOrder(event.favorites)
       is Event.ChangeScreenState -> _screenState.value = event.state
+      is Event.UpdateApp -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            repo.updateApp(event.app)
+          }
+        }
+      }
+      is Event.ClearModal -> _currentModalId.value = null
     }
   }
 
@@ -116,21 +136,25 @@ class LauncherViewModel @Inject constructor(
 
   fun getTotalUsage() = mutableLongStateOf(usageStats.value.values.sum())
 
-  private fun handleGesture(gestureDirection: GestureDirection) {
-    Timber.d("Gesture handled, $gestureDirection")
-    when (gestureDirection) {
-      GestureDirection.UP -> _screenState.value = ScreenState.APPS
-      GestureDirection.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
+  private fun handleGesture(gesture: Gesture) {
+    if (!screenState.value.isFavorites()) return
+    var vibrate = true
+    Timber.d("Gesture handled, $gesture")
+    when (gesture) {
+      Gesture.UP -> _screenState.value = ScreenState.APPS
+      Gesture.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
       else -> {
+        vibrate = false
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            repo.getAppForGesture(gestureDirection)?.let {
+            repo.getAppForGesture(gesture)?.let {
               openApplication(it.app)
             }
           }
         }
       }
     }
+    if (vibrate) sendUiEvent(UiEvent.VibrateLongPress)
   }
 
   private fun updateSearch(text: String?) {
@@ -169,7 +193,7 @@ class LauncherViewModel @Inject constructor(
       .mapValues { it.value.totalTimeInForeground }
   }
 
-  private fun setGestureApp(app: App, gesture: GestureDirection) {
+  private fun setGestureApp(app: App, gesture: Gesture) {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         repo.insertGestureApp(SwipeApp(gesture, app))
@@ -177,7 +201,7 @@ class LauncherViewModel @Inject constructor(
     }
   }
 
-  private fun clearGestureApp(gesture: GestureDirection) {
+  private fun clearGestureApp(gesture: Gesture) {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         repo.removeAppForGesture(gesture)
@@ -196,7 +220,8 @@ class LauncherViewModel @Inject constructor(
 
   private fun openApplication(app: App) {
     Timber.d("Open Application ${app.appTitle}")
-    sendUiEvent(UiEvent.OpenApplication(app))
+    _currentModalId.value = app.id
+    sendUiEvent(UiEvent.VibrateLongPress)
   }
 
   private fun launchActivity(app: App) {

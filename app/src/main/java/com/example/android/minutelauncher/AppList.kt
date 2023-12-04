@@ -1,96 +1,67 @@
 package com.example.android.minutelauncher
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.constraintlayout.compose.ConstrainScope
+import androidx.constraintlayout.compose.ConstrainedLayoutReference
+import androidx.constraintlayout.compose.ConstraintLayoutScope
 import com.example.android.minutelauncher.db.App
-import timber.log.Timber
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AppList(
-  viewModel: LauncherViewModel = hiltViewModel(),
-  focusRequester: FocusRequester = remember { FocusRequester() },
-  onAppPress: (App) -> Unit = {},
-  onBackPressed: () -> Unit = {}
+fun ConstraintLayoutScope.AppList(
+  state: LazyListState,
+  apps: List<App>,
+  offset: Dp,
+  alpha: Float,
+  constraintReference: ConstrainedLayoutReference,
+  constraints: ConstrainScope.() -> Unit,
+  onAppClick: (App) -> Unit,
+  header: @Composable (() -> Unit )? = null
 ) {
-  val apps by viewModel.filteredApps.collectAsState(emptyList())
-  val searchText by viewModel.searchTerm.collectAsState()
-
-  BackHandler(true) {
-    Timber.d("back pressed")
-    onBackPressed()
-  }
-
-  Scaffold(floatingActionButton = {
-    FloatingActionButton(onClick = {
-      Timber.d("Search focused")
-      focusRequester.requestFocus()
-    }) {
-      Icon(
-        imageVector = Icons.Default.Search, contentDescription = "Search apps"
-      )
+  Column(
+    modifier = Modifier
+      .constrainAs(constraintReference) { constraints() }
+      .graphicsLayer {
+        this.alpha = alpha
+      }
+      .offset(y = offset)
+      .thenIf(header != null) { statusBarsPadding() },
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.SpaceBetween
+  ) {
+    Box(
+      modifier = Modifier.padding(horizontal = 12.dp)
+    ) {
+      header?.invoke()
     }
-  }) { paddingValues ->
-    Surface(modifier = Modifier.padding(paddingValues)) {
-      Column {
-        Row {
-          TextField(
-            value = searchText,
-            onValueChange = { viewModel.onEvent(Event.UpdateSearch(it)) },
-            modifier = Modifier
-              .fillMaxWidth()
-              .focusRequester(focusRequester)
-              .clearFocusOnKeyboardDismiss(),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-              apps.firstOrNull()?.let {
-                viewModel.onEvent(Event.OpenApplication(it))
-              }
-            }),
-            colors = OutlinedTextFieldDefaults.colors(),
-            placeholder = {
-              Text(
-                text = "search", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
-              )
-            },
-            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+    LazyColumn(
+      state = state,
+      verticalArrangement = Arrangement.Bottom,
+      reverseLayout = true,
+      modifier = Modifier.fillMaxSize()
+    ) {
+      items(items = apps, key = { it.id }) { app ->
+        val appTitle = app.appTitle
+        val appUsage = 0L // todo move into app.usage in viewModel?
+        Box(
+          modifier = Modifier.animateItemPlacement(
+            animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessLow)
           )
-        }
-        LazyColumn(
-          verticalArrangement = Arrangement.Top,
-          horizontalAlignment = Alignment.CenterHorizontally,
-          modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
         ) {
-          item { Spacer(modifier = Modifier.height(24.dp)) }
-          items(apps) { app ->
-            Row {
-              val appTitle = app.appTitle
-              val appUsage by viewModel.getUsageForApp(app)
-
-              AppCard(appTitle, appUsage) { onAppPress(app) }
-            }
-          }
+          AppCard(appTitle, appUsage) { onAppClick(app) }
         }
       }
     }

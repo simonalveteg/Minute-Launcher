@@ -1,10 +1,13 @@
 package com.example.android.minutelauncher
 
 enum class ScreenState {
-  FAVORITES, APPS, MODIFY;
+  FAVORITES, APPS, MODIFY, SELECTOR;
 
   fun isFavorites() = this == FAVORITES
   fun isModify() = this == MODIFY
+  fun isSelector() = this == SELECTOR
+  fun isApps() = this == APPS
+  fun hasSearch() = this == APPS || this == SELECTOR
 
   fun toggleModify(): ScreenState {
     return when (this) {
@@ -13,5 +16,4 @@ enum class ScreenState {
       else -> this
     }
   }
-
 }

@@ -11,7 +11,7 @@ fun LauncherNavHost(
 ) {
   NavHost(navController = navController, startDestination = "main") {
     composable("main") {
-      MainScreen()
+      HomeScreen()
     }
   }
 }

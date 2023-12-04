@@ -9,13 +9,14 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.example.android.minutelauncher.GestureDirection
+import com.example.android.minutelauncher.Gesture
 
 @Entity
 data class App(
   @PrimaryKey(autoGenerate = true) val id: Int, // hashcode of package name
   val packageName: String,
-  val appTitle: String
+  val appTitle: String,
+  val timer: Int = 10
 )
 fun ResolveInfo.toApp(packageManager: PackageManager) =
   App(
@@ -36,10 +37,10 @@ fun ResolveInfo.toApp(packageManager: PackageManager) =
   indices = [Index(value = ["app_id"])]
 )
 data class SwipeApp(
-  @PrimaryKey val swipeDirection: GestureDirection,
+  @PrimaryKey val swipeDirection: Gesture,
   @ColumnInfo(name = "app_id") val appId: Int
 ) {
-  constructor(gesture: GestureDirection, app: App): this(gesture, app.id)
+  constructor(gesture: Gesture, app: App): this(gesture, app.id)
 }
 
 data class SwipeAppWithApp(
