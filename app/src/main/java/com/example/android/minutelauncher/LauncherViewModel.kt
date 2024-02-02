@@ -119,6 +119,7 @@ class LauncherViewModel @Inject constructor(
           }
         }
       }
+
       is Event.ClearModal -> _currentModalId.value = null
     }
   }
@@ -182,10 +183,8 @@ class LauncherViewModel @Inject constructor(
     usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startTime, currentTime)
       .sortedBy {
         it.totalTimeInForeground
-      }.forEach {
-        Timber.d(
-          "Package: ${it.packageName} time: ${it.firstTimeStamp}, usage: ${it.totalTimeInForeground.toTimeUsed()}"
-        )
+      }.also {
+        Timber.d("Usage queried for ${it.size} applications.")
       }
 
     return usageStatsManager.queryAndAggregateUsageStats(startTime, currentTime)
