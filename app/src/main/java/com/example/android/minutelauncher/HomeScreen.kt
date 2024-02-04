@@ -48,7 +48,6 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.material.ripple.RippleAlpha
-import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -338,153 +337,152 @@ fun HomeScreen(
             )
           )
 
-          CompositionLocalProvider(LocalRippleTheme provides ClearRippleTheme) {
-            Column(
-              modifier = Modifier
-                .constrainAs(favList) {
-                  top.linkTo(parent.top)
-                  bottom.linkTo(parent.bottom)
-                  start.linkTo(topLeft.end)
-                  end.linkTo(topRight.start)
-                  width = Dimension.fillToConstraints
-                }
-                .fillMaxSize()
-                .graphicsLayer {
-                  alpha = favoritesAlpha
-                }
-                .combinedClickable(onLongClick = {
-                  viewModel.onEvent(Event.ChangeScreenState(screenState.toggleModify()))
-                }) {}
-                .offset { IntOffset(x = 0, y = offsetY.value.roundToInt()) }
-                .pointerInput(Unit) {
-                  detectHorizontalDragGestures(
-                    onDragCancel = {
-                      currentZone = GestureZone.NONE
-                      currentDirection = GestureDirection.NONE
-                    },
-                    onDragEnd = {
-                      gesture = when (currentZone) {
-                        GestureZone.UPPER -> {
-                          when (currentDirection) {
-                            GestureDirection.RIGHT -> Gesture.UPPER_RIGHT
-                            GestureDirection.LEFT -> Gesture.UPPER_LEFT
-                            else -> Gesture.NONE
-                          }
+          Column(
+            modifier = Modifier
+              .constrainAs(favList) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(topLeft.end)
+                end.linkTo(topRight.start)
+                width = Dimension.fillToConstraints
+              }
+              .fillMaxSize()
+              .graphicsLayer {
+                alpha = favoritesAlpha
+              }
+              .combinedClickable(onLongClick = {
+                viewModel.onEvent(Event.ChangeScreenState(screenState.toggleModify()))
+              }) {}
+              .offset { IntOffset(x = 0, y = offsetY.value.roundToInt()) }
+              .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                  onDragCancel = {
+                    currentZone = GestureZone.NONE
+                    currentDirection = GestureDirection.NONE
+                  },
+                  onDragEnd = {
+                    gesture = when (currentZone) {
+                      GestureZone.UPPER -> {
+                        when (currentDirection) {
+                          GestureDirection.RIGHT -> Gesture.UPPER_RIGHT
+                          GestureDirection.LEFT -> Gesture.UPPER_LEFT
+                          else -> Gesture.NONE
                         }
+                      }
 
-                        GestureZone.LOWER -> {
-                          when (currentDirection) {
-                            GestureDirection.RIGHT -> Gesture.LOWER_RIGHT
-                            GestureDirection.LEFT -> Gesture.LOWER_LEFT
-                            else -> Gesture.NONE
-                          }
+                      GestureZone.LOWER -> {
+                        when (currentDirection) {
+                          GestureDirection.RIGHT -> Gesture.LOWER_RIGHT
+                          GestureDirection.LEFT -> Gesture.LOWER_LEFT
+                          else -> Gesture.NONE
                         }
+                      }
 
-                        else -> Gesture.NONE
-                      }
-                      currentZone = GestureZone.NONE
-                      currentDirection = GestureDirection.NONE
-                      viewModel.onEvent(Event.HandleGesture(gesture))
-                    },
-                  ) { change, dragAmount ->
-                    currentDirection = if (dragAmount > 0) {
-                      when (currentDirection) {
-                        GestureDirection.NONE -> GestureDirection.RIGHT
-                        GestureDirection.LEFT -> GestureDirection.INVALID
-                        else -> currentDirection
-                      }
-                    } else {
-                      when (currentDirection) {
-                        GestureDirection.NONE -> GestureDirection.LEFT
-                        GestureDirection.RIGHT -> GestureDirection.INVALID
-                        else -> currentDirection
-                      }
+                      else -> Gesture.NONE
                     }
-                    currentZone = if (change.position.y < screenHeight.div(2)) {
-                      when (currentZone) {
-                        GestureZone.UPPER -> GestureZone.UPPER
-                        GestureZone.NONE -> GestureZone.UPPER
-                        else -> GestureZone.INVALID
-                      }
-                    } else {
-                      when (currentZone) {
-                        GestureZone.LOWER -> GestureZone.LOWER
-                        GestureZone.NONE -> GestureZone.LOWER
-                        else -> GestureZone.INVALID
-                      }
+                    currentZone = GestureZone.NONE
+                    currentDirection = GestureDirection.NONE
+                    viewModel.onEvent(Event.HandleGesture(gesture))
+                  },
+                ) { change, dragAmount ->
+                  currentDirection = if (dragAmount > 0) {
+                    when (currentDirection) {
+                      GestureDirection.NONE -> GestureDirection.RIGHT
+                      GestureDirection.LEFT -> GestureDirection.INVALID
+                      else -> currentDirection
                     }
-                    Timber.d("Direction: $gesture")
+                  } else {
+                    when (currentDirection) {
+                      GestureDirection.NONE -> GestureDirection.LEFT
+                      GestureDirection.RIGHT -> GestureDirection.INVALID
+                      else -> currentDirection
+                    }
                   }
-                }
-                .pointerInput(Unit) {
-                  detectVerticalDragGestures(
-                    onDragCancel = { onDragEnd() },
-                    onDragEnd = {
-                      onDragEnd()
-                      viewModel.onEvent(Event.HandleGesture(gesture))
-                    },
-                  ) { _, dragAmount ->
-                    val originalY = offsetY.value
-                    val threshold = 100f
-                    val weight = (abs(originalY) - threshold) / threshold
-                    val easingFactor = (1 - weight * 0.75f) * 0.25f
-                    val easedDragAmount = dragAmount * easingFactor
-                    coroutineScope.launch {
-                      offsetY.snapTo(originalY + easedDragAmount)
+                  currentZone = if (change.position.y < screenHeight.div(2)) {
+                    when (currentZone) {
+                      GestureZone.UPPER -> GestureZone.UPPER
+                      GestureZone.NONE -> GestureZone.UPPER
+                      else -> GestureZone.INVALID
                     }
-                    gesture = if (easingFactor < 0.18) {
-                      if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
-                    } else Gesture.NONE
+                  } else {
+                    when (currentZone) {
+                      GestureZone.LOWER -> GestureZone.LOWER
+                      GestureZone.NONE -> GestureZone.LOWER
+                      else -> GestureZone.INVALID
+                    }
                   }
-                },
-              verticalArrangement = Arrangement.Bottom,
-              horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-              Text(
-                text = totalUsage.toTimeUsed(),
-                color = LocalContentColor.current.copy(alpha = usageAlpha)
-              )
-              val data = remember { mutableStateOf(favorites) }
-              LaunchedEffect(favorites) {
-                if (favorites.size != data.value.size) {
-                  data.value = favorites
+                  Timber.d("Direction: $gesture")
                 }
               }
-              val reorderableState = rememberReorderableLazyListState(
-                onMove = { from, to ->
-                  data.value = data.value.toMutableList().apply {
-                    add(to.index, removeAt(from.index))
+              .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                  onDragCancel = { onDragEnd() },
+                  onDragEnd = {
+                    onDragEnd()
+                    viewModel.onEvent(Event.HandleGesture(gesture))
+                  },
+                ) { _, dragAmount ->
+                  val originalY = offsetY.value
+                  val threshold = 100f
+                  val weight = (abs(originalY) - threshold) / threshold
+                  val easingFactor = (1 - weight * 0.75f) * 0.25f
+                  val easedDragAmount = dragAmount * easingFactor
+                  coroutineScope.launch {
+                    offsetY.snapTo(originalY + easedDragAmount)
                   }
-                  viewModel.onEvent(Event.UpdateFavoriteOrder(data.value))
+                  gesture = if (easingFactor < 0.18) {
+                    if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
+                  } else Gesture.NONE
                 }
-              )
-              LazyColumn(
-                state = reorderableState.listState,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                userScrollEnabled = false,
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .thenIf(screenState.isModify()) { detectReorder(reorderableState) }
-                  .thenIf(screenState.isModify()) { reorderable(reorderableState) }
-              ) {
-                items(data.value, { it.app.id }) { item ->
-                  ReorderableItem(reorderableState, key = item.app.id) { isDragged ->
-                    val appUsage by viewModel.getUsageForApp(item.app)
-                    AppCard(
-                      appTitle = item.app.appTitle,
-                      appUsage = appUsage,
-                      editState = screenState.isModify(),
-                      isDragged = isDragged
-                    ) {
-                      if (screenState.isFavorites()) appListSelectionAction(item.app)
-                    }
-                  }
-                }
+              },
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Text(
+              text = totalUsage.toTimeUsed(),
+              color = LocalContentColor.current.copy(alpha = usageAlpha)
+            )
+            val data = remember { mutableStateOf(favorites) }
+            LaunchedEffect(favorites) {
+              if (favorites.size != data.value.size) {
+                data.value = favorites
               }
-              val bottomHeightDp = with(density) { bottomHeight.toDp() }
-              Spacer(modifier = Modifier.height(bottomHeightDp))
             }
+            val reorderableState = rememberReorderableLazyListState(
+              onMove = { from, to ->
+                data.value = data.value.toMutableList().apply {
+                  add(to.index, removeAt(from.index))
+                }
+                viewModel.onEvent(Event.UpdateFavoriteOrder(data.value))
+              }
+            )
+            LazyColumn(
+              state = reorderableState.listState,
+              horizontalAlignment = Alignment.CenterHorizontally,
+              userScrollEnabled = false,
+              modifier = Modifier
+                .fillMaxWidth()
+                .thenIf(screenState.isModify()) { detectReorder(reorderableState) }
+                .thenIf(screenState.isModify()) { reorderable(reorderableState) }
+            ) {
+              items(data.value, { it.app.id }) { item ->
+                ReorderableItem(reorderableState, key = item.app.id) { isDragged ->
+                  val appUsage by viewModel.getUsageForApp(item.app)
+                  AppCard(
+                    appTitle = item.app.appTitle,
+                    appUsage = appUsage,
+                    editState = screenState.isModify(),
+                    isDragged = isDragged
+                  ) {
+                    if (screenState.isFavorites()) appListSelectionAction(item.app)
+                  }
+                }
+              }
+            }
+            val bottomHeightDp = with(density) { bottomHeight.toDp() }
+            Spacer(modifier = Modifier.height(bottomHeightDp))
           }
+
 
           AppList(
             state = selectorListState,
@@ -562,7 +560,9 @@ fun HomeScreen(
               keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
               keyboardActions = KeyboardActions(onSearch = {
                 apps.firstOrNull()?.let {
-                  if (screenState.isSelector()) shortcutSelectionAction(it) else appListSelectionAction(it)
+                  if (screenState.isSelector()) shortcutSelectionAction(it) else appListSelectionAction(
+                    it
+                  )
                 }
                 this.defaultKeyboardAction(ImeAction.Done)
               }),
@@ -724,14 +724,4 @@ fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
   } catch (e: Exception) {
     e.printStackTrace()
   }
-}
-
-object ClearRippleTheme : RippleTheme {
-  @Composable
-  override fun defaultColor(): Color = Color.Transparent
-
-  @Composable
-  override fun rippleAlpha() = RippleAlpha(
-    draggedAlpha = 0f, focusedAlpha = 0f, hoveredAlpha = 0f, pressedAlpha = 0f
-  )
 }

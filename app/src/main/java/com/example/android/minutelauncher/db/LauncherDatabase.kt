@@ -11,7 +11,7 @@ import androidx.room.TypeConverters
     FavoriteApp::class
   ],
   version = 6,
-  exportSchema = true
+  exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class LauncherDatabase : RoomDatabase() {
