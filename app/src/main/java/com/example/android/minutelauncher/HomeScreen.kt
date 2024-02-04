@@ -201,8 +201,7 @@ fun HomeScreen(
   }
 
   MinuteBottomSheet(
-    visible = currentAppModal != null,
-    app = currentAppModal!!,
+    app = currentAppModal,
     sheetState = sheetState,
     onDismiss = { viewModel.onEvent(Event.ClearModal) },
     onEvent = viewModel::onEvent

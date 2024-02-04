@@ -19,15 +19,17 @@ import com.example.android.minutelauncher.db.App
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MinuteBottomSheet(
-  visible: Boolean,
-  app: App,
+  app: App?,
   sheetState: SheetState,
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit,
 
 ) {
+  val visible = app != null
+
   if (visible) {
     val mContext = LocalContext.current
+    val app = app!!
     ModalBottomSheet(
       onDismissRequest = onDismiss,
       sheetState = sheetState,

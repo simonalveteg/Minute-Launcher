@@ -3,8 +3,13 @@ package com.example.android.minutelauncher
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,20 +58,30 @@ fun AppModal(
   onDismiss: () -> Unit,
   viewModel: LauncherViewModel = hiltViewModel(),
 ) {
-  val mContext = LocalContext.current
+  var state by remember { mutableStateOf(AppModalState.MAIN) }
   val appUsage = viewModel.getUsageForApp(app).longValue
   val favoriteApps by viewModel.favoriteApps.collectAsState(initial = emptyList())
-  val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
   val isFavorite = favoriteApps.any { it.app.packageName == app.packageName }
-  val isGesture = gestureApps.any { it.value.packageName == app.packageName }
-  val favoriteIcon = if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder
   var enabled by remember { mutableStateOf(false) }
   var timer by remember { mutableIntStateOf(0) }
-  var openText by remember { mutableStateOf("") }
-  val animationPeriod = 350
-  val scale = remember { Animatable(1f) }
-
-  var modify by remember { mutableStateOf(false) }
+  var confirmationText by remember { mutableStateOf("") }
+  val animationPeriod = when (app.timer) {
+    2 -> 700
+    5 -> 500
+    10 -> 250
+    15 -> 150
+    else -> Int.MAX_VALUE
+  }
+  val infiniteTransition = rememberInfiniteTransition(label = "Put the phone down button")
+  val scale by infiniteTransition.animateFloat(
+    initialValue = 1f,
+    targetValue = 1.03f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(animationPeriod, easing = LinearEasing),
+      repeatMode = RepeatMode.Reverse
+    ),
+    label = "Pulsating Button"
+  )
 
   LaunchedEffect(app) {
     Timber.d("New timer: ${app.timer}")
@@ -74,36 +89,13 @@ fun AppModal(
   }
 
   LaunchedEffect(key1 = timer) {
-    openText = "Wait ${timer}s.."
+    confirmationText = "Wait ${timer}s.."
     if (timer > 0 && !enabled) {
       delay(1000L)
       timer -= 1
     } else {
-      openText = "Open Anyway"
+      confirmationText = "Open Anyway"
       enabled = true
-    }
-  }
-
-  LaunchedEffect(key1 = enabled) {
-    if (!enabled) {
-      delay(500L)
-      while (true) {
-        delay(animationPeriod.toLong())
-        scale.animateTo(
-          targetValue = 1.03f,
-          animationSpec = tween(animationPeriod)
-        )
-        delay(animationPeriod.toLong())
-        scale.animateTo(
-          targetValue = 1f,
-          animationSpec = tween(animationPeriod)
-        )
-      }
-    } else {
-      scale.animateTo(
-        targetValue = 1f,
-        animationSpec = tween(animationPeriod)
-      )
     }
   }
 
@@ -112,89 +104,25 @@ fun AppModal(
       verticalArrangement = Arrangement.SpaceBetween,
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        IconButton(
-          enabled = enabled,
-          onClick = {
-            modify = !modify
-          }
-        ) {
-          Icon(imageVector = Icons.Default.Tune, contentDescription = "Modify app settings")
-        }
-        Text(
-          text = app.appTitle, style = MaterialTheme.typography.headlineSmall
-        )
-        IconButton(
-          enabled = !isGesture,
-          onClick = {
-            onEvent(Event.ToggleFavorite(app))
-          }
-        ) {
-          Icon(imageVector = favoriteIcon, contentDescription = "Favorite")
-        }
-      }
-      AnimatedVisibility(visible = !modify) {
-        Column {
-          Text(
-            text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}",
-            modifier = Modifier.padding(64.dp)
+      AppModalHeader(
+        app = app,
+        enabled = enabled,
+        isFavorite = isFavorite,
+        onStateChanged = { state = state.toggle() },
+        onEvent = onEvent
+      )
+      AnimatedContent(targetState = state, label = "") { state ->
+        when (state) {
+          AppModalState.MAIN -> AppModalMain(
+            app = app,
+            appUsage = appUsage,
+            enabled = enabled,
+            confirmationText = confirmationText,
+            onConfirmation = onConfirmation,
+            onDismiss = onDismiss,
+            scale = scale
           )
-          Row(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(bottom = 22.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.Bottom
-          ) {
-            TextButton(onClick = onConfirmation, enabled = enabled) {
-              Box(contentAlignment = Alignment.Center) {
-                Text(text = "Open Anyway", color = Color.Transparent) // for alignment consistency
-                Text(text = openText)
-              }
-            }
-            Button(
-              modifier = Modifier.scale(scale.value),
-              onClick = onDismiss
-            ) {
-              Text(text = "Put the phone down")
-            }
-          }
-        }
-      }
-      AnimatedVisibility(visible = modify) {
-        Column(
-          modifier = Modifier
-            .padding(vertical = 16.dp, horizontal = 32.dp),
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-          AppProperty(label = "App timer") {
-            SegmentedControl(
-              items = setOf(0, 2, 5, 10, 15),
-              selectedItem = app.timer,
-              onItemSelection = {
-                viewModel.onEvent(
-                  Event.UpdateApp(
-                    app.copy(timer = it)
-                  )
-                )
-              }
-            )
-          }
-          TextButton(onClick = {
-            val intent = Intent().apply {
-              action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-              data = Uri.fromParts("package", app.packageName, null)
-            }
-            startActivity(mContext, intent, null)
-          }) {
-            Text(text = "Open App Info")
-          }
+          AppModalState.OPTIONS -> AppModalOptions(app = app, onEvent = onEvent)
         }
       }
     }
@@ -202,7 +130,118 @@ fun AppModal(
 }
 
 @Composable
-fun AppProperty(
+private fun AppModalHeader(
+  app: App,
+  enabled: Boolean,
+  isFavorite: Boolean,
+  onStateChanged: () -> Unit,
+  onEvent: (Event) -> Unit
+) {
+  val favoriteIcon = if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder
+
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(8.dp),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    IconButton(
+      enabled = enabled,
+      onClick = onStateChanged
+    ) {
+      Icon(imageVector = Icons.Default.Tune, contentDescription = "Modify app settings")
+    }
+    Text(
+      text = app.appTitle, style = MaterialTheme.typography.headlineSmall
+    )
+    IconButton(
+      onClick = {
+        onEvent(Event.ToggleFavorite(app))
+      }
+    ) {
+      Icon(imageVector = favoriteIcon, contentDescription = "Favorite")
+    }
+  }
+}
+
+@Composable
+private fun AppModalMain(
+  app: App,
+  appUsage: Long,
+  enabled: Boolean,
+  confirmationText: String,
+  onConfirmation: () -> Unit,
+  onDismiss: () -> Unit,
+  scale: Float
+) {
+  Column {
+    Text(
+      text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}",
+      modifier = Modifier.padding(64.dp)
+    )
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(bottom = 22.dp),
+      horizontalArrangement = Arrangement.SpaceEvenly,
+      verticalAlignment = Alignment.Bottom
+    ) {
+      TextButton(onClick = onConfirmation, enabled = enabled) {
+        Box(contentAlignment = Alignment.Center) {
+          Text(text = "Open Anyway", color = Color.Transparent) // for alignment consistency
+          Text(text = confirmationText)
+        }
+      }
+      Button(
+        modifier = Modifier.scale(scale),
+        onClick = onDismiss
+      ) {
+        Text(text = "Put the phone down")
+      }
+    }
+  }
+}
+
+@Composable
+private fun AppModalOptions(
+  app: App,
+  onEvent: (Event) -> Unit
+) {
+  val mContext = LocalContext.current
+
+  Column(
+    modifier = Modifier
+      .padding(vertical = 16.dp, horizontal = 32.dp),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    AppProperty(label = "App timer") {
+      SegmentedControl(
+        items = setOf(0, 2, 5, 10, 15),
+        selectedItem = app.timer,
+        onItemSelection = {
+          onEvent(
+            Event.UpdateApp(
+              app.copy(timer = it)
+            )
+          )
+        }
+      )
+    }
+    TextButton(onClick = {
+      val intent = Intent().apply {
+        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+        data = Uri.fromParts("package", app.packageName, null)
+      }
+      startActivity(mContext, intent, null)
+    }) {
+      Text(text = "Open App Info")
+    }
+  }
+}
+
+@Composable
+private fun AppProperty(
   label: String,
   content: @Composable ColumnScope.() -> Unit
 ) {
@@ -212,5 +251,16 @@ fun AppProperty(
       style = MaterialTheme.typography.labelMedium
     )
     content()
+  }
+}
+
+private enum class AppModalState {
+  MAIN, OPTIONS;
+
+  fun toggle(): AppModalState {
+    return when (this) {
+      MAIN -> OPTIONS
+      OPTIONS -> MAIN
+    }
   }
 }
