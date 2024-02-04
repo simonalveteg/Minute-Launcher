@@ -1,4 +1,5 @@
 <resources>
-    <string name="app_name">MinuteLauncher</string>
-    <string name="accessibility_service_description">This accessibility service needs to be enabled in order for Minute Launcher to turn the screen off.</string>
+    <string name="app_name">Minute Launcher</string>
+    <string name="accessibility_service_summary">Screen locking service</string>
+    <string name="accessibility_service_description">This service needs to be enabled in order for you to be able to quickly turn off your phone\'s screen from Minute Launcher.</string>
 </resources>
