@@ -15,7 +15,7 @@
         </intent>
     </queries>
     <application
-        android:name=".MinuteLauncher"
+        android:name="com.alveteg.simon.minutelauncher.MinuteLauncher"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -26,7 +26,7 @@
         android:theme="@style/Theme.MinuteLauncher"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name="com.alveteg.simon.minutelauncher.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.MinuteLauncher">
             <intent-filter>
@@ -38,7 +38,7 @@
         </activity>
 
         <service
-            android:name=".MinuteAccessibilityService"
+            android:name="com.alveteg.simon.minutelauncher.MinuteAccessibilityService"
             android:enabled="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="false">
