@@ -16,23 +16,22 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteAccessibilityService
-import com.alveteg.simon.minutelauncher.data.App
+import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.isAccessibilityServiceEnabled
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MinuteBottomSheet(
-  app: App?,
+  appInfo: AppInfo?,
   sheetState: SheetState,
   onDismiss: () -> Unit,
-  onEvent: (Event) -> Unit,
-
-  ) {
-  val visible = app != null
+  onEvent: (Event) -> Unit
+) {
+  val visible = appInfo != null
 
   if (visible) {
     val mContext = LocalContext.current
-    val app = app!!
+    val app = appInfo!!
     ModalBottomSheet(
       onDismissRequest = onDismiss,
       sheetState = sheetState,
@@ -42,18 +41,18 @@ fun MinuteBottomSheet(
       Spacer(modifier = Modifier.height(4.dp))
       BackHandler(true) { onDismiss() }
       AppModal(
-        app = app,
+        appInfo = appInfo,
         onEvent = onEvent,
         onConfirmation = {
-          onEvent(Event.LaunchActivity(app))
-          onEvent(Event.ClearModal)
+          onEvent(Event.LaunchActivity(appInfo))
+          onDismiss()
         },
-        onDismiss = {
+        onCancel = {
           val isAccessibilityServiceEnabled =
             isAccessibilityServiceEnabled(mContext, MinuteAccessibilityService::class.java)
           if (isAccessibilityServiceEnabled) {
             MinuteAccessibilityService.turnScreenOff()
-            onEvent(Event.ClearModal)
+            onDismiss()
           } else {
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
             ContextCompat.startActivity(mContext, intent, null)

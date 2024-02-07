@@ -25,7 +25,7 @@ interface LauncherDAO {
   @Query("SELECT * FROM App WHERE id = :id")
   fun getAppById(id: Int): App?
 
-  @Insert(onConflict = OnConflictStrategy.IGNORE)
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insertApp(app: App)
 
   @Query("UPDATE App SET timer = :timer WHERE id = :appId")

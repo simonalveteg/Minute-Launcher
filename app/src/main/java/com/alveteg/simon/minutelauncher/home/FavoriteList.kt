@@ -37,15 +37,16 @@ import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.utilities.Gesture
-import com.alveteg.simon.minutelauncher.utilities.GestureDirection
-import com.alveteg.simon.minutelauncher.utilities.GestureZone
-import com.alveteg.simon.minutelauncher.data.App
-import com.alveteg.simon.minutelauncher.data.FavoriteAppWithApp
+import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
+import com.alveteg.simon.minutelauncher.data.toAppInfo
 import com.alveteg.simon.minutelauncher.reorderableList.ReorderableItem
 import com.alveteg.simon.minutelauncher.reorderableList.detectReorder
 import com.alveteg.simon.minutelauncher.reorderableList.rememberReorderableLazyListState
 import com.alveteg.simon.minutelauncher.reorderableList.reorderable
+import com.alveteg.simon.minutelauncher.utilities.Gesture
+import com.alveteg.simon.minutelauncher.utilities.GestureDirection
+import com.alveteg.simon.minutelauncher.utilities.GestureZone
 import com.alveteg.simon.minutelauncher.utilities.thenIf
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import kotlinx.coroutines.launch
@@ -57,13 +58,13 @@ import kotlin.math.roundToInt
 @Composable
 fun ConstraintLayoutScope.FavoriteList(
   screenState: ScreenState,
-  favorites: List<FavoriteAppWithApp>,
+  favorites: List<FavoriteAppInfo>,
   constraintReference: ConstrainedLayoutReference,
   constraints: ConstrainScope.() -> Unit,
   onEvent: (Event) -> Unit,
   screenHeight: Float,
   totalUsage: Long,
-  onAppClick: (App) -> Unit
+  onAppClick: (AppInfo) -> Unit
 ) {
   var gesture by remember { mutableStateOf(Gesture.NONE) }
   val offsetY = remember { Animatable(0f) }
@@ -205,17 +206,17 @@ fun ConstraintLayoutScope.FavoriteList(
       modifier = Modifier
         .fillMaxWidth()
         .thenIf(screenState.isModify()) { detectReorder(reorderableState) }
-        .thenIf(screenState.isModify()) { reorderable(reorderableState) }) {
-      items(data.value, { it.app.id }) { item ->
-        ReorderableItem(reorderableState, key = item.app.id) { isDragged ->
-          //val appUsage by viewModel.getUsageForApp(item.app)
+        .thenIf(screenState.isModify()) { reorderable(reorderableState) }
+    ) {
+      items(data.value, { it.favoriteApp.app.id }) { favoriteAppInfo ->
+        ReorderableItem(reorderableState, key = favoriteAppInfo.favoriteApp.app.id) { isDragged ->
           AppCard(
-            appTitle = item.app.appTitle,
-            appUsage = 20,
+            appTitle = favoriteAppInfo.favoriteApp.app.appTitle,
+            appUsage = favoriteAppInfo.usage,
             editState = screenState.isModify(),
             isDragged = isDragged
           ) {
-            if (screenState.isFavorites()) onAppClick(item.app)
+            if (screenState.isFavorites()) onAppClick(favoriteAppInfo.toAppInfo())
           }
         }
       }

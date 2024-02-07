@@ -24,8 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayoutScope
-import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.data.App
+import com.alveteg.simon.minutelauncher.utilities.Gesture
 
 @Composable
 fun ConstraintLayoutScope.GestureApps(
@@ -44,87 +44,73 @@ fun ConstraintLayoutScope.GestureApps(
     label = "",
     animationSpec = tween(200, 0, EaseInOutQuad)
   )
+  val width = sideWidth.dp
+  val height = with(density) { screenHeight.div(2).toDp() - 80.dp }
+  val corner = 64.dp
+  val leftShape = RoundedCornerShape(0.dp, corner, corner, 0.dp)
+  val rightShape = RoundedCornerShape(corner, 0.dp, 0.dp, corner)
 
-  apps.forEach { (gesture, app) ->
-    val width = sideWidth.dp
-    val height = with(density) { screenHeight.div(2).toDp() - 80.dp }
-    val corner = 64.dp
-    val leftShape = RoundedCornerShape(0.dp, corner, corner, 0.dp)
-    val rightShape = RoundedCornerShape(corner, 0.dp, 0.dp, corner)
-    when (gesture) {
-      Gesture.UPPER_RIGHT -> {
-        GestureCard(
-          app = app,
-          direction = gesture,
-          height = height,
-          width = width,
-          shape = leftShape,
-          constraintReference = crTopLeft,
-          constraints = {
-            start.linkTo(parent.start)
-            top.linkTo(parent.top)
-          },
-          onClick = onClick
-        )
-      }
+  GestureCard(
+    app = apps[Gesture.UPPER_RIGHT],
+    direction = Gesture.UPPER_RIGHT,
+    height = height,
+    width = width,
+    shape = leftShape,
+    constraintReference = crTopLeft,
+    constraints = {
+      start.linkTo(parent.start)
+      top.linkTo(parent.top)
+    },
+    onClick = onClick
+  )
 
-      Gesture.UPPER_LEFT -> {
-        GestureCard(
-          app = app,
-          direction = gesture,
-          height = height,
-          width = width,
-          shape = rightShape,
-          constraintReference = crTopRight,
-          constraints = {
-            end.linkTo(parent.end)
-            top.linkTo(parent.top)
-          },
-          onClick = onClick
-        )
-      }
+  GestureCard(
+    app = apps[Gesture.UPPER_LEFT],
+    direction = Gesture.UPPER_LEFT,
+    height = height,
+    width = width,
+    shape = rightShape,
+    constraintReference = crTopRight,
+    constraints = {
+      end.linkTo(parent.end)
+      top.linkTo(parent.top)
+    },
+    onClick = onClick
+  )
 
-      Gesture.LOWER_RIGHT -> {
-        GestureCard(
-          app = app,
-          direction = gesture,
-          height = height,
-          width = width,
-          shape = leftShape,
-          constraintReference = crBottomLeft,
-          constraints = {
-            start.linkTo(parent.start)
-            bottom.linkTo(parent.bottom)
-          },
-          onClick = onClick
-        )
-      }
+  GestureCard(
+    app = apps[Gesture.LOWER_RIGHT],
+    direction = Gesture.LOWER_RIGHT,
+    height = height,
+    width = width,
+    shape = leftShape,
+    constraintReference = crBottomLeft,
+    constraints = {
+      start.linkTo(parent.start)
+      bottom.linkTo(parent.bottom)
+    },
+    onClick = onClick
+  )
 
-      Gesture.LOWER_LEFT -> {
-        GestureCard(
-          app = app,
-          direction = gesture,
-          height = height,
-          width = width,
-          shape = rightShape,
-          constraintReference = crBottomRight,
-          constraints = {
-            end.linkTo(parent.end)
-            bottom.linkTo(parent.bottom)
-          },
-          onClick = onClick
-        )
-      }
-
-      else -> Unit
-    }
-  }
+  GestureCard(
+    app = apps[Gesture.LOWER_LEFT],
+    direction = Gesture.LOWER_LEFT,
+    height = height,
+    width = width,
+    shape = rightShape,
+    constraintReference = crBottomRight,
+    constraints = {
+      end.linkTo(parent.end)
+      bottom.linkTo(parent.bottom)
+    },
+    onClick = onClick
+  )
 }
 
 
 @Composable
 fun ConstraintLayoutScope.GestureCard(
-  app: App,
+  app: App?,
   direction: Gesture,
   height: Dp,
   width: Dp,
@@ -133,7 +119,7 @@ fun ConstraintLayoutScope.GestureCard(
   constraints: ConstrainScope.() -> Unit,
   onClick: (Gesture) -> Unit
 ) {
-  val title = app.appTitle
+  val title = app?.appTitle ?: ""
   Surface(modifier = Modifier
     .width(width)
     .height(height)

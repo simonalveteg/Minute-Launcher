@@ -19,17 +19,18 @@ import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import com.alveteg.simon.minutelauncher.data.App
+import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.utilities.thenIf
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ConstraintLayoutScope.AppList(
-  apps: List<App>,
+  apps: List<AppInfo>,
   offset: Dp,
   alpha: Float,
   constraintReference: ConstrainedLayoutReference,
   constraints: ConstrainScope.() -> Unit,
-  onAppClick: (App) -> Unit,
+  onAppClick: (AppInfo) -> Unit,
   state: LazyListState = rememberLazyListState(),
   header: @Composable (() -> Unit )? = null
 ) {
@@ -55,15 +56,15 @@ fun ConstraintLayoutScope.AppList(
       reverseLayout = true,
       modifier = Modifier.fillMaxSize()
     ) {
-      items(items = apps, key = { it.id }) { app ->
-        val appTitle = app.appTitle
-        val appUsage = 0L // todo move into app.usage in viewModel?
+      items(items = apps, key = { it.app.id }) { appInfo ->
+        val appTitle = appInfo.app.appTitle
+        val appUsage = appInfo.usage
         Box(
           modifier = Modifier.animateItemPlacement(
             animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessLow)
           )
         ) {
-          AppCard(appTitle, appUsage) { onAppClick(app) }
+          AppCard(appTitle, appUsage) { onAppClick(appInfo) }
         }
       }
     }

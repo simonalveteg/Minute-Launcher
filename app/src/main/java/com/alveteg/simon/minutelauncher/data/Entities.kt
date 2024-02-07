@@ -1,5 +1,6 @@
 package com.alveteg.simon.minutelauncher.data
 
+import android.content.pm.LauncherActivityInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import androidx.room.ColumnInfo
@@ -13,16 +14,18 @@ import com.alveteg.simon.minutelauncher.utilities.Gesture
 
 @Entity
 data class App(
-  @PrimaryKey(autoGenerate = true) val id: Int, // hashcode of package name
-  val packageName: String,
-  val appTitle: String,
-  val timer: Int = 10
+  @PrimaryKey(autoGenerate = true) val id: Int,
+  @ColumnInfo(name = "package_name") val packageName: String,
+  @ColumnInfo(name = "app_title") val appTitle: String,
+  @ColumnInfo(name = "timer") val timer: Int = 5,
+  @ColumnInfo(name = "installed") val installed: Boolean = true
 )
-fun ResolveInfo.toApp(packageManager: PackageManager) =
+
+fun LauncherActivityInfo.toApp() =
   App(
-    this.activityInfo.packageName.hashCode(),
-    this.activityInfo.packageName,
-    this.loadLabel(packageManager).toString()
+    this.applicationInfo.packageName.hashCode(),
+    this.applicationInfo.packageName,
+    this.label.toString(),
   )
 
 @Entity(
@@ -40,7 +43,7 @@ data class SwipeApp(
   @PrimaryKey val swipeDirection: Gesture,
   @ColumnInfo(name = "app_id") val appId: Int
 ) {
-  constructor(gesture: Gesture, app: App): this(gesture, app.id)
+  constructor(gesture: Gesture, app: App) : this(gesture, app.id)
 }
 
 data class SwipeAppWithApp(

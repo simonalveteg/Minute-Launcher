@@ -45,10 +45,11 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.utilities.Gesture
-import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
+import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.LauncherViewModel
+import com.alveteg.simon.minutelauncher.utilities.Gesture
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -60,30 +61,17 @@ fun HomeScreen(
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
   val screenState by viewModel.screenState.collectAsState()
-  val mContext = LocalContext.current
-  val hapticFeedback = LocalHapticFeedback.current
-  val keyboardController = LocalSoftwareKeyboardController.current
-  val selectorListState = rememberLazyListState()
-  val selectedGesture = remember { mutableStateOf<Gesture?>(null) }
-  val coroutineScope = rememberCoroutineScope()
-  val currentAppModal by viewModel.currentModal.collectAsState()
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
-  var screenHeight by remember { mutableFloatStateOf(0f) }
-  val shortcutSelectionAction: (App) -> Unit = { app ->
-    coroutineScope.launch {
-      Timber.d("App pressed: ${app.appTitle}")
-      selectedGesture.value?.let {
-        Timber.d("Selected ${app.appTitle} in direction $it")
-        viewModel.onEvent(Event.SetAppGesture(app, it))
-      }
-      viewModel.onEvent(Event.ChangeScreenState(ScreenState.MODIFY))
-      delay(500L)
-      selectedGesture.value = null
-      viewModel.onEvent(Event.UpdateSearch(""))
-    }
-    keyboardController?.hide()
-  }
+  val totalUsage = 6000000L
+  val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
+  val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
+
+  val mContext = LocalContext.current
+  val hapticFeedback = LocalHapticFeedback.current
+  val selectorListState = rememberLazyListState()
+  val selectedGesture = remember { mutableStateOf<Gesture?>(null) }
+  var currentAppModal by remember { mutableStateOf<AppInfo?>(null) }
 
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {
@@ -105,6 +93,7 @@ fun HomeScreen(
         is UiEvent.VibrateLongPress -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)
+        is UiEvent.ShowModal -> currentAppModal = event.appInfo
       }
     }
   }
@@ -148,14 +137,15 @@ fun HomeScreen(
   }
 
   MinuteBottomSheet(
-    app = currentAppModal,
+    appInfo = currentAppModal,
     sheetState = sheetState,
-    onDismiss = { viewModel.onEvent(Event.ClearModal) },
+    onDismiss = { currentAppModal = null },
     onEvent = viewModel::onEvent
   )
 
   CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
     Surface(color = backgroundColor) {
+      var screenHeight by remember { mutableFloatStateOf(0f) }
       ConstraintLayout(
         modifier = Modifier
           .fillMaxSize()
@@ -164,10 +154,6 @@ fun HomeScreen(
           }
       ) {
         val (favList, appList, appSelector, searchBar, topLeft, topRight, bottomLeft, bottomRight) = createRefs()
-
-        val totalUsage by viewModel.getTotalUsage()
-        val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
-        val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
 
         val superFastDpSpec: AnimationSpec<Dp> = tween(durationMillis = 200)
         val fastSpringDpSpec: AnimationSpec<Dp> = tween(
@@ -197,8 +183,23 @@ fun HomeScreen(
           label = "",
           animationSpec = if (screenState.isSelector()) fastFloatSpec else slowFloatSpec
         )
-
-        val appListSelectionAction: (App) -> Unit = {
+        val coroutineScope = rememberCoroutineScope()
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val shortcutSelectionAction: (AppInfo) -> Unit = { appInfo ->
+          coroutineScope.launch {
+            Timber.d("App pressed: ${appInfo.app.appTitle}")
+            selectedGesture.value?.let {
+              Timber.d("Selected ${appInfo.app.appTitle} in direction $it")
+              viewModel.onEvent(Event.SetAppGesture(appInfo.app, it))
+            }
+            viewModel.onEvent(Event.ChangeScreenState(ScreenState.MODIFY))
+            delay(500L)
+            selectedGesture.value = null
+            viewModel.onEvent(Event.UpdateSearch(""))
+          }
+          keyboardController?.hide()
+        }
+        val appListSelectionAction: (AppInfo) -> Unit = {
           viewModel.onEvent(Event.OpenApplication(it))
           keyboardController?.hide()
         }
@@ -278,9 +279,7 @@ fun HomeScreen(
           text = searchText,
           onSearch = {
             apps.firstOrNull()?.let {
-              if (screenState.isSelector()) shortcutSelectionAction(it) else appListSelectionAction(
-                it
-              )
+              if (screenState.isSelector()) shortcutSelectionAction(it) else appListSelectionAction(it)
             }
             this.defaultKeyboardAction(ImeAction.Done)
           }

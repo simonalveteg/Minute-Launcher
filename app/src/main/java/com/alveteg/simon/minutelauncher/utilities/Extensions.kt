@@ -13,6 +13,8 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import com.alveteg.simon.minutelauncher.data.App
+import com.alveteg.simon.minutelauncher.data.AppInfo
 
 fun Long.toTimeUsed(
   blankIfZero: Boolean = true
@@ -53,3 +55,10 @@ inline fun Modifier.thenIf(
   condition: Boolean,
   crossinline other: Modifier.() -> Modifier,
 ) = if (condition) other() else this
+
+fun List<AppInfo>.filterBySearchTerm(searchTerm: String) : List<AppInfo> {
+  return filter { appInfo ->
+    appInfo.app.appTitle.lowercase().filterNot { it.isWhitespace() }
+      .contains(searchTerm.lowercase().filterNot { it.isWhitespace() })
+  }.sortedBy { it.app.appTitle.lowercase() }
+}

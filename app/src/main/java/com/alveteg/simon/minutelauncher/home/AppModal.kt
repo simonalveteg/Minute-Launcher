@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,10 +42,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.data.App
+import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import kotlinx.coroutines.delay
 import timber.log.Timber
@@ -54,20 +52,18 @@ import timber.log.Timber
 
 @Composable
 fun AppModal(
-  app: App,
+  appInfo: AppInfo,
   onEvent: (Event) -> Unit,
   onConfirmation: () -> Unit,
-  onDismiss: () -> Unit,
-  viewModel: LauncherViewModel = hiltViewModel(),
+  onCancel: () -> Unit,
 ) {
   var state by remember { mutableStateOf(AppModalState.MAIN) }
-  val appUsage = viewModel.getUsageForApp(app).longValue
-  val favoriteApps by viewModel.favoriteApps.collectAsState(initial = emptyList())
-  val isFavorite = favoriteApps.any { it.app.packageName == app.packageName }
+  val appUsage = 600000L
+  val isFavorite = appInfo.favorite
   var enabled by remember { mutableStateOf(false) }
   var timer by remember { mutableIntStateOf(0) }
   var confirmationText by remember { mutableStateOf("") }
-  val animationPeriod = when (app.timer) {
+  val animationPeriod = when (appInfo.app.timer) {
     2 -> 700
     5 -> 500
     10 -> 250
@@ -85,9 +81,9 @@ fun AppModal(
     label = "Pulsating Button"
   )
 
-  LaunchedEffect(app) {
-    Timber.d("New timer: ${app.timer}")
-    timer = app.timer
+  LaunchedEffect(appInfo) {
+    Timber.d("New timer: ${appInfo.app.timer}")
+    timer = appInfo.app.timer
   }
 
   LaunchedEffect(key1 = timer) {
@@ -107,7 +103,7 @@ fun AppModal(
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       AppModalHeader(
-        app = app,
+        app = appInfo.app,
         enabled = enabled,
         isFavorite = isFavorite,
         onStateChanged = { state = state.toggle() },
@@ -116,15 +112,16 @@ fun AppModal(
       AnimatedContent(targetState = state, label = "") { state ->
         when (state) {
           AppModalState.MAIN -> AppModalMain(
-            app = app,
+            appInfo = appInfo,
             appUsage = appUsage,
             enabled = enabled,
             confirmationText = confirmationText,
             onConfirmation = onConfirmation,
-            onDismiss = onDismiss,
+            onCancel = onCancel,
             scale = scale
           )
-          AppModalState.OPTIONS -> AppModalOptions(app = app, onEvent = onEvent)
+
+          AppModalState.OPTIONS -> AppModalOptions(appInfo = appInfo, onEvent = onEvent)
         }
       }
     }
@@ -169,17 +166,17 @@ private fun AppModalHeader(
 
 @Composable
 private fun AppModalMain(
-  app: App,
+  appInfo: AppInfo,
   appUsage: Long,
   enabled: Boolean,
   confirmationText: String,
   onConfirmation: () -> Unit,
-  onDismiss: () -> Unit,
+  onCancel: () -> Unit,
   scale: Float
 ) {
   Column {
     Text(
-      text = "${app.appTitle} used for ${appUsage.toTimeUsed(false)}",
+      text = "${appInfo.app.appTitle} used for ${appUsage.toTimeUsed(false)}",
       modifier = Modifier.padding(64.dp)
     )
     Row(
@@ -197,7 +194,7 @@ private fun AppModalMain(
       }
       Button(
         modifier = Modifier.scale(scale),
-        onClick = onDismiss
+        onClick = onCancel
       ) {
         Text(text = "Put the phone down")
       }
@@ -207,7 +204,7 @@ private fun AppModalMain(
 
 @Composable
 private fun AppModalOptions(
-  app: App,
+  appInfo: AppInfo,
   onEvent: (Event) -> Unit
 ) {
   val mContext = LocalContext.current
@@ -220,11 +217,11 @@ private fun AppModalOptions(
     AppProperty(label = "App timer") {
       SegmentedControl(
         items = setOf(0, 2, 5, 10, 15),
-        selectedItem = app.timer,
+        selectedItem = appInfo.app.timer,
         onItemSelection = {
           onEvent(
             Event.UpdateApp(
-              app.copy(timer = it)
+              appInfo.app.copy(timer = it)
             )
           )
         }
@@ -233,7 +230,7 @@ private fun AppModalOptions(
     TextButton(onClick = {
       val intent = Intent().apply {
         action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-        data = Uri.fromParts("package", app.packageName, null)
+        data = Uri.fromParts("package", appInfo.app.packageName, null)
       }
       startActivity(mContext, intent, null)
     }) {
