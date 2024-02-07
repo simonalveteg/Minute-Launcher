@@ -10,7 +10,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.android.minutelauncher"
+        applicationId "com.alveteg.simon.minutelauncher"
         minSdk 29
         targetSdk 34
         versionCode 1
