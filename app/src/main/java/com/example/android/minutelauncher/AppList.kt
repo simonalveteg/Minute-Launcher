@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,17 +19,18 @@ import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.home.thenIf
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ConstraintLayoutScope.AppList(
-  state: LazyListState,
   apps: List<App>,
   offset: Dp,
   alpha: Float,
   constraintReference: ConstrainedLayoutReference,
   constraints: ConstrainScope.() -> Unit,
   onAppClick: (App) -> Unit,
+  state: LazyListState = rememberLazyListState(),
   header: @Composable (() -> Unit )? = null
 ) {
   Column(
