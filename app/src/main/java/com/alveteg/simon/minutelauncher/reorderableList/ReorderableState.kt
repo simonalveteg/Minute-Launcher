@@ -46,6 +46,8 @@ abstract class ReorderableState<T>(
   private val onDragEnd: ((startIndex: Int, endIndex: Int) -> (Unit))?,
   val dragCancelledAnimation: DragCancelledAnimation
 ) {
+  var layoutWindowPosition = mutableStateOf(Offset.Zero)
+
   var draggingItemIndex by mutableStateOf<Int?>(null)
     private set
   val draggingItemKey: Any?
@@ -63,16 +65,15 @@ abstract class ReorderableState<T>(
   protected abstract val firstVisibleItemScrollOffset: Int
   protected abstract val viewportStartOffset: Int
   protected abstract val viewportEndOffset: Int
-  internal val interactions = Channel<StartDrag>()
   internal val scrollChannel = Channel<Float>()
   val draggingItemLeft: Float
-    get() = draggingLayoutInfo?.let { item ->
+    get() = if (draggingItemKey != null) draggingLayoutInfo?.let { item ->
       (selected?.left ?: 0) + draggingDelta.x - item.left
-    } ?: 0f
+    } ?: 0f else 0f
   val draggingItemTop: Float
-    get() = draggingLayoutInfo?.let { item ->
+    get() = if (draggingItemKey != null) draggingLayoutInfo?.let { item ->
       (selected?.top ?: 0) + draggingDelta.y - item.top
-    } ?: 0f
+    } ?: 0f else 0f
   abstract val isVerticalScroll: Boolean
   private val draggingLayoutInfo: T?
     get() = visibleItemsInfo
@@ -311,8 +312,10 @@ abstract class ReorderableState<T>(
     return when {
       delta > 0 ->
         (endOffset - viewportEndOffset).coerceAtLeast(0f)
+
       delta < 0 ->
         (startOffset - viewportStartOffset).coerceAtMost(0f)
+
       else -> 0f
     }
       .let { interpolateOutOfBoundsScroll((endOffset - startOffset).toInt(), it, time, maxScroll) }
@@ -337,8 +340,10 @@ abstract class ReorderableState<T>(
     ): Float {
       if (viewSizeOutOfBounds == 0f) return 0f
       val outOfBoundsRatio = min(1f, 1f * viewSizeOutOfBounds.absoluteValue / viewSize)
-      val cappedScroll = sign(viewSizeOutOfBounds) * maxScroll * EaseOutQuadInterpolator(outOfBoundsRatio)
-      val timeRatio = if (time > ACCELERATION_LIMIT_TIME_MS) 1f else time.toFloat() / ACCELERATION_LIMIT_TIME_MS
+      val cappedScroll =
+        sign(viewSizeOutOfBounds) * maxScroll * EaseOutQuadInterpolator(outOfBoundsRatio)
+      val timeRatio =
+        if (time > ACCELERATION_LIMIT_TIME_MS) 1f else time.toFloat() / ACCELERATION_LIMIT_TIME_MS
       return (cappedScroll * EaseInQuintInterpolator(timeRatio)).let {
         if (it == 0f) {
           if (viewSizeOutOfBounds > 0) 1f else -1f

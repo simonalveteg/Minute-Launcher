@@ -16,14 +16,20 @@ package com.alveteg.simon.minutelauncher.reorderableList
  * limitations under the License.
  */
 
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -62,6 +68,39 @@ fun LazyGridItemScope.ReorderableItem(
   index,
   content
 )
+
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun LazyStaggeredGridItemScope.ReorderableItem(
+  reorderableState: ReorderableState<*>,
+  key: Any?,
+  modifier: Modifier = Modifier,
+  index: Int? = null,
+  content: @Composable BoxScope.(isDragging: Boolean) -> Unit
+) = ReorderableItem(
+  reorderableState,
+  key,
+  modifier,
+  Modifier.animateDraggeableItemPlacement(),
+  false,
+  index,
+  content
+)
+
+/**
+ * XXX LazyGridItemScope.Modifier.animateItemPlacement is missing from LazyStaggeredGridItemScope
+ * XXX Replace this when added to the compose library.
+ *
+ * @param animationSpec a finite animation that will be used to animate the item placement.
+ */
+@ExperimentalFoundationApi
+fun Modifier.animateDraggeableItemPlacement(
+  animationSpec: FiniteAnimationSpec<IntOffset> = spring(
+    stiffness = Spring.StiffnessMediumLow,
+    visibilityThreshold = IntOffset.VisibilityThreshold
+  )
+): Modifier = this
 
 @Composable
 fun ReorderableItem(
