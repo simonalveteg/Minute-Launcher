@@ -1,6 +1,6 @@
-package com.example.android.minutelauncher.db
+package com.example.android.minutelauncher.data
 
-import com.example.android.minutelauncher.Gesture
+import com.example.android.minutelauncher.utilities.Gesture
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject

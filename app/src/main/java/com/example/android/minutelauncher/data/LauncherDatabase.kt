@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher.db
+package com.example.android.minutelauncher.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.utilities
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -48,3 +48,8 @@ fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
     }
   }
 }
+
+inline fun Modifier.thenIf(
+  condition: Boolean,
+  crossinline other: Modifier.() -> Modifier,
+) = if (condition) other() else this

@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.utilities
 
 enum class GestureZone {
   UPPER, LOWER, NONE, INVALID

@@ -24,9 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayoutScope
-import com.example.android.minutelauncher.Gesture
-import com.example.android.minutelauncher.ScreenState
-import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.utilities.Gesture
+import com.example.android.minutelauncher.data.App
 
 @Composable
 fun ConstraintLayoutScope.GestureApps(

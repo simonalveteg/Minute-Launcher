@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.home
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayoutScope
-import com.example.android.minutelauncher.db.App
-import com.example.android.minutelauncher.home.thenIf
+import com.example.android.minutelauncher.data.App
+import com.example.android.minutelauncher.utilities.thenIf
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row

@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.home
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.android.minutelauncher.utilities.toTimeUsed
 
 @Composable
 fun AppCard(

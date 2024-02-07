@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.home
 
 enum class ScreenState {
   FAVORITES, APPS, MODIFY, SELECTOR;

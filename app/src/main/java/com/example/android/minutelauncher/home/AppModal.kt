@@ -1,10 +1,9 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.home
 
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -45,7 +44,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.Event
+import com.example.android.minutelauncher.data.LauncherViewModel
+import com.example.android.minutelauncher.data.App
+import com.example.android.minutelauncher.utilities.toTimeUsed
 import kotlinx.coroutines.delay
 import timber.log.Timber
 

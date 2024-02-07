@@ -1,7 +1,9 @@
 package com.example.android.minutelauncher
 
-import com.example.android.minutelauncher.db.App
-import com.example.android.minutelauncher.db.FavoriteAppWithApp
+import com.example.android.minutelauncher.data.App
+import com.example.android.minutelauncher.data.FavoriteAppWithApp
+import com.example.android.minutelauncher.home.ScreenState
+import com.example.android.minutelauncher.utilities.Gesture
 
 
 sealed class Event {

@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.home
 
 import android.content.Intent
 import android.provider.Settings
@@ -14,7 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.Event
+import com.example.android.minutelauncher.MinuteAccessibilityService
+import com.example.android.minutelauncher.data.App
+import com.example.android.minutelauncher.isAccessibilityServiceEnabled
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,7 +27,7 @@ fun MinuteBottomSheet(
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit,
 
-) {
+  ) {
   val visible = app != null
 
   if (visible) {

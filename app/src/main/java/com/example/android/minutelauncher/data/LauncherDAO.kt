@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher.db
+package com.example.android.minutelauncher.data
 
 import androidx.room.Dao
 import androidx.room.Delete

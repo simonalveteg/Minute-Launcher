@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher.db
+package com.example.android.minutelauncher.data
 
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
@@ -9,7 +9,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.example.android.minutelauncher.Gesture
+import com.example.android.minutelauncher.utilities.Gesture
 
 @Entity
 data class App(

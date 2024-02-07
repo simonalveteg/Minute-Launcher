@@ -35,8 +35,7 @@ import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import com.example.android.minutelauncher.Event
-import com.example.android.minutelauncher.ScreenState
-import com.example.android.minutelauncher.clearFocusOnKeyboardDismiss
+import com.example.android.minutelauncher.utilities.clearFocusOnKeyboardDismiss
 
 @Composable
 fun ConstraintLayoutScope.SearchBar(

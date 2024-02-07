@@ -7,19 +7,13 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.EaseInOutQuad
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -37,11 +31,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -49,20 +41,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ChainStyle
-import androidx.constraintlayout.compose.ConstrainScope
-import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.android.minutelauncher.AppList
 import com.example.android.minutelauncher.Event
-import com.example.android.minutelauncher.Gesture
-import com.example.android.minutelauncher.LauncherViewModel
-import com.example.android.minutelauncher.MinuteBottomSheet
-import com.example.android.minutelauncher.ScreenState
+import com.example.android.minutelauncher.utilities.Gesture
+import com.example.android.minutelauncher.data.LauncherViewModel
 import com.example.android.minutelauncher.UiEvent
-import com.example.android.minutelauncher.db.App
+import com.example.android.minutelauncher.data.App
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -77,7 +63,6 @@ fun HomeScreen(
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
   val keyboardController = LocalSoftwareKeyboardController.current
-  val density = LocalDensity.current
   val selectorListState = rememberLazyListState()
   val selectedGesture = remember { mutableStateOf<Gesture?>(null) }
   val coroutineScope = rememberCoroutineScope()
@@ -321,12 +306,6 @@ fun HomeScreen(
     }
   }
 }
-
-inline fun Modifier.thenIf(
-  condition: Boolean,
-  crossinline other: Modifier.() -> Modifier,
-) = if (condition) other() else this
-
 
 @SuppressLint("WrongConstant")
 fun setExpandNotificationDrawer(context: Context, expand: Boolean) {

@@ -1,4 +1,4 @@
-package com.example.android.minutelauncher
+package com.example.android.minutelauncher.data
 
 import android.app.Application
 import android.app.usage.UsageStatsManager
@@ -9,11 +9,11 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.android.minutelauncher.db.App
-import com.example.android.minutelauncher.db.FavoriteAppWithApp
-import com.example.android.minutelauncher.db.LauncherRepository
-import com.example.android.minutelauncher.db.SwipeApp
-import com.example.android.minutelauncher.db.toApp
+import com.example.android.minutelauncher.Event
+import com.example.android.minutelauncher.UiEvent
+import com.example.android.minutelauncher.home.ScreenState
+import com.example.android.minutelauncher.utilities.Gesture
+import com.example.android.minutelauncher.utilities.toTimeUsed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Runnable

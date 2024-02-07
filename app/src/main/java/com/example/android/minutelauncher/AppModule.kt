@@ -1,7 +1,10 @@
-package com.example.android.minutelauncher.db
+package com.example.android.minutelauncher
 
 import android.content.Context
 import androidx.room.Room
+import com.example.android.minutelauncher.data.LauncherDAO
+import com.example.android.minutelauncher.data.LauncherDatabase
+import com.example.android.minutelauncher.data.LauncherRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,7 +14,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DatabaseModule {
+object AppModule {
 
   @Provides
   @Singleton
@@ -33,5 +36,10 @@ object DatabaseModule {
   @Singleton
   fun provideRepository(dao: LauncherDAO): LauncherRepository {
     return LauncherRepository(dao)
+  }
+
+  @Provides
+  fun provideContext(@ApplicationContext appContext: Context): Context {
+    return appContext
   }
 }
