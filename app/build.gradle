@@ -6,9 +6,22 @@ plugins {
     id 'dagger.hilt.android.plugin'
 }
 
+def propsFile = file('signing/signing.properties')
+def keyFile = file('signing/minute_keystore.jks')
+def props = new Properties()
+props.load(new FileInputStream(propsFile))
+
+
 android {
     compileSdk 34
-
+    signingConfigs {
+        release {
+            storeFile keyFile
+            storePassword props['storePassword']
+            keyAlias props['keyAlias']
+            keyPassword props['keyPassword']
+        }
+    }
     defaultConfig {
         applicationId "com.alveteg.simon.minutelauncher"
         minSdk 29
@@ -24,8 +37,14 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            resValue "string", "app_name", "Minute Launcher"
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix = ".debug"
+            resValue "string", "app_name", "Minute Debug"
         }
     }
     compileOptions {
