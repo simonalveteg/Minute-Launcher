@@ -5,8 +5,8 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import timber.log.Timber
 import java.util.Calendar
@@ -17,7 +17,10 @@ import javax.inject.Inject
 class UsageRepository @Inject constructor(@ApplicationContext private val context: Context) {
   private val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
-  fun queryUsageStats(): Flow<Map<String, Long>> = flow {
+  private val _usageStats = MutableSharedFlow<Map<String, Long>>(replay = 1)
+  val usageStats = _usageStats.asSharedFlow()
+
+  suspend fun startUsageUpdater() {
     while (currentCoroutineContext().isActive) {
       val currentTime = Calendar.getInstance().timeInMillis
       val startTime = Calendar.getInstance()
@@ -31,7 +34,7 @@ class UsageRepository @Inject constructor(@ApplicationContext private val contex
       val usageStats = usageStatsManager.queryAndAggregateUsageStats(startTime, currentTime)
         .filter { context.packageName != it.key }
         .mapValues { it.value.totalTimeInForeground }
-      emit(usageStats)
+      _usageStats.emit(usageStats)
       delay(TimeUnit.MINUTES.toMillis(1))
     }
   }

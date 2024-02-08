@@ -39,7 +39,7 @@ class LauncherViewModel @Inject constructor(
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
-  private val usageStats = usageRepository.queryUsageStats()
+  private val usageStats = usageRepository.usageStats
   val totalUsage = usageStats.map { it.values.sum() }
 
   val gestureApps = roomRepository.gestureApps()
@@ -99,6 +99,11 @@ class LauncherViewModel @Inject constructor(
   init {
     packageRepository.registerCallback(packageCallback)
     updateDatabase()
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        usageRepository.startUsageUpdater()
+      }
+    }
   }
 
   private fun updateDatabase() {
