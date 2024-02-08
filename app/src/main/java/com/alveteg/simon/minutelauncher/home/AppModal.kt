@@ -58,10 +58,9 @@ fun AppModal(
   onCancel: () -> Unit,
 ) {
   var state by remember { mutableStateOf(AppModalState.MAIN) }
-  val appUsage = 600000L
-  val isFavorite = appInfo.favorite
   var enabled by remember { mutableStateOf(false) }
   var timer by remember { mutableIntStateOf(0) }
+  val usage by remember { mutableStateOf(appInfo.usage) }
   var confirmationText by remember { mutableStateOf("") }
   val animationPeriod = when (appInfo.app.timer) {
     2 -> 700
@@ -105,7 +104,7 @@ fun AppModal(
       AppModalHeader(
         app = appInfo.app,
         enabled = enabled,
-        isFavorite = isFavorite,
+        isFavorite = appInfo.favorite,
         onStateChanged = { state = state.toggle() },
         onEvent = onEvent
       )
@@ -113,7 +112,7 @@ fun AppModal(
         when (state) {
           AppModalState.MAIN -> AppModalMain(
             appInfo = appInfo,
-            appUsage = appUsage,
+            appUsage = usage,
             enabled = enabled,
             confirmationText = confirmationText,
             onConfirmation = onConfirmation,

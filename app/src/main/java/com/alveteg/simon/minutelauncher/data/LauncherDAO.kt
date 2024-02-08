@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
+import timber.log.Timber
 
 @Dao
 interface LauncherDAO {
@@ -28,6 +29,9 @@ interface LauncherDAO {
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insertApp(app: App)
 
+  @Delete
+  fun removeApp(app: App)
+
   @Query("UPDATE App SET timer = :timer WHERE id = :appId")
   fun updateAppTimer(appId: Int, timer: Int)
 
@@ -46,7 +50,8 @@ interface LauncherDAO {
     if (fApp != null) {
       deleteFavoriteApp(fApp)
     } else {
-      val order = getMaxFavoriteOrder()
+      val order = getMaxFavoriteOrder() + 1
+      Timber.d("Insert new favorite at position: $order")
       insertFavoriteApp(FavoriteApp(app.id, order))
     }
   }

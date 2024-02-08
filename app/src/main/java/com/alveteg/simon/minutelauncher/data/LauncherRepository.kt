@@ -16,6 +16,7 @@ class LauncherRepository @Inject constructor(private val dao: LauncherDAO) {
   fun updateApp(app: App) {
     dao.updateAppTimer(app.id, app.timer)
   }
+  fun removeApp(app: App) = dao.removeApp(app)
 
   fun getAppById(id: Int) = dao.getAppById(id)
   fun toggleFavorite(app: App) = dao.toggleFavoriteApp(app)

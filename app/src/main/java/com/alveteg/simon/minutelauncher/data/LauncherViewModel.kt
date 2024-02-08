@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,6 +40,8 @@ class LauncherViewModel @Inject constructor(
   val searchTerm = _searchTerm.asStateFlow()
 
   private val usageStats = usageRepository.queryUsageStats()
+  val totalUsage = usageStats.map { it.values.sum() }
+
   val gestureApps = roomRepository.gestureApps()
   val favoriteApps = combine(
     roomRepository.favoriteApps(), usageStats
@@ -51,7 +54,7 @@ class LauncherViewModel @Inject constructor(
   private val installedApps = combine(
     roomRepository.appList(), roomRepository.favoriteApps(), usageStats,
   ) { apps, favorites, usageStats ->
-    apps.filter { it.installed }.map { app ->
+    apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
       val usage = usageStats.getOrDefault(app.packageName, 0L)
       AppInfo(app, favorite, usage)
@@ -104,12 +107,15 @@ class LauncherViewModel @Inject constructor(
       withContext(Dispatchers.IO) {
         val currentApps = roomRepository.appList().first()
         val installedApps = packageRepository.getPackages()
-        val newApps = installedApps - currentApps.toSet()
-        val removedApps = (currentApps - installedApps.toSet()).filter { it.installed }
-        Timber.d("${newApps.size} new apps and ${removedApps.size} removed apps found.")
+        val currentAppPackageNames = currentApps.map { it.packageName }.toSet()
+        val installedAppPackageNames = installedApps.map { it.packageName }.toSet()
+        val newApps = installedApps.filter { !currentAppPackageNames.contains(it.packageName) }
+        val removedApps = currentApps.filter { !installedAppPackageNames.contains(it.packageName) }
+
+        Timber.d("${newApps} new apps and ${removedApps} removed apps found.")
 
         newApps.forEach { roomRepository.insertApp(it) }
-        removedApps.forEach { roomRepository.insertApp(it.copy(installed = false)) }
+        removedApps.forEach { roomRepository.removeApp(it) }
       }
     }
   }

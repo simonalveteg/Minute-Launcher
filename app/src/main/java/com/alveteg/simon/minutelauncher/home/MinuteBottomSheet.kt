@@ -31,7 +31,7 @@ fun MinuteBottomSheet(
 
   if (visible) {
     val mContext = LocalContext.current
-    val app = appInfo!!
+    appInfo!!
     ModalBottomSheet(
       onDismissRequest = onDismiss,
       sheetState = sheetState,

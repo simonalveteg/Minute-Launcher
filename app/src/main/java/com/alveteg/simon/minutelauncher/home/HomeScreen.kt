@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +47,6 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
-import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.utilities.Gesture
@@ -63,7 +63,7 @@ fun HomeScreen(
   val screenState by viewModel.screenState.collectAsState()
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
-  val totalUsage = 6000000L
+  val totalUsage by viewModel.totalUsage.collectAsState(initial = 0L)
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
   val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
 
@@ -71,7 +71,9 @@ fun HomeScreen(
   val hapticFeedback = LocalHapticFeedback.current
   val selectorListState = rememberLazyListState()
   val selectedGesture = remember { mutableStateOf<Gesture?>(null) }
-  var currentAppModal by remember { mutableStateOf<AppInfo?>(null) }
+  var currentAppPackage by remember { mutableStateOf<String?>(null) }
+  val currentAppModal by
+  remember { derivedStateOf { apps.firstOrNull { it.app.packageName == currentAppPackage } } }
 
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {
@@ -93,7 +95,7 @@ fun HomeScreen(
         is UiEvent.VibrateLongPress -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)
-        is UiEvent.ShowModal -> currentAppModal = event.appInfo
+        is UiEvent.ShowModal -> currentAppPackage = event.appInfo.app.packageName
       }
     }
   }
@@ -139,7 +141,7 @@ fun HomeScreen(
   MinuteBottomSheet(
     appInfo = currentAppModal,
     sheetState = sheetState,
-    onDismiss = { currentAppModal = null },
+    onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent
   )
 
@@ -279,7 +281,9 @@ fun HomeScreen(
           text = searchText,
           onSearch = {
             apps.firstOrNull()?.let {
-              if (screenState.isSelector()) shortcutSelectionAction(it) else appListSelectionAction(it)
+              if (screenState.isSelector()) {
+                shortcutSelectionAction(it)
+              } else appListSelectionAction(it)
             }
             this.defaultKeyboardAction(ImeAction.Done)
           }

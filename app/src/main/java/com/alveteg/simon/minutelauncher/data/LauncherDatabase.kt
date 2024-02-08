@@ -10,7 +10,7 @@ import androidx.room.TypeConverters
     SwipeApp::class,
     FavoriteApp::class
   ],
-  version = 7,
+  version = 8,
   exportSchema = false
 )
 @TypeConverters(Converters::class)

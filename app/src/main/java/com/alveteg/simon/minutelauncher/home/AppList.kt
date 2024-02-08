@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -34,6 +35,10 @@ fun ConstraintLayoutScope.AppList(
   state: LazyListState = rememberLazyListState(),
   header: @Composable (() -> Unit )? = null
 ) {
+  LaunchedEffect(key1 = apps.size) {
+    state.animateScrollToItem(0)
+  }
+
   Column(
     modifier = Modifier
       .constrainAs(constraintReference) { constraints() }

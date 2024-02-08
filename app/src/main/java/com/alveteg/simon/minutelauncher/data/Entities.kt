@@ -17,8 +17,7 @@ data class App(
   @PrimaryKey(autoGenerate = true) val id: Int,
   @ColumnInfo(name = "package_name") val packageName: String,
   @ColumnInfo(name = "app_title") val appTitle: String,
-  @ColumnInfo(name = "timer") val timer: Int = 5,
-  @ColumnInfo(name = "installed") val installed: Boolean = true
+  @ColumnInfo(name = "timer") val timer: Int = 5
 )
 
 fun LauncherActivityInfo.toApp() =
