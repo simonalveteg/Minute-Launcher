@@ -1,16 +1,17 @@
 package com.alveteg.simon.minutelauncher.home
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -19,11 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainScope
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayoutScope
-import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.utilities.thenIf
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ConstraintLayoutScope.AppList(
   apps: List<AppInfo>,
@@ -33,12 +32,8 @@ fun ConstraintLayoutScope.AppList(
   constraints: ConstrainScope.() -> Unit,
   onAppClick: (AppInfo) -> Unit,
   state: LazyListState = rememberLazyListState(),
-  header: @Composable (() -> Unit )? = null
+  header: @Composable (() -> Unit)? = null
 ) {
-  LaunchedEffect(key1 = apps.size) {
-    state.animateScrollToItem(0)
-  }
-
   Column(
     modifier = Modifier
       .constrainAs(constraintReference) { constraints() }
@@ -61,16 +56,10 @@ fun ConstraintLayoutScope.AppList(
       reverseLayout = true,
       modifier = Modifier.fillMaxSize()
     ) {
-      items(items = apps, key = { it.app.id }) { appInfo ->
+      items(items = apps) { appInfo ->
         val appTitle = appInfo.app.appTitle
         val appUsage = appInfo.usage
-        Box(
-          modifier = Modifier.animateItemPlacement(
-            animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessLow)
-          )
-        ) {
-          AppCard(appTitle, appUsage) { onAppClick(appInfo) }
-        }
+        AppCard(appTitle, appUsage) { onAppClick(appInfo) }
       }
     }
   }

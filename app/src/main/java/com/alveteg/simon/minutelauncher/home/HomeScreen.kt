@@ -69,11 +69,13 @@ fun HomeScreen(
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
+  val coroutineScope = rememberCoroutineScope()
   val selectorListState = rememberLazyListState()
   val selectedGesture = remember { mutableStateOf<Gesture?>(null) }
   var currentAppPackage by remember { mutableStateOf<String?>(null) }
-  val currentAppModal by
-  remember { derivedStateOf { apps.firstOrNull { it.app.packageName == currentAppPackage } } }
+  val currentAppModal by remember {
+    derivedStateOf { apps.firstOrNull { it.app.packageName == currentAppPackage } }
+  }
 
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {
@@ -173,7 +175,7 @@ fun HomeScreen(
         val appSelectorOffset by animateDpAsState(
           targetValue = if (screenState.isSelector()) 0.dp else -screenHeight.dp,
           label = "",
-          animationSpec = if (screenState.isSelector()) superFastDpSpec else slowDpSpec
+          animationSpec = if (screenState.isSelector()) superFastDpSpec else tween(0)
         )
         val appsStateAlpha by animateFloatAsState(
           targetValue = if (screenState.isApps()) 1f else 0f,
@@ -185,7 +187,6 @@ fun HomeScreen(
           label = "",
           animationSpec = if (screenState.isSelector()) fastFloatSpec else slowFloatSpec
         )
-        val coroutineScope = rememberCoroutineScope()
         val keyboardController = LocalSoftwareKeyboardController.current
         val shortcutSelectionAction: (AppInfo) -> Unit = { appInfo ->
           coroutineScope.launch {
@@ -197,7 +198,6 @@ fun HomeScreen(
             viewModel.onEvent(Event.ChangeScreenState(ScreenState.MODIFY))
             delay(500L)
             selectedGesture.value = null
-            viewModel.onEvent(Event.UpdateSearch(""))
           }
           keyboardController?.hide()
         }
