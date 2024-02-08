@@ -56,7 +56,7 @@ interface LauncherDAO {
     }
   }
 
-  @Query("SELECT 'MAX(order)' FROM FavoriteApp")
+  @Query("SELECT MAX(`order`) FROM FavoriteApp")
   fun getMaxFavoriteOrder(): Int
 
   @Query("SELECT * FROM FavoriteApp WHERE app_id = :id")
