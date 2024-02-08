@@ -162,21 +162,27 @@ class LauncherViewModel @Inject constructor(
         if (!screenState.value.isFavorites()) return
         Timber.d("Gesture handled, $gesture")
         when (gesture) {
-          Gesture.UP -> _screenState.value = ScreenState.APPS
-          Gesture.DOWN -> sendUiEvent(UiEvent.ExpandNotifications)
+          Gesture.UP -> {
+            _screenState.value = ScreenState.APPS
+            sendUiEvent(UiEvent.VibrateLongPress)
+          }
+          Gesture.DOWN -> {
+            sendUiEvent(UiEvent.ExpandNotifications)
+            sendUiEvent(UiEvent.VibrateLongPress)
+          }
           else -> {
             viewModelScope.launch {
               withContext(Dispatchers.IO) {
                 roomRepository.getAppInfoForGesture(gesture)?.let {
                   getAppInfoForApp(it.app)?.let { app ->
                     sendUiEvent(UiEvent.ShowModal(app))
+                    sendUiEvent(UiEvent.VibrateLongPress)
                   }
                 }
               }
             }
           }
         }
-        sendUiEvent(UiEvent.VibrateLongPress)
       }
 
       is Event.SetAppGesture -> {
