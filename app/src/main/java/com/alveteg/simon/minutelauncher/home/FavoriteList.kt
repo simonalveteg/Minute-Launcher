@@ -44,6 +44,7 @@ import com.alveteg.simon.minutelauncher.reorderableList.ReorderableItem
 import com.alveteg.simon.minutelauncher.reorderableList.detectReorder
 import com.alveteg.simon.minutelauncher.reorderableList.rememberReorderableLazyListState
 import com.alveteg.simon.minutelauncher.reorderableList.reorderable
+import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.GestureDirection
 import com.alveteg.simon.minutelauncher.utilities.GestureZone
@@ -186,7 +187,9 @@ fun ConstraintLayoutScope.FavoriteList(
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     Text(
-      text = totalUsage.toTimeUsed(), color = LocalContentColor.current.copy(alpha = usageAlpha)
+      text = totalUsage.toTimeUsed(),
+      color = LocalContentColor.current.copy(alpha = usageAlpha),
+      fontFamily = archivoFamily
     )
     val data = remember { mutableStateOf(favorites) }
     LaunchedEffect(favorites) {
@@ -210,7 +213,7 @@ fun ConstraintLayoutScope.FavoriteList(
     ) {
       items(data.value, { it.favoriteApp.app.id }) { favoriteAppInfo ->
         ReorderableItem(reorderableState, key = favoriteAppInfo.favoriteApp.app.id) { isDragged ->
-          AppCard(
+          FavoriteCard(
             appTitle = favoriteAppInfo.favoriteApp.app.appTitle,
             appUsage = favoriteAppInfo.usage,
             editState = screenState.isModify(),

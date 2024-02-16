@@ -52,7 +52,7 @@ fun ConstraintLayoutScope.GestureApps(
 
   GestureCard(
     app = apps[Gesture.UPPER_RIGHT],
-    direction = Gesture.UPPER_RIGHT,
+    gesture = Gesture.UPPER_RIGHT,
     height = height,
     width = width,
     shape = leftShape,
@@ -66,7 +66,7 @@ fun ConstraintLayoutScope.GestureApps(
 
   GestureCard(
     app = apps[Gesture.UPPER_LEFT],
-    direction = Gesture.UPPER_LEFT,
+    gesture = Gesture.UPPER_LEFT,
     height = height,
     width = width,
     shape = rightShape,
@@ -80,7 +80,7 @@ fun ConstraintLayoutScope.GestureApps(
 
   GestureCard(
     app = apps[Gesture.LOWER_RIGHT],
-    direction = Gesture.LOWER_RIGHT,
+    gesture = Gesture.LOWER_RIGHT,
     height = height,
     width = width,
     shape = leftShape,
@@ -94,7 +94,7 @@ fun ConstraintLayoutScope.GestureApps(
 
   GestureCard(
     app = apps[Gesture.LOWER_LEFT],
-    direction = Gesture.LOWER_LEFT,
+    gesture = Gesture.LOWER_LEFT,
     height = height,
     width = width,
     shape = rightShape,
@@ -111,7 +111,7 @@ fun ConstraintLayoutScope.GestureApps(
 @Composable
 fun ConstraintLayoutScope.GestureCard(
   app: App?,
-  direction: Gesture,
+  gesture: Gesture,
   height: Dp,
   width: Dp,
   shape: Shape,
@@ -129,7 +129,7 @@ fun ConstraintLayoutScope.GestureCard(
     tonalElevation = 1.dp,
     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
     onClick = {
-      onClick(direction)
+      onClick(gesture)
     }) {
     Column(
       verticalArrangement = Arrangement.Center,

@@ -117,7 +117,7 @@ class LauncherViewModel @Inject constructor(
         val newApps = installedApps.filter { !currentAppPackageNames.contains(it.packageName) }
         val removedApps = currentApps.filter { !installedAppPackageNames.contains(it.packageName) }
 
-        Timber.d("${newApps} new apps and ${removedApps} removed apps found.")
+        Timber.d("$newApps new apps and $removedApps removed apps found.")
 
         newApps.forEach { roomRepository.insertApp(it) }
         removedApps.forEach { roomRepository.removeApp(it) }

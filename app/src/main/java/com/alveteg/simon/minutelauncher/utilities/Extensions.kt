@@ -23,8 +23,8 @@ fun Long.toTimeUsed(
   val hours = minutes.div(60)
   val sb = StringBuilder()
   if (hours != 0L) sb.append("${hours}h ")
-  if (minutes != 0L) sb.append("${minutes % 60}min")
-  return sb.toString().ifBlank { if (!blankIfZero) "0min" else "" }
+  if (minutes != 0L) sb.append("${minutes % 60} min")
+  return sb.toString().ifBlank { if (!blankIfZero) "0 min" else "" }
 }
 
 fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {

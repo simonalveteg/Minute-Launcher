@@ -22,11 +22,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 
 @Composable
-fun AppCard(
+fun FavoriteCard(
   appTitle: String,
   appUsage: Long,
   editState: Boolean = false,
@@ -82,7 +83,7 @@ fun AppCard(
     ) {
       Text(
         text = appTitle,
-        fontFamily = archivoFamily,
+        fontFamily = archivoBlackFamily,
         fontSize = 25.sp,
         textAlign = TextAlign.Center,
         overflow = TextOverflow.Clip,
