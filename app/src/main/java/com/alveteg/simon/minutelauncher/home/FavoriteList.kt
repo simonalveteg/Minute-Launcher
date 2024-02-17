@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +56,7 @@ import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+@Suppress("NAME_SHADOWING")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ConstraintLayoutScope.FavoriteList(
@@ -67,6 +69,8 @@ fun ConstraintLayoutScope.FavoriteList(
   totalUsage: Long,
   onAppClick: (AppInfo) -> Unit
 ) {
+
+  val screenHeight by rememberUpdatedState(screenHeight)
   var gesture by remember { mutableStateOf(Gesture.NONE) }
   val offsetY = remember { Animatable(0f) }
   val coroutineScope = rememberCoroutineScope()
@@ -146,7 +150,8 @@ fun ConstraintLayoutScope.FavoriteList(
             else -> currentDirection
           }
         }
-        currentZone = if (change.position.y < screenHeight.div(2)) {
+        Timber.d("Pos: ${change.position.y}, $screenHeight half: ${screenHeight.div(2f)}")
+        currentZone = if (change.position.y < screenHeight.div(2f)) {
           when (currentZone) {
             GestureZone.UPPER -> GestureZone.UPPER
             GestureZone.NONE -> GestureZone.UPPER
