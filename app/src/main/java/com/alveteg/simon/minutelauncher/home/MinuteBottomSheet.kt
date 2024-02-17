@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteAccessibilityService
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.home.modal.AppModal
 import com.alveteg.simon.minutelauncher.isAccessibilityServiceEnabled
 
 @OptIn(ExperimentalMaterial3Api::class)
