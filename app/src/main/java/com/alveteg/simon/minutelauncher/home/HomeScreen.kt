@@ -86,7 +86,6 @@ fun HomeScreen(
     },
     label = ""
   )
-  val sheetState = rememberModalBottomSheetState()
 
   LaunchedEffect(key1 = true) {
     Timber.d("launched effect")
@@ -142,7 +141,6 @@ fun HomeScreen(
 
   MinuteBottomSheet(
     appInfo = currentAppModal,
-    sheetState = sheetState,
     onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent
   )

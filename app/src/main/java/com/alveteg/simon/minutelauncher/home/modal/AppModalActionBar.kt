@@ -49,6 +49,7 @@ import com.alveteg.simon.minutelauncher.theme.archivoFamily
 fun AppModalActionBar(
   appInfo: AppInfo,
   enabled: Boolean,
+  onChangeTimer: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
   val mContext = LocalContext.current
@@ -117,7 +118,7 @@ fun AppModalActionBar(
       }
       if (actionBarState == AppActionBarState.EXPANDED) {
         AppActionTextButton(
-          onClick = { /*TODO*/ },
+          onClick = onChangeTimer,
           icon = {
             Icon(imageVector = Icons.Outlined.Timer, contentDescription = "Change app timer")
           },

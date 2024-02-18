@@ -1,8 +1,5 @@
 package com.alveteg.simon.minutelauncher.home.modal
 
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -13,27 +10,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.HourglassEmpty
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,14 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.home.SegmentedControl
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import kotlinx.coroutines.delay
@@ -69,6 +47,7 @@ fun AppModal(
   onEvent: (Event) -> Unit,
   onConfirmation: () -> Unit,
   onCancel: () -> Unit,
+  onChangeTimer: () -> Unit
 ) {
   var enabled by remember { mutableStateOf(false) }
   var timer by remember { mutableIntStateOf(0) }
@@ -119,7 +98,7 @@ fun AppModal(
       fontFamily = archivoBlackFamily,
       modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
     )
-    AppModalActionBar(appInfo = appInfo, enabled = enabled, onEvent = onEvent)
+    AppModalActionBar(appInfo = appInfo, enabled = enabled, onChangeTimer = onChangeTimer, onEvent = onEvent)
     Surface(
       modifier = Modifier
         .height(220.dp)
@@ -133,7 +112,8 @@ fun AppModal(
     Row(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(bottom = 22.dp),
+        .padding(bottom = 8.dp)
+        .navigationBarsPadding(),
       horizontalArrangement = Arrangement.SpaceEvenly,
       verticalAlignment = Alignment.Bottom
     ) {
