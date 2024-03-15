@@ -66,9 +66,6 @@ class LauncherViewModel @Inject constructor(
     apps.filterBySearchTerm(searchTerm)
   }
 
-  private val _screenState = MutableStateFlow(ScreenState.FAVORITES)
-  val screenState = _screenState.asStateFlow()
-
   private val packageCallback = object : LauncherApps.Callback() {
     override fun onPackageRemoved(packageName: String?, user: UserHandle?) {
       Timber.d("Package Removed")
@@ -164,11 +161,10 @@ class LauncherViewModel @Inject constructor(
 
       is Event.HandleGesture -> {
         val gesture = event.gesture
-        if (!screenState.value.isFavorites()) return
         Timber.d("Gesture handled, $gesture")
         when (gesture) {
           Gesture.UP -> {
-            _screenState.value = ScreenState.APPS
+            sendUiEvent(UiEvent.ShowDashboard)
             sendUiEvent(UiEvent.VibrateLongPress)
           }
           Gesture.DOWN -> {
@@ -214,7 +210,6 @@ class LauncherViewModel @Inject constructor(
         }
       }
 
-      is Event.ChangeScreenState -> _screenState.value = event.state
       is Event.UpdateApp -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {

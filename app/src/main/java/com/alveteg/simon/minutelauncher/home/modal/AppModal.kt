@@ -12,12 +12,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import kotlinx.coroutines.delay
@@ -89,7 +88,7 @@ fun AppModal(
   Column(
     horizontalAlignment = Alignment.CenterHorizontally,
     modifier = Modifier
-      .padding(start = 8.dp, end = 8.dp)
+      .padding(vertical = 0.dp, horizontal = 16.dp)
       .animateContentSize()
   ) {
     Text(
@@ -98,17 +97,13 @@ fun AppModal(
       fontFamily = archivoBlackFamily,
       modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
     )
-    AppModalActionBar(appInfo = appInfo, enabled = enabled, onChangeTimer = onChangeTimer, onEvent = onEvent)
-    Surface(
-      modifier = Modifier
-        .height(220.dp)
-        .fillMaxWidth()
-        .padding(horizontal = 16.dp, vertical = 8.dp),
-      color = MaterialTheme.colorScheme.background,
-      shape = MaterialTheme.shapes.large,
-      tonalElevation = 8.dp
-    ) {
-    }
+    AppModalActionBar(
+      appInfo = appInfo,
+      enabled = enabled,
+      onChangeTimer = onChangeTimer,
+      onEvent = onEvent
+    )
+    UsageBarGraph()
     Row(
       modifier = Modifier
         .fillMaxWidth()

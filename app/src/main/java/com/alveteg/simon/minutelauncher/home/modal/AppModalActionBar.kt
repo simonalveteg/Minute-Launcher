@@ -57,7 +57,7 @@ fun AppModalActionBar(
   Surface(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(horizontal = 16.dp, vertical = 8.dp),
+      .padding(vertical = 8.dp),
     color = MaterialTheme.colorScheme.background,
     shape = MaterialTheme.shapes.large,
     tonalElevation = 8.dp
@@ -88,14 +88,8 @@ fun AppModalActionBar(
         }) {
           Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Uninstall app")
         }
-        IconButton(enabled = enabled, onClick = {
-          val intent = Intent().apply {
-            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-            data = Uri.fromParts("package", appInfo.app.packageName, null)
-          }
-          ContextCompat.startActivity(mContext, intent, null)
-        }) {
-          Icon(imageVector = Icons.Outlined.Info, contentDescription = "Open app info")
+        IconButton(enabled = enabled, onClick = onChangeTimer) {
+          Icon(imageVector = Icons.Outlined.Timer, contentDescription = "Change app timer")
         }
         IconButton(onClick = {
           val intent = Intent().apply {
@@ -118,11 +112,15 @@ fun AppModalActionBar(
       }
       if (actionBarState == AppActionBarState.EXPANDED) {
         AppActionTextButton(
-          onClick = onChangeTimer,
-          icon = {
-            Icon(imageVector = Icons.Outlined.Timer, contentDescription = "Change app timer")
+          onClick = {
+            val intent = Intent().apply {
+              action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+              data = Uri.fromParts("package", appInfo.app.packageName, null)
+            }
+            ContextCompat.startActivity(mContext, intent, null)
           },
-          text = "Change app timer",
+          icon = { Icon(imageVector = Icons.Outlined.Info, contentDescription = "Open app info") },
+          text = "Open app info",
           enabled = enabled
         )
         AppActionTextButton(
