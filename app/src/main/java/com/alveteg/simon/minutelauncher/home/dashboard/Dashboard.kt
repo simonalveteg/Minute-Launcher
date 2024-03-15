@@ -133,7 +133,6 @@ fun Dashboard(
             )
           }
           Spacer(Modifier.height(8.dp))
-          UsageBarGraph()
           Row(
             modifier = Modifier
               .fillMaxWidth()
@@ -155,11 +154,9 @@ fun Dashboard(
                 .weight(1f)
             )
           }
-          AppModalActionBar(
-            appInfo = AppInfo(App(0, "", ""), true),
-            enabled = true,
-            onChangeTimer = { /*TODO*/ },
-            onEvent = {}
+          UsageBarGraph()
+          DashboardActionBar(
+            onEvent = onEvent
           )
         }
       },
