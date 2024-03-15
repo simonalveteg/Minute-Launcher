@@ -3,6 +3,7 @@ package com.alveteg.simon.minutelauncher.home.dashboard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
@@ -78,7 +79,7 @@ fun Dashboard(
   ) {
     val peekHeight = remember { Animatable(0f) }
     LaunchedEffect(true) {
-      peekHeight.animateTo(100f)
+      peekHeight.animateTo(100f, tween(200))
     }
     DisposableEffect(Unit) {
       onDispose {

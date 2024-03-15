@@ -68,17 +68,16 @@ fun FavoriteList(
   }
   var currentZone by remember { mutableStateOf(GestureZone.NONE) }
   var currentDirection by remember { mutableStateOf(GestureDirection.NONE) }
-  val fastFloatSpec: AnimationSpec<Float> = tween(durationMillis = 500)
   val slowFloatSpec: AnimationSpec<Float> = tween(durationMillis = 1000)
   val favoritesAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
     label = "",
-    animationSpec = if (screenState.isFavorites()) slowFloatSpec else fastFloatSpec
+    animationSpec = if (screenState.isFavorites()) slowFloatSpec else tween(300)
   )
   val usageAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
     label = "",
-    animationSpec = if (!screenState.isFavorites()) fastFloatSpec else tween(
+    animationSpec = if (!screenState.isFavorites()) tween(500) else tween(
       durationMillis = 500, delayMillis = 600
     )
   )
