@@ -42,6 +42,7 @@ fun ActionBar(
 
   val showMoreIcon =
     if (actionBarState == ActionBarState.COLLAPSED) Icons.Default.ExpandMore else Icons.Default.ExpandLess
+
   Surface(
     modifier = Modifier
       .fillMaxWidth()

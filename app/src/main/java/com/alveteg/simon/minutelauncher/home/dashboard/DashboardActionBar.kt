@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wallpaper
@@ -15,15 +14,12 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
 
 
 @Composable
-fun DashboardActionBar(
-  onEvent: (Event) -> Unit
-) {
+fun DashboardActionBar() {
   val mContext = LocalContext.current
   val actions = listOf(
     ActionBarAction(
@@ -56,7 +52,11 @@ fun DashboardActionBar(
       description = "Change Wallpaper",
       action = {
         val intent = Intent(Intent.ACTION_SET_WALLPAPER)
-        ContextCompat.startActivity(mContext, Intent.createChooser(intent, "Select Wallpaper"), null)
+        ContextCompat.startActivity(
+          mContext,
+          Intent.createChooser(intent, "Select Wallpaper"),
+          null
+        )
       }
     ),
     ActionBarAction(
