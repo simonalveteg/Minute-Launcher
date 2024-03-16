@@ -34,7 +34,7 @@ import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
-import com.alveteg.simon.minutelauncher.home.modal.MinuteBottomSheet
+import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
 import timber.log.Timber
 import java.lang.reflect.Method
 
@@ -85,7 +85,7 @@ fun HomeScreen(
     screenState = ScreenState.FAVORITES
   }
 
-  MinuteBottomSheet(
+  AppModalBottomSheet(
     appInfo = currentAppModal,
     onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent

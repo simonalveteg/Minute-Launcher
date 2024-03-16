@@ -1,5 +1,6 @@
 package com.alveteg.simon.minutelauncher.home.dashboard
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,14 +12,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -29,10 +36,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
+import com.alveteg.simon.minutelauncher.home.SegmentedControl
 import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
 import com.alveteg.simon.minutelauncher.home.stats.UsageCard
+import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
+import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.clearFocusOnKeyboardDismiss
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardBottomSheet(
   searchText: String,
@@ -41,6 +53,7 @@ fun DashboardBottomSheet(
   onGloballyPositioned: (LayoutCoordinates) -> Unit = {}
 ) {
   val focusRequester = remember { FocusRequester() }
+  var gestureSheet by remember { mutableStateOf(false) }
 
   Column(
     modifier = Modifier
@@ -101,6 +114,38 @@ fun DashboardBottomSheet(
       )
     }
     UsageBarGraph()
-    DashboardActionBar()
+    DashboardActionBar(
+      onOpenGestureSheet = { gestureSheet = true }
+    )
   }
+
+  if (gestureSheet) {
+    MinuteBottomSheet(
+      onDismissRequest = { gestureSheet = false }
+    ) {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .navigationBarsPadding()
+          .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        Text(
+          text = "Set gesture shortcuts",
+          style = MaterialTheme.typography.headlineSmall,
+          fontFamily = archivoBlackFamily,
+          modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+        )
+        Text(
+          text = "The app timer decides how long you need to wait before being able to open the app. ",
+          style = MaterialTheme.typography.bodyMedium,
+          textAlign = TextAlign.Center,
+          fontFamily = archivoFamily,
+          modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+      }
+    }
+  }
+
 }

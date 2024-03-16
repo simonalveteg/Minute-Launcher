@@ -19,7 +19,9 @@ import com.alveteg.simon.minutelauncher.home.ActionBarAction
 
 
 @Composable
-fun DashboardActionBar() {
+fun DashboardActionBar(
+  onOpenGestureSheet: () -> Unit
+) {
   val mContext = LocalContext.current
   val actions = listOf(
     ActionBarAction(
@@ -33,7 +35,7 @@ fun DashboardActionBar() {
     ActionBarAction(
       imageVector = Icons.Default.Gesture,
       description = "Change gesture shortcuts",
-      action = {}
+      action = onOpenGestureSheet
     ),
     ActionBarAction(
       imageVector = Icons.Default.HourglassEmpty,

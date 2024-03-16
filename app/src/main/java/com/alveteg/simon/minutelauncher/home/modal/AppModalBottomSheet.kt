@@ -30,6 +30,7 @@ import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteAccessibilityService
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
 import com.alveteg.simon.minutelauncher.home.SegmentedControl
 import com.alveteg.simon.minutelauncher.isAccessibilityServiceEnabled
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
@@ -38,7 +39,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MinuteBottomSheet(
+fun AppModalBottomSheet(
   appInfo: AppInfo?,
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit
@@ -88,21 +89,17 @@ fun MinuteBottomSheet(
       )
       Spacer(modifier = Modifier.height(4.dp))
     }
-    val onTimerSheetDismiss: () -> Unit = {
-      timerVisible = false
-      coroutineScope.launch {
-        timerSheetState.hide()
-        sheetState.show()
-      }
-    }
     if (timerVisible) {
-      ModalBottomSheet(
-        onDismissRequest = onTimerSheetDismiss,
-        sheetState = timerSheetState,
-        dragHandle = {},
-        windowInsets = WindowInsets(bottom = 0.dp)
+      MinuteBottomSheet(
+        onDismissRequest = {
+          timerVisible = false
+          coroutineScope.launch {
+            timerSheetState.hide()
+            sheetState.show()
+          }
+        },
+        sheetState = timerSheetState
       ) {
-        BackHandler(true) { onTimerSheetDismiss() }
         Column(
           modifier = Modifier
             .fillMaxWidth()
