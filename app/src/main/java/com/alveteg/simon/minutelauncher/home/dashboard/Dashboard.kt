@@ -78,7 +78,7 @@ fun Dashboard(
     exit = fadeOut()
   ) {
     val peekHeight = remember { Animatable(0f) }
-    LaunchedEffect(true) {
+    LaunchedEffect(Unit) {
       peekHeight.animateTo(100f, tween(200))
     }
     DisposableEffect(Unit) {
@@ -105,10 +105,10 @@ fun Dashboard(
             shape = MaterialTheme.shapes.large,
             tonalElevation = 8.dp,
             modifier = Modifier
+              .navigationBarsPadding()
               .onGloballyPositioned {
                 searchHeight = with(density) { it.size.height.toDp() }
               }
-              .navigationBarsPadding()
           ) {
             TextField(
               value = searchText,
@@ -188,52 +188,6 @@ fun Dashboard(
           Spacer(modifier = Modifier.statusBarsPadding())
         }
       }
-    }
-  }
-}
-
-@Composable
-fun asss() {
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .statusBarsPadding(),
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    Row(
-      modifier = Modifier
-        .fillMaxWidth()
-    ) {
-      UsageCard(
-        label = "7 day average",
-        usage = 10000000L,
-        modifier = Modifier
-          .fillMaxWidth()
-          .weight(1f)
-          .padding(horizontal = 16.dp, vertical = 8.dp)
-      )
-      UsageCard(
-        label = "Today",
-        usage = 20000000L,
-        modifier = Modifier
-          .fillMaxWidth()
-          .weight(1f)
-          .padding(horizontal = 16.dp, vertical = 8.dp)
-      )
-    }
-    UsageBarGraph()
-    AppModalActionBar(
-      appInfo = AppInfo(App(0, "", ""), true),
-      enabled = true,
-      onChangeTimer = { /*TODO*/ },
-      onEvent = {}
-    )
-    Button(
-      onClick = { }, modifier = Modifier
-        .padding(48.dp)
-        .padding(top = 280.dp)
-    ) {
-      Text(text = "Show Apps")
     }
   }
 }

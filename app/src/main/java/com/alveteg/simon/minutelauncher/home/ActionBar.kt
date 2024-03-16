@@ -99,7 +99,10 @@ fun ActionBar(
             )
           }
         }
-        IconButton(onClick = { actionBarState = ActionBarState.COLLAPSED }) {
+        IconButton(
+          modifier = Modifier.fillMaxWidth(),
+          onClick = { actionBarState = ActionBarState.COLLAPSED }
+        ) {
           Icon(imageVector = showMoreIcon, contentDescription = "Show less actions")
         }
       }
