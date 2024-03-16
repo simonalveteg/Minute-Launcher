@@ -50,23 +50,27 @@ fun DashboardBottomSheet(
   searchText: String,
   onSearch: KeyboardActionScope.() -> Unit,
   onEvent: (Event) -> Unit,
-  onGloballyPositioned: (LayoutCoordinates) -> Unit = {}
+  onGloballyPositioned: (Int) -> Unit = {}
 ) {
   val focusRequester = remember { FocusRequester() }
   var gestureSheet by remember { mutableStateOf(false) }
+  val bottomPadding = 8
+  val topPadding = 16
 
   Column(
     modifier = Modifier
       .navigationBarsPadding()
       .padding(horizontal = 16.dp)
-      .padding(bottom = 8.dp, top = 16.dp)
+      .padding(bottom = bottomPadding.dp, top = topPadding.dp)
   ) {
     Surface(
       shape = MaterialTheme.shapes.large,
       tonalElevation = 8.dp,
       modifier = Modifier
         .navigationBarsPadding()
-        .onGloballyPositioned { onGloballyPositioned(it) }
+        .onGloballyPositioned {
+          onGloballyPositioned(it.size.height + bottomPadding + topPadding)
+        }
     ) {
       TextField(
         value = searchText,

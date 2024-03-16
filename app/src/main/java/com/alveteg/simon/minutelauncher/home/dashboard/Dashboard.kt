@@ -74,7 +74,7 @@ fun Dashboard(
           onSearch = onSearch,
           onEvent = onEvent,
           onGloballyPositioned = {
-            searchHeight = with(density) { it.size.height.toDp() }
+            searchHeight = with(density) { it.toDp() }
           }
         )
       },
@@ -93,7 +93,7 @@ fun Dashboard(
           Spacer(
             modifier = Modifier
               .navigationBarsPadding()
-              .height(searchHeight)
+              .height(searchHeight + 8.dp)
           )
         }
         items(items = apps) { appInfo ->
