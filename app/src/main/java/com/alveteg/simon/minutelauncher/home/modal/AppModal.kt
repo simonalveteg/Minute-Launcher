@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonElevation
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
@@ -88,7 +95,10 @@ fun AppModal(
   Column(
     horizontalAlignment = Alignment.CenterHorizontally,
     modifier = Modifier
-      .padding(vertical = 0.dp, horizontal = 16.dp)
+      .graphicsLayer { clip = true }
+      .padding(horizontal = 16.dp)
+      .padding(bottom = 8.dp)
+      .navigationBarsPadding()
       .animateContentSize()
   ) {
     Text(
@@ -107,12 +117,20 @@ fun AppModal(
     Row(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(bottom = 8.dp)
-        .navigationBarsPadding(),
-      horizontalArrangement = Arrangement.SpaceEvenly,
+        .graphicsLayer { clip = true }
+        .padding(horizontal = 8.dp)
+        .padding(top = 4.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.Bottom
     ) {
-      TextButton(onClick = onConfirmation, enabled = enabled) {
+      FilledTonalButton(
+        modifier = Modifier
+          .weight(1f)
+          .padding(end = 8.dp),
+        onClick = onConfirmation,
+        shape = MaterialTheme.shapes.medium,
+        enabled = enabled
+      ) {
         Box(contentAlignment = Alignment.Center) {
           // Transparent copy for alignment consistency
           Text(
@@ -129,8 +147,12 @@ fun AppModal(
         }
       }
       Button(
-        modifier = Modifier.scale(scale),
-        onClick = onCancel
+        modifier = Modifier
+          .wrapContentSize(unbounded = true, align = Alignment.CenterEnd)
+          .weight(1f)
+          .scale(scale),
+        onClick = onCancel,
+        shape = MaterialTheme.shapes.medium
       ) {
         Text(
           text = "Put the phone down",
