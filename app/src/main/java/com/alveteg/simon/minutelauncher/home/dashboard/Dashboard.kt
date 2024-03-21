@@ -91,31 +91,12 @@ fun Dashboard(
       },
       containerColor = Color.Transparent
     ) {
-      val listState = rememberLazyListState()
-      LazyColumn(
-        state = listState,
-        verticalArrangement = Arrangement.Bottom,
-        reverseLayout = true,
-        modifier = Modifier
-          .fillMaxSize()
-          .offset(y = offsetY.value.dp)
-      ) {
-        item {
-          Spacer(
-            modifier = Modifier
-              .navigationBarsPadding()
-              .height(searchHeight + 8.dp)
-          )
-        }
-        items(items = apps) { appInfo ->
-          val appTitle = appInfo.app.appTitle
-          val appUsage = appInfo.usage
-          AppCard(appTitle, appUsage) { onAppClick(appInfo) }
-        }
-        item {
-          Spacer(modifier = Modifier.statusBarsPadding())
-        }
-      }
+      AppList(
+        apps = apps,
+        offsetY = offsetY,
+        onAppClick = onAppClick,
+        searchHeight = searchHeight
+      )
     }
   }
 }

@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteRoute
 import com.alveteg.simon.minutelauncher.UiEvent
-import com.alveteg.simon.minutelauncher.home.ScreenState
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
@@ -126,7 +125,6 @@ class LauncherViewModel @Inject constructor(
   fun onEvent(event: Event) {
     Timber.d(event.toString())
     when (event) {
-      is Event.OpenGestures -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES))
       is Event.OpenApplication -> {
         sendUiEvent(UiEvent.ShowModal(event.appInfo))
         sendUiEvent(UiEvent.VibrateLongPress)
@@ -169,10 +167,12 @@ class LauncherViewModel @Inject constructor(
             sendUiEvent(UiEvent.ShowDashboard)
             sendUiEvent(UiEvent.VibrateLongPress)
           }
+
           Gesture.DOWN -> {
             sendUiEvent(UiEvent.ExpandNotifications)
             sendUiEvent(UiEvent.VibrateLongPress)
           }
+
           else -> {
             viewModelScope.launch {
               withContext(Dispatchers.IO) {
@@ -194,7 +194,11 @@ class LauncherViewModel @Inject constructor(
             roomRepository.insertGestureApp(SwipeApp(event.gesture, event.app))
           }
         }
+        sendUiEvent(UiEvent.Navigate(route = MinuteRoute.GESTURES, popBackStack = true))
       }
+
+      is Event.OpenGestureList -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES_LIST + "/${event.gesture}"))
+      is Event.OpenGestures -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES))
 
       is Event.ClearAppGesture -> {
         viewModelScope.launch {

@@ -23,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -30,19 +31,33 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
+import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.MinuteRoute
+import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GestureScreen(
-  navController: NavController,
+  onNavigate: (UiEvent.Navigate) -> Unit,
   viewModel: LauncherViewModel = hiltViewModel()
 ) {
+  LaunchedEffect(key1 = true) {
+    Timber.d("launched effect")
+    viewModel.uiEvent.collect { event ->
+      Timber.d("event: $event")
+      when (event) {
+        is UiEvent.Navigate -> onNavigate(event)
+        else -> Unit
+      }
+    }
+  }
+
   val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
   val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
 
@@ -60,7 +75,7 @@ fun GestureScreen(
             )
           },
           navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = { onNavigate(UiEvent.Navigate(MinuteRoute.GESTURES, true)) }) {
               Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Navigate Back"
@@ -90,12 +105,14 @@ fun GestureScreen(
           GestureEntry(
             name = "Swipe Left",
             gesture = Gesture.UPPER_LEFT,
-            app = gestureApps[Gesture.UPPER_LEFT]
+            app = gestureApps[Gesture.UPPER_LEFT],
+            onEvent = viewModel::onEvent
           )
           GestureEntry(
             name = "Swipe Right",
             gesture = Gesture.UPPER_RIGHT,
-            app = gestureApps[Gesture.UPPER_RIGHT]
+            app = gestureApps[Gesture.UPPER_RIGHT],
+            onEvent = viewModel::onEvent
           )
         }
         stickyHeader {
@@ -110,12 +127,14 @@ fun GestureScreen(
           GestureEntry(
             name = "Swipe Left",
             gesture = Gesture.LOWER_LEFT,
-            app = gestureApps[Gesture.LOWER_LEFT]
+            app = gestureApps[Gesture.LOWER_LEFT],
+            onEvent = viewModel::onEvent
           )
           GestureEntry(
             name = "Swipe Right",
             gesture = Gesture.LOWER_RIGHT,
-            app = gestureApps[Gesture.LOWER_RIGHT]
+            app = gestureApps[Gesture.LOWER_RIGHT],
+            onEvent = viewModel::onEvent
           )
         }
       }
@@ -127,7 +146,8 @@ fun GestureScreen(
 fun GestureEntry(
   name: String,
   gesture: Gesture,
-  app: App?
+  app: App?,
+  onEvent: (Event) -> Unit
 ) {
   val appTitle = app?.appTitle ?: "No app selected"
   Surface(
@@ -150,14 +170,18 @@ fun GestureEntry(
         horizontalArrangement = Arrangement.SpaceBetween
       ) {
         FilledTonalButton(
-          onClick = { /*TODO*/ },
+          onClick = {
+            onEvent(Event.OpenGestureList(gesture))
+          },
           modifier = Modifier.weight(1f),
           shape = MaterialTheme.shapes.medium
         ) {
           Text(text = appTitle)
         }
         IconButton(
-          onClick = { /*TODO*/ },
+          onClick = {
+            onEvent(Event.ClearAppGesture(gesture))
+          },
           modifier = Modifier.wrapContentWidth()
         ) {
           Icon(imageVector = Icons.Default.Close, contentDescription = "Unset Gesture")

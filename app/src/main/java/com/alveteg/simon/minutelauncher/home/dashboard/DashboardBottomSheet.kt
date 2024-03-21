@@ -9,29 +9,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActionScope
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
 import com.alveteg.simon.minutelauncher.home.stats.UsageCard
-import com.alveteg.simon.minutelauncher.utilities.clearFocusOnKeyboardDismiss
 
 @Composable
 fun DashboardBottomSheet(
@@ -41,7 +24,6 @@ fun DashboardBottomSheet(
   onGloballyPositioned: (Int) -> Unit = {},
   onSearchFocused: () -> Unit
 ) {
-  val focusRequester = remember { FocusRequester() }
   val bottomPadding = 8
   val topPadding = 16
 
@@ -51,43 +33,15 @@ fun DashboardBottomSheet(
       .padding(horizontal = 16.dp)
       .padding(bottom = bottomPadding.dp, top = topPadding.dp)
   ) {
-    Surface(
-      shape = MaterialTheme.shapes.large,
-      tonalElevation = 8.dp,
-      modifier = Modifier
-        .navigationBarsPadding()
-        .onGloballyPositioned {
-          onGloballyPositioned(it.size.height + bottomPadding + topPadding)
-        }
-    ) {
-      TextField(
-        value = searchText,
-        onValueChange = { onEvent(Event.UpdateSearch(it)) },
-        modifier = Modifier
-          .fillMaxWidth()
-          .focusRequester(focusRequester)
-          .onFocusChanged {
-            if (it.hasFocus) {
-              onSearchFocused()
-            }
-          }
-          .clearFocusOnKeyboardDismiss(),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = onSearch),
-        colors = OutlinedTextFieldDefaults.colors(
-          unfocusedBorderColor = Color.Transparent,
-          focusedBorderColor = Color.Transparent
-        ),
-        placeholder = {
-          Text(
-            text = "search",
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-          )
-        },
-        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
-      )
-    }
+    SearchBar(
+      searchText = searchText,
+      onSearch = onSearch,
+      topPadding = topPadding.dp,
+      bottomPadding = bottomPadding.dp,
+      onGloballyPositioned = onGloballyPositioned,
+      onSearchFocused = onSearchFocused,
+      onEvent = onEvent
+    )
     Spacer(Modifier.height(8.dp))
     Row(
       modifier = Modifier

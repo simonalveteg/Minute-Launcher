@@ -30,7 +30,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
@@ -42,8 +41,8 @@ import java.lang.reflect.Method
 
 @Composable
 fun HomeScreen(
-    navController: NavController,
-    viewModel: LauncherViewModel = hiltViewModel()
+  onNavigate: (UiEvent.Navigate) -> Unit,
+  viewModel: LauncherViewModel = hiltViewModel()
 ) {
   var screenState by rememberSaveable { mutableStateOf(ScreenState.FAVORITES) }
   val searchText by viewModel.searchTerm.collectAsState()
@@ -80,9 +79,7 @@ fun HomeScreen(
         is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)
         is UiEvent.ShowModal -> currentAppPackage = event.appInfo.app.packageName
         is UiEvent.ShowDashboard -> screenState = ScreenState.DASHBOARD
-        is UiEvent.Navigate -> {
-          navController.navigate(event.route)
-        }
+        is UiEvent.Navigate -> onNavigate(event)
       }
     }
   }

@@ -17,4 +17,5 @@ sealed class Event {
   data class UpdateFavoriteOrder(val favorites: List<FavoriteAppInfo>) : Event()
   data class UpdateApp(val app: App) : Event()
   data object OpenGestures : Event()
+  data class OpenGestureList(val gesture: Gesture) : Event()
 }
