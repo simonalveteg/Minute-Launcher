@@ -26,20 +26,25 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.AppCard
 import com.alveteg.simon.minutelauncher.home.ScreenState
+import com.alveteg.simon.minutelauncher.utilities.Gesture
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dashboard(
   screenState: ScreenState,
+  gestureApps: Map<Gesture, App>,
   onEvent: (Event) -> Unit,
   searchText: String,
   apps: List<AppInfo>,
@@ -52,6 +57,7 @@ fun Dashboard(
     enter = fadeIn(),
     exit = fadeOut()
   ) {
+    val coroutineScope = rememberCoroutineScope()
     val peekHeight = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
       peekHeight.animateTo(100f, tween(200))
@@ -75,6 +81,11 @@ fun Dashboard(
           onEvent = onEvent,
           onGloballyPositioned = {
             searchHeight = with(density) { it.toDp() }
+          },
+          onSearchFocused = {
+            coroutineScope.launch {
+              scaffoldState.bottomSheetState.partialExpand()
+            }
           }
         )
       },

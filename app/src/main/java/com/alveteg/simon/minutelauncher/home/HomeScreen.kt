@@ -121,6 +121,7 @@ fun HomeScreen(
 
         Dashboard(
           screenState = screenState,
+          gestureApps = gestureApps,
           onEvent = viewModel::onEvent,
           searchText = searchText,
           onAppClick = { appListSelectionAction(it) },
