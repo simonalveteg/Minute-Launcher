@@ -118,12 +118,11 @@ fun AppModal(
       modifier = Modifier
         .fillMaxWidth()
         .graphicsLayer { clip = true }
-        .padding(horizontal = 8.dp)
         .padding(top = 4.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.Bottom
     ) {
-      FilledTonalButton(
+      TextButton(
         modifier = Modifier
           .weight(1f)
           .padding(end = 8.dp),
@@ -149,6 +148,7 @@ fun AppModal(
       Button(
         modifier = Modifier
           .wrapContentSize(unbounded = true, align = Alignment.CenterEnd)
+          .padding(end = 8.dp)
           .weight(1f)
           .scale(scale),
         onClick = onCancel,
