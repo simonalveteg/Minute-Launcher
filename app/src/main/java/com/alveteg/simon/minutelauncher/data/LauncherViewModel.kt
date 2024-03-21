@@ -5,6 +5,7 @@ import android.os.UserHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.MinuteRoute
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.home.ScreenState
 import com.alveteg.simon.minutelauncher.utilities.Gesture
@@ -125,6 +126,7 @@ class LauncherViewModel @Inject constructor(
   fun onEvent(event: Event) {
     Timber.d(event.toString())
     when (event) {
+      is Event.OpenGestures -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES))
       is Event.OpenApplication -> {
         sendUiEvent(UiEvent.ShowModal(event.appInfo))
         sendUiEvent(UiEvent.VibrateLongPress)

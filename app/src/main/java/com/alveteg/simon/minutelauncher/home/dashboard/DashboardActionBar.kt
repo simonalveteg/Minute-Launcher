@@ -14,13 +14,14 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
 
 
 @Composable
 fun DashboardActionBar(
-  onOpenGestureSheet: () -> Unit
+  onEvent: (Event) -> Unit
 ) {
   val mContext = LocalContext.current
   val actions = listOf(
@@ -35,7 +36,7 @@ fun DashboardActionBar(
     ActionBarAction(
       imageVector = Icons.Default.Gesture,
       description = "Change gesture shortcuts",
-      action = onOpenGestureSheet
+      action = { onEvent(Event.OpenGestures) }
     ),
     ActionBarAction(
       imageVector = Icons.Default.HourglassEmpty,

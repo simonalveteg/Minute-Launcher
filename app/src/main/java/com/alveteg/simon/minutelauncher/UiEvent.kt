@@ -10,4 +10,5 @@ sealed class UiEvent {
   data object ExpandNotifications : UiEvent()
   data object ShowDashboard : UiEvent()
   data class ShowModal(val appInfo: AppInfo) : UiEvent()
+  data class Navigate(val route: String, val popBackStack: Boolean = false): UiEvent()
 }

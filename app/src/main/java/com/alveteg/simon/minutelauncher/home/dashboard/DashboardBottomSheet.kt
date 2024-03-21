@@ -111,8 +111,6 @@ fun DashboardBottomSheet(
       )
     }
     UsageBarGraph()
-    DashboardActionBar(
-      onOpenGestureSheet = {  }
-    )
+    DashboardActionBar(onEvent = onEvent)
   }
 }

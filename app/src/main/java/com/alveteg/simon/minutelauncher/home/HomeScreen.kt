@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -29,6 +30,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
@@ -40,9 +42,10 @@ import java.lang.reflect.Method
 
 @Composable
 fun HomeScreen(
-  viewModel: LauncherViewModel = hiltViewModel()
+    navController: NavController,
+    viewModel: LauncherViewModel = hiltViewModel()
 ) {
-  var screenState by remember { mutableStateOf(ScreenState.FAVORITES) }
+  var screenState by rememberSaveable { mutableStateOf(ScreenState.FAVORITES) }
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
   val totalUsage by viewModel.totalUsage.collectAsState(initial = 0L)
@@ -77,6 +80,9 @@ fun HomeScreen(
         is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)
         is UiEvent.ShowModal -> currentAppPackage = event.appInfo.app.packageName
         is UiEvent.ShowDashboard -> screenState = ScreenState.DASHBOARD
+        is UiEvent.Navigate -> {
+          navController.navigate(event.route)
+        }
       }
     }
   }
