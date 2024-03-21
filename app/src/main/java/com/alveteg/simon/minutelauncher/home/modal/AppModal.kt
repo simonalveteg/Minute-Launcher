@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +38,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
@@ -150,14 +152,18 @@ fun AppModal(
           .wrapContentSize(unbounded = true, align = Alignment.CenterEnd)
           .padding(end = 8.dp)
           .weight(1f)
-          .scale(scale),
+          .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+          },
         onClick = onCancel,
         shape = MaterialTheme.shapes.medium
       ) {
         Text(
           text = "Put the phone down",
           fontFamily = archivoFamily,
-          fontWeight = FontWeight.Bold
+          fontWeight = FontWeight.Bold,
+          style = LocalTextStyle.current.copy(textMotion = TextMotion.Animated)
         )
       }
     }
