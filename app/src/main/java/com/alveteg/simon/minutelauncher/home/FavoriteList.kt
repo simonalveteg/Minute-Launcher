@@ -2,11 +2,10 @@ package com.alveteg.simon.minutelauncher.home
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,81 +26,68 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
-import androidx.constraintlayout.compose.ConstrainScope
-import androidx.constraintlayout.compose.ConstrainedLayoutReference
-import androidx.constraintlayout.compose.ConstraintLayoutScope
+import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
 import com.alveteg.simon.minutelauncher.data.toAppInfo
-import com.alveteg.simon.minutelauncher.reorderableList.ReorderableItem
-import com.alveteg.simon.minutelauncher.reorderableList.detectReorder
-import com.alveteg.simon.minutelauncher.reorderableList.rememberReorderableLazyListState
-import com.alveteg.simon.minutelauncher.reorderableList.reorderable
+import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.GestureDirection
 import com.alveteg.simon.minutelauncher.utilities.GestureZone
-import com.alveteg.simon.minutelauncher.utilities.thenIf
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
-@OptIn(ExperimentalFoundationApi::class)
+@Suppress("NAME_SHADOWING")
 @Composable
-fun ConstraintLayoutScope.FavoriteList(
+fun FavoriteList(
   screenState: ScreenState,
   favorites: List<FavoriteAppInfo>,
-  constraintReference: ConstrainedLayoutReference,
-  constraints: ConstrainScope.() -> Unit,
   onEvent: (Event) -> Unit,
   screenHeight: Float,
   totalUsage: Long,
+  offsetY: Animatable<Float, AnimationVector1D>,
   onAppClick: (AppInfo) -> Unit
 ) {
+  val screenHeight by rememberUpdatedState(screenHeight)
   var gesture by remember { mutableStateOf(Gesture.NONE) }
-  val offsetY = remember { Animatable(0f) }
   val coroutineScope = rememberCoroutineScope()
   val onDragEnd = {
     coroutineScope.launch {
-      offsetY.animateTo(0f, spring(0.5f, 300f))
+      offsetY.animateTo(0f, spring(0.44f, 300f))
     }
   }
   var currentZone by remember { mutableStateOf(GestureZone.NONE) }
   var currentDirection by remember { mutableStateOf(GestureDirection.NONE) }
-  val fastFloatSpec: AnimationSpec<Float> = tween(durationMillis = 500)
   val slowFloatSpec: AnimationSpec<Float> = tween(durationMillis = 1000)
   val favoritesAlpha by animateFloatAsState(
-    targetValue = if (screenState.hasSearch()) 0f else 1f,
+    targetValue = if (screenState.isFavorites()) 1f else 0f,
     label = "",
-    animationSpec = if (screenState.hasSearch()) fastFloatSpec else slowFloatSpec
+    animationSpec = if (screenState.isFavorites()) slowFloatSpec else tween(300)
   )
   val usageAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
     label = "",
-    animationSpec = if (!screenState.isFavorites()) fastFloatSpec else tween(
+    animationSpec = if (!screenState.isFavorites()) tween(500) else tween(
       durationMillis = 500, delayMillis = 600
     )
   )
 
   Column(modifier = Modifier
-    .constrainAs(constraintReference) { constraints() }
     .fillMaxSize()
     .graphicsLayer {
       alpha = favoritesAlpha
     }
-    .combinedClickable(onLongClick = {
-      onEvent(Event.ChangeScreenState(screenState.toggleModify()))
-    }) {}
-    .offset { IntOffset(x = 0, y = offsetY.value.roundToInt()) }
+    .offset(y = offsetY.value.dp)
     .pointerInput(Unit) {
       detectHorizontalDragGestures(
         onDragCancel = {
@@ -145,7 +132,8 @@ fun ConstraintLayoutScope.FavoriteList(
             else -> currentDirection
           }
         }
-        currentZone = if (change.position.y < screenHeight.div(2)) {
+        Timber.d("Pos: ${change.position.y}, $screenHeight half: ${screenHeight.div(2f)}")
+        currentZone = if (change.position.y < screenHeight.div(2f)) {
           when (currentZone) {
             GestureZone.UPPER -> GestureZone.UPPER
             GestureZone.NONE -> GestureZone.UPPER
@@ -172,12 +160,13 @@ fun ConstraintLayoutScope.FavoriteList(
         val originalY = offsetY.value
         val threshold = 100f
         val weight = (abs(originalY) - threshold) / threshold
-        val easingFactor = (1 - weight * 0.75f) * 0.25f
+        val easingFactor = (1 - weight * 0.85f) * 0.10f
         val easedDragAmount = dragAmount * easingFactor
         coroutineScope.launch {
           offsetY.snapTo(originalY + easedDragAmount)
         }
-        gesture = if (easingFactor < 0.18) {
+        Timber.d("EasingFactor: $easingFactor")
+        gesture = if (easingFactor < 0.14) {
           if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
         } else Gesture.NONE
       }
@@ -186,7 +175,9 @@ fun ConstraintLayoutScope.FavoriteList(
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     Text(
-      text = totalUsage.toTimeUsed(), color = LocalContentColor.current.copy(alpha = usageAlpha)
+      text = totalUsage.toTimeUsed(),
+      color = LocalContentColor.current.copy(alpha = usageAlpha),
+      fontFamily = archivoFamily
     )
     val data = remember { mutableStateOf(favorites) }
     LaunchedEffect(favorites) {
@@ -194,30 +185,19 @@ fun ConstraintLayoutScope.FavoriteList(
         data.value = favorites
       }
     }
-    val reorderableState = rememberReorderableLazyListState(onMove = { from, to ->
-      data.value = data.value.toMutableList().apply {
-        add(to.index, removeAt(from.index))
-      }
-      onEvent(Event.UpdateFavoriteOrder(data.value))
-    })
-    LazyColumn(state = reorderableState.listState,
+    val listState = rememberLazyListState()
+    LazyColumn(
+      state = listState,
       horizontalAlignment = Alignment.CenterHorizontally,
       userScrollEnabled = false,
-      modifier = Modifier
-        .fillMaxWidth()
-        .thenIf(screenState.isModify()) { detectReorder(reorderableState) }
-        .thenIf(screenState.isModify()) { reorderable(reorderableState) }
+      modifier = Modifier.fillMaxWidth()
     ) {
       items(data.value, { it.favoriteApp.app.id }) { favoriteAppInfo ->
-        ReorderableItem(reorderableState, key = favoriteAppInfo.favoriteApp.app.id) { isDragged ->
-          AppCard(
-            appTitle = favoriteAppInfo.favoriteApp.app.appTitle,
-            appUsage = favoriteAppInfo.usage,
-            editState = screenState.isModify(),
-            isDragged = isDragged
-          ) {
-            if (screenState.isFavorites()) onAppClick(favoriteAppInfo.toAppInfo())
-          }
+        FavoriteCard(
+          appTitle = favoriteAppInfo.favoriteApp.app.appTitle,
+          appUsage = favoriteAppInfo.usage,
+        ) {
+          onAppClick(favoriteAppInfo.toAppInfo())
         }
       }
     }

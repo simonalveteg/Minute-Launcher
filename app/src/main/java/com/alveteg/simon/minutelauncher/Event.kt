@@ -3,7 +3,6 @@ package com.alveteg.simon.minutelauncher
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
-import com.alveteg.simon.minutelauncher.home.ScreenState
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 
 
@@ -16,6 +15,7 @@ sealed class Event {
   data class SetAppGesture(val app: App, val gesture: Gesture) : Event()
   data class ClearAppGesture(val gesture: Gesture) : Event()
   data class UpdateFavoriteOrder(val favorites: List<FavoriteAppInfo>) : Event()
-  data class ChangeScreenState(val state: ScreenState) : Event()
   data class UpdateApp(val app: App) : Event()
+  data object OpenGestures : Event()
+  data class OpenGestureList(val gesture: Gesture) : Event()
 }

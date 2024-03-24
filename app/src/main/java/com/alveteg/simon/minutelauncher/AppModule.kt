@@ -5,8 +5,7 @@ import androidx.room.Room
 import com.alveteg.simon.minutelauncher.data.LauncherDAO
 import com.alveteg.simon.minutelauncher.data.LauncherDatabase
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
-import com.alveteg.simon.minutelauncher.data.PackageRepository
-import com.alveteg.simon.minutelauncher.data.UsageRepository
+import com.alveteg.simon.minutelauncher.data.ApplicationRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,14 +41,8 @@ object AppModule {
 
   @Provides
   @Singleton
-  fun providePackageRepository(context: Context): PackageRepository {
-    return PackageRepository(context)
-  }
-
-  @Provides
-  @Singleton
-  fun provideUsageRepository(context: Context): UsageRepository {
-    return UsageRepository(context)
+  fun provideApplicationRepository(context: Context): ApplicationRepository {
+    return ApplicationRepository(context)
   }
 
   @Provides

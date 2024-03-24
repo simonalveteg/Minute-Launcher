@@ -5,8 +5,8 @@ import android.os.UserHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.MinuteRoute
 import com.alveteg.simon.minutelauncher.UiEvent
-import com.alveteg.simon.minutelauncher.home.ScreenState
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
@@ -29,8 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LauncherViewModel @Inject constructor(
   private val roomRepository: LauncherRepository,
-  private val packageRepository: PackageRepository,
-  private val usageRepository: UsageRepository
+  private val applicationRepository: ApplicationRepository
 ) : ViewModel() {
 
   private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -39,12 +38,12 @@ class LauncherViewModel @Inject constructor(
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
-  private val usageStats = usageRepository.usageStats
-  val totalUsage = usageStats.map { it.values.sum() }
+  private val dailyUsage = applicationRepository.dailyUsage
+  val dailyUsageTotal = dailyUsage.map { it.values.sum() }
 
   val gestureApps = roomRepository.gestureApps()
   val favoriteApps = combine(
-    roomRepository.favoriteApps(), usageStats
+    roomRepository.favoriteApps(), dailyUsage
   ) { favorites, usageStats ->
     favorites.map {
       val usage = usageStats.getOrDefault(it.app.packageName, 0L)
@@ -52,7 +51,7 @@ class LauncherViewModel @Inject constructor(
     }
   }
   private val installedApps = combine(
-    roomRepository.appList(), roomRepository.favoriteApps(), usageStats,
+    roomRepository.appList(), roomRepository.favoriteApps(), dailyUsage,
   ) { apps, favorites, usageStats ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
@@ -65,9 +64,6 @@ class LauncherViewModel @Inject constructor(
   ) { apps, searchTerm ->
     apps.filterBySearchTerm(searchTerm)
   }
-
-  private val _screenState = MutableStateFlow(ScreenState.FAVORITES)
-  val screenState = _screenState.asStateFlow()
 
   private val packageCallback = object : LauncherApps.Callback() {
     override fun onPackageRemoved(packageName: String?, user: UserHandle?) {
@@ -97,11 +93,11 @@ class LauncherViewModel @Inject constructor(
   }
 
   init {
-    packageRepository.registerCallback(packageCallback)
+    applicationRepository.registerCallback(packageCallback)
     updateDatabase()
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
-        usageRepository.startUsageUpdater()
+        applicationRepository.startUsageUpdater()
       }
     }
   }
@@ -111,13 +107,13 @@ class LauncherViewModel @Inject constructor(
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         val currentApps = roomRepository.appList().first()
-        val installedApps = packageRepository.getPackages()
+        val installedApps = applicationRepository.getApps()
         val currentAppPackageNames = currentApps.map { it.packageName }.toSet()
         val installedAppPackageNames = installedApps.map { it.packageName }.toSet()
         val newApps = installedApps.filter { !currentAppPackageNames.contains(it.packageName) }
         val removedApps = currentApps.filter { !installedAppPackageNames.contains(it.packageName) }
 
-        Timber.d("${newApps} new apps and ${removedApps} removed apps found.")
+        Timber.d("$newApps new apps and $removedApps removed apps found.")
 
         newApps.forEach { roomRepository.insertApp(it) }
         removedApps.forEach { roomRepository.removeApp(it) }
@@ -136,7 +132,7 @@ class LauncherViewModel @Inject constructor(
       is Event.LaunchActivity -> {
         val appInfo = event.appInfo
         Timber.d("Launch Activity ${appInfo.app.appTitle}")
-        packageRepository.getLaunchIntentForPackage(appInfo.app.packageName)?.let { intent ->
+        applicationRepository.getLaunchIntentForPackage(appInfo.app.packageName)?.let { intent ->
           sendUiEvent(UiEvent.LaunchActivity(intent))
           sendUiEvent(
             UiEvent.ShowToast("${appInfo.app.appTitle} used for ${appInfo.usage.toTimeUsed(false)}")
@@ -164,17 +160,18 @@ class LauncherViewModel @Inject constructor(
 
       is Event.HandleGesture -> {
         val gesture = event.gesture
-        if (!screenState.value.isFavorites()) return
         Timber.d("Gesture handled, $gesture")
         when (gesture) {
           Gesture.UP -> {
-            _screenState.value = ScreenState.APPS
+            sendUiEvent(UiEvent.ShowDashboard)
             sendUiEvent(UiEvent.VibrateLongPress)
           }
+
           Gesture.DOWN -> {
             sendUiEvent(UiEvent.ExpandNotifications)
             sendUiEvent(UiEvent.VibrateLongPress)
           }
+
           else -> {
             viewModelScope.launch {
               withContext(Dispatchers.IO) {
@@ -196,7 +193,11 @@ class LauncherViewModel @Inject constructor(
             roomRepository.insertGestureApp(SwipeApp(event.gesture, event.app))
           }
         }
+        sendUiEvent(UiEvent.Navigate(route = MinuteRoute.GESTURES, popBackStack = true))
       }
+
+      is Event.OpenGestureList -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES_LIST + "/${event.gesture}"))
+      is Event.OpenGestures -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES))
 
       is Event.ClearAppGesture -> {
         viewModelScope.launch {
@@ -214,7 +215,6 @@ class LauncherViewModel @Inject constructor(
         }
       }
 
-      is Event.ChangeScreenState -> _screenState.value = event.state
       is Event.UpdateApp -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
@@ -236,7 +236,7 @@ class LauncherViewModel @Inject constructor(
   }
 
   override fun onCleared() {
-    packageRepository.unregisterCallback()
+    applicationRepository.unregisterCallback()
     super.onCleared()
   }
 }
