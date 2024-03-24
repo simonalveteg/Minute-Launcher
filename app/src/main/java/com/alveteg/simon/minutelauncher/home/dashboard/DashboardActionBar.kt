@@ -12,9 +12,13 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
 
@@ -39,7 +43,7 @@ fun DashboardActionBar(
       action = { onEvent(Event.OpenGestures) }
     ),
     ActionBarAction(
-      imageVector = Icons.Default.HourglassEmpty,
+      imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
       description = "Open Digital Wellbeing",
       action = {
         val intent = Intent()

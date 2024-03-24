@@ -12,9 +12,12 @@ import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
@@ -49,8 +52,8 @@ fun AppModalActionBar(
       enabled = enabled
     ),
     ActionBarAction(
-      imageVector = Icons.Outlined.HourglassEmpty,
-      description = "Open app screen time",
+      imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
+      description = "Show app usage details",
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APP_USAGE_SETTINGS
