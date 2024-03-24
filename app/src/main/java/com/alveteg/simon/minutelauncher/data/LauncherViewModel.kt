@@ -29,8 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LauncherViewModel @Inject constructor(
   private val roomRepository: LauncherRepository,
-  private val packageRepository: PackageRepository,
-  private val usageRepository: UsageRepository
+  private val applicationRepository: ApplicationRepository
 ) : ViewModel() {
 
   private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -39,12 +38,12 @@ class LauncherViewModel @Inject constructor(
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
-  private val usageStats = usageRepository.usageStats
-  val totalUsage = usageStats.map { it.values.sum() }
+  private val dailyUsage = applicationRepository.dailyUsage
+  val dailyUsageTotal = dailyUsage.map { it.values.sum() }
 
   val gestureApps = roomRepository.gestureApps()
   val favoriteApps = combine(
-    roomRepository.favoriteApps(), usageStats
+    roomRepository.favoriteApps(), dailyUsage
   ) { favorites, usageStats ->
     favorites.map {
       val usage = usageStats.getOrDefault(it.app.packageName, 0L)
@@ -52,7 +51,7 @@ class LauncherViewModel @Inject constructor(
     }
   }
   private val installedApps = combine(
-    roomRepository.appList(), roomRepository.favoriteApps(), usageStats,
+    roomRepository.appList(), roomRepository.favoriteApps(), dailyUsage,
   ) { apps, favorites, usageStats ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
@@ -94,11 +93,11 @@ class LauncherViewModel @Inject constructor(
   }
 
   init {
-    packageRepository.registerCallback(packageCallback)
+    applicationRepository.registerCallback(packageCallback)
     updateDatabase()
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
-        usageRepository.startUsageUpdater()
+        applicationRepository.startUsageUpdater()
       }
     }
   }
@@ -108,7 +107,7 @@ class LauncherViewModel @Inject constructor(
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         val currentApps = roomRepository.appList().first()
-        val installedApps = packageRepository.getPackages()
+        val installedApps = applicationRepository.getApps()
         val currentAppPackageNames = currentApps.map { it.packageName }.toSet()
         val installedAppPackageNames = installedApps.map { it.packageName }.toSet()
         val newApps = installedApps.filter { !currentAppPackageNames.contains(it.packageName) }
@@ -133,7 +132,7 @@ class LauncherViewModel @Inject constructor(
       is Event.LaunchActivity -> {
         val appInfo = event.appInfo
         Timber.d("Launch Activity ${appInfo.app.appTitle}")
-        packageRepository.getLaunchIntentForPackage(appInfo.app.packageName)?.let { intent ->
+        applicationRepository.getLaunchIntentForPackage(appInfo.app.packageName)?.let { intent ->
           sendUiEvent(UiEvent.LaunchActivity(intent))
           sendUiEvent(
             UiEvent.ShowToast("${appInfo.app.appTitle} used for ${appInfo.usage.toTimeUsed(false)}")
@@ -237,7 +236,7 @@ class LauncherViewModel @Inject constructor(
   }
 
   override fun onCleared() {
-    packageRepository.unregisterCallback()
+    applicationRepository.unregisterCallback()
     super.onCleared()
   }
 }

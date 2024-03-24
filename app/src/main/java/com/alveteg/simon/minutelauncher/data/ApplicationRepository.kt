@@ -3,6 +3,8 @@ package com.alveteg.simon.minutelauncher.data
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.Intent
+import android.content.pm.LauncherApps
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -14,24 +16,66 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-class UsageRepository @Inject constructor(@ApplicationContext private val context: Context) {
+class ApplicationRepository @Inject constructor(@ApplicationContext private val context: Context) {
+
+  init {
+    Timber.d("ApplicationRepository initialised")
+  }
+
+  private val packageManager = context.packageManager
+  private val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+  private var callback: LauncherApps.Callback? = null
+
   private val usageStatsManager =
     context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
-  private val _usageStats = MutableSharedFlow<Map<String, Long>>(replay = 1)
-  val usageStats = _usageStats.asSharedFlow()
+  private val _dailyUsage = MutableSharedFlow<Map<String, Long>>(replay = 1)
+  val dailyUsage = _dailyUsage.asSharedFlow()
+
+
+  fun registerCallback(callback: LauncherApps.Callback) {
+    launcherApps.registerCallback(callback)
+  }
+
+  fun unregisterCallback() {
+    callback?.let {
+      launcherApps.unregisterCallback(it)
+      callback = null
+    }
+  }
+
+  private fun getLauncherApps(): Set<String> {
+    val launcherIntent = Intent(Intent.ACTION_MAIN, null)
+    launcherIntent.addCategory(Intent.CATEGORY_HOME)
+    return packageManager.queryIntentActivities(launcherIntent, 0)
+      .map { it.activityInfo.packageName }
+      .toSet()
+  }
+
+  fun getApps(): List<App> {
+    return launcherApps.getActivityList(null, launcherApps.profiles.firstOrNull())
+      .filter { it.applicationInfo.packageName != context.packageName }
+      .map { it.toApp() }
+  }
+
+  fun getLaunchIntentForPackage(packageName: String): Intent? {
+    return packageManager.getLaunchIntentForPackage(packageName)?.apply {
+      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+    }
+  }
 
   suspend fun startUsageUpdater() {
+    val launcherApps = getLauncherApps()
     while (currentCoroutineContext().isActive) {
       val usageStats = getDailyStats()
+        .filter { !launcherApps.contains(it.packageName) }
         .filter { context.packageName != it.packageName }
         .associate { it.packageName to it.totalTime }
 
-      _usageStats.emit(usageStats)
+      _dailyUsage.emit(usageStats)
       delay(TimeUnit.MINUTES.toMillis(1))
     }
   }
@@ -69,7 +113,7 @@ class UsageRepository @Inject constructor(@ApplicationContext private val contex
     val stats = mutableListOf<Stat>()
 
     // Go through the events by package name
-    sortedEvents.forEach { packageName, events ->
+    sortedEvents.forEach { (packageName, events) ->
       // Keep track of the current start and end times
       var startTime = 0L
       var endTime = 0L
@@ -121,4 +165,4 @@ class UsageRepository @Inject constructor(@ApplicationContext private val contex
 }
 
 // Helper class to keep track of all of the stats
-class Stat(val packageName: String, val totalTime: Long, val startTimes: List<ZonedDateTime>)
+data class Stat(val packageName: String, val totalTime: Long, val startTimes: List<ZonedDateTime>)
