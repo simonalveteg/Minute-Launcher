@@ -44,7 +44,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun Dashboard(
   screenState: ScreenState,
-  gestureApps: Map<Gesture, App>,
   onEvent: (Event) -> Unit,
   searchText: String,
   apps: List<AppInfo>,
