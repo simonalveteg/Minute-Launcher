@@ -43,7 +43,7 @@ fun SegmentedControl(
   selectedTextColor: Color = MaterialTheme.colorScheme.onPrimary,
   onItemSelection: (selectedItem: Int) -> Unit
 ) {
-  val selectedIndex = remember { mutableIntStateOf(items.indexOf(selectedItem)) }
+  val selectedIndex = remember(selectedItem) { mutableIntStateOf(items.indexOf(selectedItem)) }
 
   LaunchedEffect(selectedIndex){
     Timber.d("SelectedIndex: ${selectedIndex.intValue}, selectedItem: $selectedItem")
