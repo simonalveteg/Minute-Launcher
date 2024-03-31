@@ -94,7 +94,10 @@ fun AppModalBottomSheet(
       Spacer(modifier = Modifier.height(4.dp))
     }
     if (timerVisible) {
-      MinuteBottomSheet(
+      TimerBottomSheet(
+        appInfo = appInfo,
+        timerMappings = timerMappings,
+        sheetState = timerSheetState,
         onDismissRequest = {
           timerVisible = false
           coroutineScope.launch {
@@ -102,45 +105,8 @@ fun AppModalBottomSheet(
             sheetState.show()
           }
         },
-        sheetState = timerSheetState
-      ) {
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 32.dp),
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-          Text(
-            text = "Change app timer",
-            style = MaterialTheme.typography.headlineSmall,
-            fontFamily = archivoBlackFamily,
-            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
-          )
-          Text(
-            text = "The app timer decides how long you need to wait before being able to open the app. ",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            fontFamily = archivoFamily,
-            modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp)
-          )
-          SegmentedControl(
-            items = timerMappings
-              .filter { it.enum != AccessTimer.DEFAULT }
-              .map { it.integerValue }
-              .toSortedSet(),
-            selectedItem = timerMappings.first { it.enum == appInfo.app.timer }.integerValue,
-            onItemSelection = { selected ->
-              onEvent(
-                Event.UpdateApp(
-                  appInfo.app.copy(timer = timerMappings.first { it.integerValue == selected }.enum)
-                )
-              )
-            }
-          )
-          Spacer(modifier = Modifier.height(12.dp))
-        }
-      }
+        onEvent = onEvent
+      )
     }
   }
 }

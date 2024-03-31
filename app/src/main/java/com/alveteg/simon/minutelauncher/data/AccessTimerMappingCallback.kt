@@ -27,7 +27,7 @@ class AccessTimerMappingCallback @Inject constructor(
     Timber.d("Populating database")
     val dao = daoProvider.get()
     val defaultMappings = listOf(
-      AccessTimerMapping(AccessTimer.DEFAULT, 1),
+      AccessTimerMapping(AccessTimer.DEFAULT, 5),
       AccessTimerMapping(AccessTimer.NONE, 0),
       AccessTimerMapping(AccessTimer.SHORT, 2),
       AccessTimerMapping(AccessTimer.MEDIUM, 5),
