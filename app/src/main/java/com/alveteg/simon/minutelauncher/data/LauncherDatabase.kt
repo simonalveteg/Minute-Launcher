@@ -8,12 +8,14 @@ import androidx.room.TypeConverters
   entities = [
     App::class,
     SwipeApp::class,
-    FavoriteApp::class
+    FavoriteApp::class,
+    AccessTimerMapping::class
   ],
-  version = 8,
+  version = 10,
   exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class LauncherDatabase : RoomDatabase() {
   abstract fun launcherDao(): LauncherDAO
+  abstract fun accessTimerMappingDao(): AccessTimerMappingDao
 }

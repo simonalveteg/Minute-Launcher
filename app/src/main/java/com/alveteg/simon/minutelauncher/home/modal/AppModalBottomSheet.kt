@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteAccessibilityService
+import com.alveteg.simon.minutelauncher.data.AccessTimer
+import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
 import com.alveteg.simon.minutelauncher.home.SegmentedControl
@@ -41,6 +43,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppModalBottomSheet(
   appInfo: AppInfo?,
+  timerMappings: List<AccessTimerMapping>,
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
@@ -63,6 +66,7 @@ fun AppModalBottomSheet(
       BackHandler(true) { onDismiss() }
       AppModal(
         appInfo = appInfo,
+        timerMapping = timerMappings,
         onEvent = onEvent,
         onConfirmation = {
           onEvent(Event.LaunchActivity(appInfo))
@@ -121,12 +125,15 @@ fun AppModalBottomSheet(
             modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp)
           )
           SegmentedControl(
-            items = setOf(0, 2, 5, 10, 15),
-            selectedItem = appInfo.app.timer,
-            onItemSelection = {
+            items = timerMappings
+              .filter { it.enum != AccessTimer.DEFAULT }
+              .map { it.integerValue }
+              .toSortedSet(),
+            selectedItem = timerMappings.first { it.enum == appInfo.app.timer }.integerValue,
+            onItemSelection = { selected ->
               onEvent(
                 Event.UpdateApp(
-                  appInfo.app.copy(timer = it)
+                  appInfo.app.copy(timer = timerMappings.first { it.integerValue == selected }.enum)
                 )
               )
             }

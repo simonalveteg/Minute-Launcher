@@ -5,38 +5,45 @@ import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
 
-class LauncherRepository @Inject constructor(private val dao: LauncherDAO) {
+class LauncherRepository @Inject constructor(
+  private val launcherDao: LauncherDAO,
+  private val accessTimerMappingDao: AccessTimerMappingDao
+) {
 
-  fun appList() = dao.getAllApps()
+  fun appList() = launcherDao.getAllApps()
   fun gestureApps() =
-    dao.getGestureApps().map { it.associate { gApp -> gApp.swipeApp.swipeDirection to gApp.app } }
+    launcherDao.getGestureApps()
+      .map { it.associate { gApp -> gApp.swipeApp.swipeDirection to gApp.app } }
 
-  fun favoriteApps() = dao.getFavoriteApps()
-  fun insertApp(app: App) = dao.insertApp(app)
+  fun favoriteApps() = launcherDao.getFavoriteApps()
+  fun insertApp(app: App) = launcherDao.insertApp(app)
   fun updateApp(app: App) {
-    dao.updateAppTimer(app.id, app.timer)
+    launcherDao.updateAppTimer(app.id, app.timer)
   }
-  fun removeApp(app: App) = dao.removeApp(app)
 
-  fun getAppById(id: Int) = dao.getAppById(id)
-  fun toggleFavorite(app: App) = dao.toggleFavoriteApp(app)
+  fun removeApp(app: App) = launcherDao.removeApp(app)
+
+  fun getAppById(id: Int) = launcherDao.getAppById(id)
+  fun toggleFavorite(app: App) = launcherDao.toggleFavoriteApp(app)
   fun insertGestureApp(swipeApp: SwipeApp) {
-    dao.removeAppForGesture(swipeApp.swipeDirection.toString())
-    dao.insertGestureApp(swipeApp)
+    launcherDao.removeAppForGesture(swipeApp.swipeDirection.toString())
+    launcherDao.insertGestureApp(swipeApp)
   }
 
-  fun removeAppForGesture(gesture: Gesture) = dao.removeAppForGesture(gesture.toString())
-  fun getAppInfoForGesture(gesture: Gesture) = dao.getAppForGesture(gesture.toString())
+  fun removeAppForGesture(gesture: Gesture) = launcherDao.removeAppForGesture(gesture.toString())
+  fun getAppInfoForGesture(gesture: Gesture) = launcherDao.getAppForGesture(gesture.toString())
   fun updateFavoritesOrder(new: List<FavoriteAppInfo>) {
     new.forEachIndexed { index, appInfo ->
       Timber.d(
         "Updating order for: ${appInfo.favoriteApp.app.appTitle} from ${
-          dao.getOrderForFavoriteById(
+          launcherDao.getOrderForFavoriteById(
             appInfo.favoriteApp.app.id
           )
         } to $index"
       )
-      dao.updateFavoriteOrder(appInfo.favoriteApp.app.id, index)
+      launcherDao.updateFavoriteOrder(appInfo.favoriteApp.app.id, index)
     }
   }
+
+  fun getAccessTimerMappings() = accessTimerMappingDao.getAllMappings()
 }

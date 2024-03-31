@@ -1,8 +1,6 @@
 package com.alveteg.simon.minutelauncher.data
 
 import android.content.pm.LauncherActivityInfo
-import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
@@ -17,7 +15,7 @@ data class App(
   @PrimaryKey(autoGenerate = true) val id: Int,
   @ColumnInfo(name = "package_name") val packageName: String,
   @ColumnInfo(name = "app_title") val appTitle: String,
-  @ColumnInfo(name = "timer") val timer: Int = 5
+  @ColumnInfo(name = "timer") val timer: AccessTimer = AccessTimer.DEFAULT
 )
 
 fun LauncherActivityInfo.toApp() =
@@ -76,4 +74,10 @@ data class FavoriteAppWithApp(
     entityColumn = "id"
   )
   val app: App
+)
+
+@Entity(primaryKeys = ["enum"])
+data class AccessTimerMapping(
+  @ColumnInfo(name = "enum") val enum: AccessTimer,
+  @ColumnInfo(name = "integerValue") val integerValue: Int
 )
