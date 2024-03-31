@@ -50,7 +50,6 @@ fun HomeScreen(
   val timerMappings by viewModel.accessTimerMappings.collectAsState(initial = emptyList())
   val totalUsage by viewModel.dailyUsageTotal.collectAsState(initial = 0L)
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
-  val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
@@ -126,7 +125,6 @@ fun HomeScreen(
 
         Dashboard(
           screenState = screenState,
-          gestureApps = gestureApps,
           onEvent = viewModel::onEvent,
           searchText = searchText,
           onAppClick = { appListSelectionAction(it) },

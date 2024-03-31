@@ -13,11 +13,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.AppCard
+import timber.log.Timber
 
 @Composable
 fun AppList(
@@ -25,9 +30,10 @@ fun AppList(
   onAppClick: (AppInfo) -> Unit,
   offsetY: Animatable<Float, AnimationVector1D>? = null,
   searchHeight: Dp = 0.dp
-  ) {
+) {
   val listState = rememberLazyListState()
   val offset = offsetY?.value?.dp ?: 0.dp
+  val selectedApps = remember { mutableStateListOf<AppInfo>() }
 
   LazyColumn(
     state = listState,
@@ -47,10 +53,25 @@ fun AppList(
     items(items = apps) { appInfo ->
       val appTitle = appInfo.app.appTitle
       val appUsage = appInfo.usage
-      AppCard(appTitle, appUsage) { onAppClick(appInfo) }
+      val isSelected by remember(appInfo, selectedApps) {
+        derivedStateOf { selectedApps.contains(appInfo) }
+      }
+      AppCard(
+        appTitle = appTitle,
+        appUsage = appUsage,
+        selected = isSelected,
+        onLongClick = {
+          selectedApps.addOrRemove(appInfo)
+          Timber.d("LONG CLICK")
+        }
+      ) { onAppClick(appInfo) }
     }
     item {
       Spacer(modifier = Modifier.statusBarsPadding())
     }
   }
+}
+
+fun MutableList<AppInfo>.addOrRemove(app: AppInfo) {
+  if (contains(app)) remove(app) else add(app)
 }
