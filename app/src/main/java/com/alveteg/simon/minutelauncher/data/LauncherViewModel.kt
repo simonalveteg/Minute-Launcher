@@ -65,6 +65,8 @@ class LauncherViewModel @Inject constructor(
     apps.filterBySearchTerm(searchTerm)
   }
 
+  val accessTimerMappings = roomRepository.getAccessTimerMappings()
+
   private val packageCallback = object : LauncherApps.Callback() {
     override fun onPackageRemoved(packageName: String?, user: UserHandle?) {
       Timber.d("Package Removed")
