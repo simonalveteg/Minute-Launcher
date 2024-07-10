@@ -1,5 +1,7 @@
 package com.alveteg.simon.minutelauncher
 
+import com.alveteg.simon.minutelauncher.data.AccessTimer
+import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
@@ -16,6 +18,8 @@ sealed class Event {
   data class ClearAppGesture(val gesture: Gesture) : Event()
   data class UpdateFavoriteOrder(val favorites: List<FavoriteAppInfo>) : Event()
   data class UpdateApp(val app: App) : Event()
-  data object OpenGestures : Event()
+  data object OpenGestureSettings : Event()
   data class OpenGestureList(val gesture: Gesture) : Event()
+  data object OpenTimerSettings : Event()
+  data class SetDefaultTimer(val accessTimerMapping: AccessTimerMapping) : Event()
 }

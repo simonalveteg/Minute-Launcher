@@ -6,15 +6,15 @@ import android.provider.Settings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Gesture
-import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
@@ -40,7 +40,7 @@ fun DashboardActionBar(
     ActionBarAction(
       imageVector = Icons.Default.Gesture,
       description = "Change gesture shortcuts",
-      action = { onEvent(Event.OpenGestures) }
+      action = { onEvent(Event.OpenGestureSettings) }
     ),
     ActionBarAction(
       imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
@@ -65,6 +65,11 @@ fun DashboardActionBar(
           null
         )
       }
+    ),
+    ActionBarAction(
+      imageVector = Icons.Outlined.Timer,
+      description = "Change Timer Settings",
+      action = { onEvent(Event.OpenTimerSettings) }
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,

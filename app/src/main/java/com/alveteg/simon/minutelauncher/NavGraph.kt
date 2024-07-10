@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import com.alveteg.simon.minutelauncher.home.HomeScreen
 import com.alveteg.simon.minutelauncher.settings.GestureList
 import com.alveteg.simon.minutelauncher.settings.GestureScreen
+import com.alveteg.simon.minutelauncher.settings.TimerScreen
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 
 @Composable
@@ -31,7 +32,7 @@ fun LauncherNavHost(
     ) {
       HomeScreen(onNavigate = { navController.navigationEvent(event = it) })
     }
-    composable(route = MinuteRoute.GESTURES,
+    composable(route = MinuteRoute.GESTURE_SETTINGS,
       enterTransition = {
         slideIntoContainer(
           towards = AnimatedContentTransitionScope.SlideDirection.Up
@@ -43,7 +44,8 @@ fun LauncherNavHost(
       GestureScreen(onNavigate = { navController.navigationEvent(event = it) })
     }
     composable(
-      route = MinuteRoute.GESTURES_LIST + "/{gesture}"
+      route = MinuteRoute.GESTURE_SETTINGS_LIST + "/{gesture}",
+      enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) }
     ) { backStackEntry ->
       val gesture = backStackEntry.arguments?.getString("gesture") ?: Gesture.NONE.toString()
       GestureList(
@@ -51,13 +53,27 @@ fun LauncherNavHost(
         gesture = Gesture.valueOf(gesture)
       )
     }
+    composable(
+      route = MinuteRoute.TIMER_SETTINGS,
+      enterTransition = {
+        slideIntoContainer(
+          towards = AnimatedContentTransitionScope.SlideDirection.Up
+        )
+      },
+      exitTransition = { fadeOut() },
+      popEnterTransition = { fadeIn() },
+      popExitTransition = { fadeOut() }
+    ) {
+      TimerScreen(onNavigate = { navController.navigationEvent(event = it) })
+    }
   }
 }
 
 object MinuteRoute {
   const val HOME = "home"
-  const val GESTURES = "gestures"
-  const val GESTURES_LIST = "gestures_list"
+  const val GESTURE_SETTINGS = "gesture_settings"
+  const val GESTURE_SETTINGS_LIST = "gestures_list"
+  const val TIMER_SETTINGS = "timer_settings"
 }
 
 fun NavController.navigationEvent(event: UiEvent.Navigate) {

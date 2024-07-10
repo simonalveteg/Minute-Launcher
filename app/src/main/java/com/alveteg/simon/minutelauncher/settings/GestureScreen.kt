@@ -75,7 +75,7 @@ fun GestureScreen(
             )
           },
           navigationIcon = {
-            IconButton(onClick = { onNavigate(UiEvent.Navigate(MinuteRoute.GESTURES, true)) }) {
+            IconButton(onClick = { onNavigate(UiEvent.Navigate(MinuteRoute.HOME, true)) }) {
               Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Navigate Back"

@@ -195,11 +195,19 @@ class LauncherViewModel @Inject constructor(
             roomRepository.insertGestureApp(SwipeApp(event.gesture, event.app))
           }
         }
-        sendUiEvent(UiEvent.Navigate(route = MinuteRoute.GESTURES, popBackStack = true))
+        sendUiEvent(UiEvent.Navigate(route = MinuteRoute.GESTURE_SETTINGS, popBackStack = true))
       }
 
-      is Event.OpenGestureList -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES_LIST + "/${event.gesture}"))
-      is Event.OpenGestures -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES))
+      is Event.OpenGestureList -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURE_SETTINGS_LIST + "/${event.gesture}"))
+      is Event.OpenGestureSettings -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURE_SETTINGS))
+      is Event.OpenTimerSettings -> sendUiEvent(UiEvent.Navigate(MinuteRoute.TIMER_SETTINGS))
+      is Event.SetDefaultTimer -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.setAccessTimerMapping(event.accessTimerMapping)
+          }
+        }
+      }
 
       is Event.ClearAppGesture -> {
         viewModelScope.launch {

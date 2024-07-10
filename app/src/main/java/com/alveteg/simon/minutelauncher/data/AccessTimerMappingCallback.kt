@@ -28,7 +28,7 @@ class AccessTimerMappingCallback @Inject constructor(
     val dao = daoProvider.get()
     val defaultMappings = listOf(
       AccessTimerMapping(AccessTimer.DEFAULT, 5),
-      AccessTimerMapping(AccessTimer.NONE, 0),
+      AccessTimerMapping(AccessTimer.INSTANT, 0),
       AccessTimerMapping(AccessTimer.SHORT, 2),
       AccessTimerMapping(AccessTimer.MEDIUM, 5),
       AccessTimerMapping(AccessTimer.LONG, 10),
