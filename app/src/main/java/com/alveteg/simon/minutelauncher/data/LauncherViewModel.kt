@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -63,6 +65,12 @@ class LauncherViewModel @Inject constructor(
     installedApps, searchTerm
   ) { apps, searchTerm ->
     apps.filterBySearchTerm(searchTerm)
+  }
+  val defaultTimerApps = installedApps.transform { appList ->
+    emit(appList.filter { it.app.timer == AccessTimer.DEFAULT }.sortedBy { it.app.appTitle })
+  }
+  val nonDefaultTimerApps = installedApps.transform { appList ->
+    emit(appList.filter { it.app.timer != AccessTimer.DEFAULT }.sortedBy { it.app.appTitle })
   }
 
   val accessTimerMappings = roomRepository.getAccessTimerMappings()
