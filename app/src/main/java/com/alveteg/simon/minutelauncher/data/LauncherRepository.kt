@@ -46,4 +46,6 @@ class LauncherRepository @Inject constructor(
   }
 
   fun getAccessTimerMappings() = accessTimerMappingDao.getAllMappings()
+  fun setAccessTimerMapping(accessTimerMapping: AccessTimerMapping) =
+    accessTimerMappingDao.insertMapping(accessTimerMapping)
 }
