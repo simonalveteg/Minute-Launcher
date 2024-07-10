@@ -151,11 +151,14 @@ fun TimerScreen(
             }
           }
         }
+        item {
+          Spacer(modifier = Modifier.height(20.dp))
+        }
         items(nonDefaultTimerApps) { app ->
           AppTimerCard(app, accessTimerMapping, viewModel::onEvent)
         }
         item {
-          Spacer(modifier = Modifier.height(40.dp))
+          Spacer(modifier = Modifier.height(20.dp))
         }
         items(defaultTimerApps) { app ->
           AppTimerCard(app, accessTimerMapping, viewModel::onEvent)
@@ -173,7 +176,9 @@ fun AppTimerCard(
   onEvent: (Event) -> Unit
 ) {
   var expanded by mutableStateOf(false)
-  Surface {
+  Surface(
+    modifier = Modifier.padding(vertical = 1.dp)
+  ) {
     Row(
       verticalAlignment = Alignment.CenterVertically
     ) {
