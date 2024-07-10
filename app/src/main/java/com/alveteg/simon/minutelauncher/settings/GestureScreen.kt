@@ -182,6 +182,7 @@ fun GestureEntry(
           onClick = {
             onEvent(Event.ClearAppGesture(gesture))
           },
+          enabled = app != null,
           modifier = Modifier.wrapContentWidth()
         ) {
           Icon(imageVector = Icons.Default.Close, contentDescription = "Unset Gesture")
