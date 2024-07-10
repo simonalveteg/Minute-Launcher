@@ -1,8 +1,10 @@
 package com.alveteg.simon.minutelauncher.settings
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,9 +13,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,15 +33,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteRoute
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AccessTimer
 import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
+import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
+import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,6 +68,8 @@ fun TimerScreen(
 
   val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
   val accessTimerMapping by viewModel.accessTimerMappings.collectAsState(initial = emptyList())
+  val defaultTimerApps by viewModel.defaultTimerApps.collectAsState(initial = emptyList())
+  val nonDefaultTimerApps by viewModel.nonDefaultTimerApps.collectAsState(initial = emptyList())
   val defaultMapping = accessTimerMapping.firstOrNull { it.enum == AccessTimer.DEFAULT }
   val mappings = accessTimerMapping
     .filter { it.enum != AccessTimer.DEFAULT }
@@ -103,8 +115,14 @@ fun TimerScreen(
               onExpandedChange = { expanded = !expanded }
             ) {
               Surface {
-                Text(
-                  text = atm?.enum?.name ?: "",
+                OutlinedTextField(
+                  readOnly = true,
+                  value = "Default timer length: ${atm?.enum?.name}",
+                  onValueChange = {},
+                  trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                  },
+                  colors = OutlinedTextFieldDefaults.colors(),
                   modifier = Modifier
                     .menuAnchor()
                     .fillMaxWidth()
@@ -112,11 +130,11 @@ fun TimerScreen(
               }
               ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = !expanded }
+                onDismissRequest = { expanded = false }
               ) {
                 mappings.forEach {
                   DropdownMenuItem(
-                    text = { Text(text = it.enum.name) },
+                    text = { Text(text = "${it.enum.name} (${it.integerValue}s)") },
                     onClick = {
                       viewModel.onEvent(
                         Event.SetDefaultTimer(
@@ -133,24 +151,74 @@ fun TimerScreen(
             }
           }
         }
-        items(mappings) { mapping ->
-          AccessTimerMappingCard(mapping = mapping)
+        items(nonDefaultTimerApps) { app ->
+          AppTimerCard(app, accessTimerMapping, viewModel::onEvent)
+        }
+        item {
+          Spacer(modifier = Modifier.height(40.dp))
+        }
+        items(defaultTimerApps) { app ->
+          AppTimerCard(app, accessTimerMapping, viewModel::onEvent)
         }
       }
     }
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AccessTimerMappingCard(
-  mapping: AccessTimerMapping
+fun AppTimerCard(
+  appInfo: AppInfo,
+  timerMappings: List<AccessTimerMapping>,
+  onEvent: (Event) -> Unit
 ) {
-  Surface(
-    modifier = Modifier.fillMaxWidth()
-  ) {
-    Column {
-      Text(text = mapping.enum.name)
-      Text(text = mapping.integerValue.toString())
+  var expanded by mutableStateOf(false)
+  Surface {
+    Row(
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Text(
+        text = appInfo.app.appTitle,
+        fontFamily = archivoFamily,
+        fontSize = 18.sp,
+        overflow = TextOverflow.Clip,
+        modifier = Modifier
+          .fillMaxWidth()
+          .weight(1f)
+      )
+      ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier
+          .weight(1f)
+      ) {
+        OutlinedTextField(
+          readOnly = true,
+          value = appInfo.app.timer.name,
+          onValueChange = {},
+          trailingIcon = {
+            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+          },
+          colors = OutlinedTextFieldDefaults.colors(),
+          modifier = Modifier
+            .menuAnchor()
+            .fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+          timerMappings.forEach {
+            DropdownMenuItem(
+              text = { Text(text = "${it.enum.name} (${it.integerValue}s)") },
+              onClick = {
+                onEvent(
+                  Event.UpdateApp(
+                    appInfo.app.copy(timer = it.enum)
+                  )
+                )
+              }
+            )
+          }
+        }
+      }
     }
   }
 }
