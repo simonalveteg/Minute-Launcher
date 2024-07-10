@@ -67,10 +67,10 @@ class LauncherViewModel @Inject constructor(
     apps.filterBySearchTerm(searchTerm)
   }
   val defaultTimerApps = installedApps.transform { appList ->
-    emit(appList.filter { it.app.timer == AccessTimer.DEFAULT }.sortedBy { it.app.appTitle })
+    emit(appList.filter { it.app.timer == AccessTimer.DEFAULT }.sortedBy { it.app.appTitle.lowercase() })
   }
   val nonDefaultTimerApps = installedApps.transform { appList ->
-    emit(appList.filter { it.app.timer != AccessTimer.DEFAULT }.sortedBy { it.app.appTitle })
+    emit(appList.filter { it.app.timer != AccessTimer.DEFAULT }.sortedBy { it.app.appTitle.lowercase() })
   }
 
   val accessTimerMappings = roomRepository.getAccessTimerMappings()
