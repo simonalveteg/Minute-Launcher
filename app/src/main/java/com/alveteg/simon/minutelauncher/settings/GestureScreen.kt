@@ -75,7 +75,7 @@ fun GestureScreen(
             )
           },
           navigationIcon = {
-            IconButton(onClick = { onNavigate(UiEvent.Navigate(MinuteRoute.GESTURES, true)) }) {
+            IconButton(onClick = { onNavigate(UiEvent.Navigate(MinuteRoute.HOME, true)) }) {
               Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Navigate Back"
@@ -182,6 +182,7 @@ fun GestureEntry(
           onClick = {
             onEvent(Event.ClearAppGesture(gesture))
           },
+          enabled = app != null,
           modifier = Modifier.wrapContentWidth()
         ) {
           Icon(imageVector = Icons.Default.Close, contentDescription = "Unset Gesture")

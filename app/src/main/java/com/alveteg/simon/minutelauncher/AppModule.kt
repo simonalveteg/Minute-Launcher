@@ -2,15 +2,18 @@ package com.alveteg.simon.minutelauncher
 
 import android.content.Context
 import androidx.room.Room
+import com.alveteg.simon.minutelauncher.data.AccessTimerMappingCallback
+import com.alveteg.simon.minutelauncher.data.AccessTimerMappingDao
+import com.alveteg.simon.minutelauncher.data.ApplicationRepository
 import com.alveteg.simon.minutelauncher.data.LauncherDAO
 import com.alveteg.simon.minutelauncher.data.LauncherDatabase
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
-import com.alveteg.simon.minutelauncher.data.ApplicationRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -19,12 +22,18 @@ object AppModule {
 
   @Provides
   @Singleton
-  fun provideDatabase(@ApplicationContext appContext: Context): LauncherDatabase {
+  fun provideDatabase(
+    @ApplicationContext appContext: Context,
+    accessTimerMappingProvider: Provider<AccessTimerMappingDao>
+  ): LauncherDatabase {
     return Room.databaseBuilder(
       appContext,
       LauncherDatabase::class.java,
       "launcher-database"
-    ).fallbackToDestructiveMigration().build()
+    )
+      .fallbackToDestructiveMigration()
+      .addCallback(AccessTimerMappingCallback(accessTimerMappingProvider))
+      .build()
   }
 
   @Provides
@@ -35,8 +44,17 @@ object AppModule {
 
   @Provides
   @Singleton
-  fun provideRepository(dao: LauncherDAO): LauncherRepository {
-    return LauncherRepository(dao)
+  fun provideAccessTimerMappingDao(database: LauncherDatabase): AccessTimerMappingDao {
+    return database.accessTimerMappingDao()
+  }
+
+  @Provides
+  @Singleton
+  fun provideRepository(
+    dao: LauncherDAO,
+    accessTimerMappingDao: AccessTimerMappingDao
+  ): LauncherRepository {
+    return LauncherRepository(dao, accessTimerMappingDao)
   }
 
   @Provides

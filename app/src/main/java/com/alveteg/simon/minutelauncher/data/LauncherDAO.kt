@@ -33,7 +33,7 @@ interface LauncherDAO {
   fun removeApp(app: App)
 
   @Query("UPDATE App SET timer = :timer WHERE id = :appId")
-  fun updateAppTimer(appId: Int, timer: Int)
+  fun updateAppTimer(appId: Int, timer: AccessTimer)
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertFavoriteApp(app: FavoriteApp)

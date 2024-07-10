@@ -83,6 +83,7 @@ class ApplicationRepository @Inject constructor(@ApplicationContext private val 
   /**
    * Returns the stats for the [date] (defaults to today)
    * https://stackoverflow.com/questions/36238481/android-usagestatsmanager-not-returning-correct-daily-results
+   * https://github.com/MuntashirAkon/AppManager/blob/6491491f1aa685892ed8deecad4d685c78ac5f94/app/src/main/java/io/github/muntashirakon/AppManager/usage/AppUsageStatsManager.java#L203
    */
   private fun getDailyStats(date: LocalDate = LocalDate.now()): List<Stat> {
     // The timezones we'll need
@@ -109,37 +110,19 @@ class ApplicationRepository @Inject constructor(@ApplicationContext private val 
       sortedEvents[event.packageName] = packageEvents
     }
 
-    // This will keep a list of our final stats
     val stats = mutableListOf<Stat>()
 
-    // Go through the events by package name
     sortedEvents.forEach { (packageName, events) ->
-      // Keep track of the current start and end times
       var startTime = 0L
       var endTime = 0L
-      // Keep track of the total usage time for this app
       var totalTime = 0L
-      // Keep track of the start times for this app
-      val startTimes = mutableListOf<ZonedDateTime>()
       events.forEach {
-        if (it.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
-          // App was moved to the foreground: set the start time
-          startTime = it.timeStamp
-          // Add the start time within this timezone to the list
-          startTimes.add(
-            Instant.ofEpochMilli(startTime).atZone(utc)
-              .withZoneSameInstant(defaultZone)
-          )
-        } else if (it.eventType == UsageEvents.Event.ACTIVITY_PAUSED) {
-          // App was moved to background: set the end time
-          endTime = it.timeStamp
-        }
 
-        // If there's an end time with no start time, this might mean that
-        //  The app was started on the previous day, so take midnight
-        //  As the start time
-        if (startTime == 0L && endTime != 0L) {
-          startTime = start
+        if (it.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
+          if (startTime == 0L) startTime = it.timeStamp
+        } else if (it.eventType == UsageEvents.Event.ACTIVITY_PAUSED) {
+          // if activity paused without startTime, it must mean that the app was started before midnight
+          if (startTime > 0L) endTime = it.timeStamp
         }
 
         // If both start and end are defined, we have a session
@@ -151,18 +134,11 @@ class ApplicationRepository @Inject constructor(@ApplicationContext private val 
           endTime = 0L
         }
       }
-
-      // If there is a start time without an end time, this might mean that
-      //  the app was used past midnight, so take (midnight - 1 second)
-      //  as the end time
-      if (startTime != 0L) {
-        totalTime += end - 1000 - startTime
-      }
-      stats.add(Stat(packageName, totalTime, startTimes))
+      stats.add(Stat(packageName, totalTime))
     }
     return stats
   }
 }
 
 // Helper class to keep track of all of the stats
-data class Stat(val packageName: String, val totalTime: Long, val startTimes: List<ZonedDateTime>)
+data class Stat(val packageName: String, val totalTime: Long)

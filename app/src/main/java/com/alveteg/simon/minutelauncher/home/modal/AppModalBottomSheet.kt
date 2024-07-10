@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteAccessibilityService
+import com.alveteg.simon.minutelauncher.data.AccessTimer
+import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
 import com.alveteg.simon.minutelauncher.home.SegmentedControl
@@ -41,6 +43,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppModalBottomSheet(
   appInfo: AppInfo?,
+  timerMappings: List<AccessTimerMapping>,
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
@@ -63,6 +66,7 @@ fun AppModalBottomSheet(
       BackHandler(true) { onDismiss() }
       AppModal(
         appInfo = appInfo,
+        timerMapping = timerMappings,
         onEvent = onEvent,
         onConfirmation = {
           onEvent(Event.LaunchActivity(appInfo))
@@ -90,7 +94,10 @@ fun AppModalBottomSheet(
       Spacer(modifier = Modifier.height(4.dp))
     }
     if (timerVisible) {
-      MinuteBottomSheet(
+      TimerBottomSheet(
+        appInfo = appInfo,
+        timerMappings = timerMappings,
+        sheetState = timerSheetState,
         onDismissRequest = {
           timerVisible = false
           coroutineScope.launch {
@@ -98,42 +105,8 @@ fun AppModalBottomSheet(
             sheetState.show()
           }
         },
-        sheetState = timerSheetState
-      ) {
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 32.dp),
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-          Text(
-            text = "Change app timer",
-            style = MaterialTheme.typography.headlineSmall,
-            fontFamily = archivoBlackFamily,
-            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
-          )
-          Text(
-            text = "The app timer decides how long you need to wait before being able to open the app. ",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            fontFamily = archivoFamily,
-            modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp)
-          )
-          SegmentedControl(
-            items = setOf(0, 2, 5, 10, 15),
-            selectedItem = appInfo.app.timer,
-            onItemSelection = {
-              onEvent(
-                Event.UpdateApp(
-                  appInfo.app.copy(timer = it)
-                )
-              )
-            }
-          )
-          Spacer(modifier = Modifier.height(12.dp))
-        }
-      }
+        onEvent = onEvent
+      )
     }
   }
 }

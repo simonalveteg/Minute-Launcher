@@ -47,9 +47,9 @@ fun HomeScreen(
   var screenState by rememberSaveable { mutableStateOf(ScreenState.FAVORITES) }
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
+  val timerMappings by viewModel.accessTimerMappings.collectAsState(initial = emptyList())
   val totalUsage by viewModel.dailyUsageTotal.collectAsState(initial = 0L)
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
-  val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
@@ -90,6 +90,7 @@ fun HomeScreen(
 
   AppModalBottomSheet(
     appInfo = currentAppModal,
+    timerMappings = timerMappings,
     onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent
   )
@@ -124,7 +125,6 @@ fun HomeScreen(
 
         Dashboard(
           screenState = screenState,
-          gestureApps = gestureApps,
           onEvent = viewModel::onEvent,
           searchText = searchText,
           onAppClick = { appListSelectionAction(it) },

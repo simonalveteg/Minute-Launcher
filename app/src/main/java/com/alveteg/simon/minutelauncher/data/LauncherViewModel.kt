@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -64,6 +66,14 @@ class LauncherViewModel @Inject constructor(
   ) { apps, searchTerm ->
     apps.filterBySearchTerm(searchTerm)
   }
+  val defaultTimerApps = installedApps.transform { appList ->
+    emit(appList.filter { it.app.timer == AccessTimer.DEFAULT }.sortedBy { it.app.appTitle.lowercase() })
+  }
+  val nonDefaultTimerApps = installedApps.transform { appList ->
+    emit(appList.filter { it.app.timer != AccessTimer.DEFAULT }.sortedBy { it.app.appTitle.lowercase() })
+  }
+
+  val accessTimerMappings = roomRepository.getAccessTimerMappings()
 
   private val packageCallback = object : LauncherApps.Callback() {
     override fun onPackageRemoved(packageName: String?, user: UserHandle?) {
@@ -193,11 +203,19 @@ class LauncherViewModel @Inject constructor(
             roomRepository.insertGestureApp(SwipeApp(event.gesture, event.app))
           }
         }
-        sendUiEvent(UiEvent.Navigate(route = MinuteRoute.GESTURES, popBackStack = true))
+        sendUiEvent(UiEvent.Navigate(route = MinuteRoute.GESTURE_SETTINGS, popBackStack = true))
       }
 
-      is Event.OpenGestureList -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES_LIST + "/${event.gesture}"))
-      is Event.OpenGestures -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURES))
+      is Event.OpenGestureList -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURE_SETTINGS_LIST + "/${event.gesture}"))
+      is Event.OpenGestureSettings -> sendUiEvent(UiEvent.Navigate(MinuteRoute.GESTURE_SETTINGS))
+      is Event.OpenTimerSettings -> sendUiEvent(UiEvent.Navigate(MinuteRoute.TIMER_SETTINGS))
+      is Event.SetDefaultTimer -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.setAccessTimerMapping(event.accessTimerMapping)
+          }
+        }
+      }
 
       is Event.ClearAppGesture -> {
         viewModelScope.launch {
