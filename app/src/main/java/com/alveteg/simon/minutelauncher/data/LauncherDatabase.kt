@@ -11,11 +11,11 @@ import androidx.room.TypeConverters
     FavoriteApp::class,
     AccessTimerMapping::class
   ],
-  version = 10,
+  version = 12,
   exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class LauncherDatabase : RoomDatabase() {
-  abstract fun launcherDao(): LauncherDAO
+  abstract fun launcherDao(): LauncherDao
   abstract fun accessTimerMappingDao(): AccessTimerMappingDao
 }

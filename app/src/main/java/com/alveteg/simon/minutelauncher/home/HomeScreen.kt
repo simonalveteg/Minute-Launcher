@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.util.fastSumBy
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
@@ -38,6 +39,7 @@ import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
 import timber.log.Timber
 import java.lang.reflect.Method
+import java.time.LocalDate
 
 @Composable
 fun HomeScreen(
@@ -48,7 +50,9 @@ fun HomeScreen(
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
   val timerMappings by viewModel.accessTimerMappings.collectAsState(initial = emptyList())
-  val totalUsage by viewModel.dailyUsageTotal.collectAsState(initial = 0L)
+  val totalUsage by derivedStateOf {
+    apps.sumOf { it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration ?: 0L }
+  }
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
 
   val mContext = LocalContext.current

@@ -29,7 +29,7 @@ import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 @Composable
 fun FavoriteCard(
   appTitle: String,
-  appUsage: Long,
+  appUsage: Long?,
   editState: Boolean = false,
   isDragged: Boolean = false,
   onClick: () -> Unit

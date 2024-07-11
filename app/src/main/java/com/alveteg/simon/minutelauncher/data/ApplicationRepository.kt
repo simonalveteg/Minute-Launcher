@@ -5,6 +5,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
+import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -12,14 +13,14 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import timber.log.Timber
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-class ApplicationRepository @Inject constructor(@ApplicationContext private val context: Context) {
+class ApplicationRepository @Inject constructor(
+  @ApplicationContext private val context: Context
+) {
 
   init {
     Timber.d("ApplicationRepository initialised")
@@ -32,8 +33,8 @@ class ApplicationRepository @Inject constructor(@ApplicationContext private val 
   private val usageStatsManager =
     context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
-  private val _dailyUsage = MutableSharedFlow<Map<String, Long>>(replay = 1)
-  val dailyUsage = _dailyUsage.asSharedFlow()
+  private val _usageStats = MutableSharedFlow<List<UsageStatistics>>(replay = 1)
+  val usageStats = _usageStats.asSharedFlow()
 
 
   fun registerCallback(callback: LauncherApps.Callback) {
@@ -68,16 +69,33 @@ class ApplicationRepository @Inject constructor(@ApplicationContext private val 
   }
 
   suspend fun startUsageUpdater() {
-    val launcherApps = getLauncherApps()
     while (currentCoroutineContext().isActive) {
-      val usageStats = getDailyStats()
-        .filter { !launcherApps.contains(it.packageName) }
-        .filter { context.packageName != it.packageName }
-        .associate { it.packageName to it.totalTime }
+      val usageStats = getDailyStatsForWeek()
 
-      _dailyUsage.emit(usageStats)
+      _usageStats.emit(usageStats)
       delay(TimeUnit.MINUTES.toMillis(1))
     }
+  }
+
+  private fun getDailyStatsForWeek(): List<UsageStatistics> {
+    val today = LocalDate.now()
+    val dates = listOf(
+      today,
+      today.minusDays(1),
+      today.minusDays(2),
+      today.minusDays(3),
+      today.minusDays(4),
+      today.minusDays(5),
+      today.minusDays(6)
+    )
+
+    val launcherApps = getLauncherApps()
+    return dates.flatMap { date ->
+      Timber.d("Getting stats for date: $date")
+      getDailyStats(date)
+        .filter { !launcherApps.contains(it.packageName) }
+        .filter { context.packageName != it.packageName }
+    }.also { Timber.d("--- ${it.size} packages, ${it.sumOf { it.usageDuration }.toTimeUsed()} ") }
   }
 
   /**
@@ -85,7 +103,7 @@ class ApplicationRepository @Inject constructor(@ApplicationContext private val 
    * https://stackoverflow.com/questions/36238481/android-usagestatsmanager-not-returning-correct-daily-results
    * https://github.com/MuntashirAkon/AppManager/blob/6491491f1aa685892ed8deecad4d685c78ac5f94/app/src/main/java/io/github/muntashirakon/AppManager/usage/AppUsageStatsManager.java#L203
    */
-  private fun getDailyStats(date: LocalDate = LocalDate.now()): List<Stat> {
+  private fun getDailyStats(date: LocalDate = LocalDate.now()): List<UsageStatistics> {
     // The timezones we'll need
     val utc = ZoneId.of("UTC")
     val defaultZone = ZoneId.systemDefault()
@@ -110,7 +128,7 @@ class ApplicationRepository @Inject constructor(@ApplicationContext private val 
       sortedEvents[event.packageName] = packageEvents
     }
 
-    val stats = mutableListOf<Stat>()
+    val stats = mutableListOf<UsageStatistics>()
 
     sortedEvents.forEach { (packageName, events) ->
       var startTime = 0L
@@ -134,7 +152,13 @@ class ApplicationRepository @Inject constructor(@ApplicationContext private val 
           endTime = 0L
         }
       }
-      stats.add(Stat(packageName, totalTime))
+      stats.add(
+        UsageStatistics(
+          packageName = packageName,
+          usageDate = date,
+          usageDuration = totalTime
+        )
+      )
     }
     return stats
   }

@@ -64,7 +64,7 @@ fun DashboardBottomSheet(
           .weight(1f)
       )
     }
-    UsageBarGraph()
+    UsageBarGraph(usageStatistics = emptyList())
     DashboardActionBar(onEvent = onEvent)
   }
 }

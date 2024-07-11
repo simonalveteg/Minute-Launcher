@@ -16,9 +16,10 @@ import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 
-fun Long.toTimeUsed(
+fun Long?.toTimeUsed(
   blankIfZero: Boolean = true
 ): String {
+  if (this == null) return if (!blankIfZero) "0 min" else ""
   val minutes = div(60000)
   val hours = minutes.div(60)
   val sb = StringBuilder()

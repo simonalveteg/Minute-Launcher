@@ -12,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,23 +20,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
-import timber.log.Timber
+import java.time.LocalDate
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppCard(
   appTitle: String,
-  appUsage: Long,
+  appUsage: List<UsageStatistics>,
   selected: Boolean = false,
   onLongClick: () -> Unit = {},
   onClick: () -> Unit
 ) {
-
-  LaunchedEffect(key1 = selected) {
-    Timber.d("Selected is now $selected")
-  }
 
   val surfaceColor by animateColorAsState(
     targetValue = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
@@ -72,7 +68,7 @@ fun AppCard(
           .fillMaxWidth()
       )
       Text(
-        text = appUsage.toTimeUsed(),
+        text = appUsage.firstOrNull{ it.usageDate == LocalDate.now() }?.usageDuration.toTimeUsed(),
         fontFamily = archivoFamily,
         color = MaterialTheme.colorScheme.primary,
       )

@@ -113,7 +113,7 @@ fun AppModal(
       onChangeTimer = onChangeTimer,
       onEvent = onEvent
     )
-    UsageBarGraph()
+    UsageBarGraph(usage)
     Row(
       modifier = Modifier
         .fillMaxWidth()

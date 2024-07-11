@@ -5,73 +5,73 @@ import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.alveteg.simon.minutelauncher.utilities.Gesture
+import java.time.LocalDate
 
 @Entity
 data class App(
-  @PrimaryKey(autoGenerate = true) val id: Int,
-  @ColumnInfo(name = "package_name") val packageName: String,
-  @ColumnInfo(name = "app_title") val appTitle: String,
-  @ColumnInfo(name = "timer") val timer: AccessTimer = AccessTimer.DEFAULT
+  @PrimaryKey val packageName: String,
+  val appTitle: String,
+  val timer: AccessTimer = AccessTimer.DEFAULT
 )
 
 fun LauncherActivityInfo.toApp() =
   App(
-    this.applicationInfo.packageName.hashCode(),
     this.applicationInfo.packageName,
-    this.label.toString(),
+    this.label.toString()
   )
 
 @Entity(
   foreignKeys = [
     ForeignKey(
       entity = App::class,
-      parentColumns = ["id"],
-      childColumns = ["app_id"],
-      onDelete = ForeignKey.CASCADE
+      parentColumns = ["packageName"],
+      childColumns = ["packageName"],
+      onDelete = CASCADE
     )
   ],
-  indices = [Index(value = ["app_id"])]
+  indices = [Index(value = ["packageName"])]
 )
 data class SwipeApp(
   @PrimaryKey val swipeDirection: Gesture,
-  @ColumnInfo(name = "app_id") val appId: Int
+  val packageName: String
 ) {
-  constructor(gesture: Gesture, app: App) : this(gesture, app.id)
+  constructor(gesture: Gesture, app: App) : this(gesture, app.packageName)
 }
 
 data class SwipeAppWithApp(
   @Embedded val swipeApp: SwipeApp,
   @Relation(
-    parentColumn = "app_id",
-    entityColumn = "id"
+    parentColumn = "packageName",
+    entityColumn = "packageName"
   )
   val app: App
 )
 
 
 @Entity(
-  primaryKeys = ["app_id"],
+  primaryKeys = ["packageName"],
   foreignKeys = [ForeignKey(
     entity = App::class,
-    parentColumns = ["id"],
-    childColumns = ["app_id"],
-    onDelete = ForeignKey.CASCADE
+    parentColumns = ["packageName"],
+    childColumns = ["packageName"],
+    onDelete = CASCADE
   )]
 )
 data class FavoriteApp(
-  @ColumnInfo(name = "app_id") val appId: Int,
+  val packageName: String,
   val order: Int
 )
 
 data class FavoriteAppWithApp(
   @Embedded val favoriteApp: FavoriteApp,
   @Relation(
-    parentColumn = "app_id",
-    entityColumn = "id"
+    parentColumn = "packageName",
+    entityColumn = "packageName"
   )
   val app: App
 )
