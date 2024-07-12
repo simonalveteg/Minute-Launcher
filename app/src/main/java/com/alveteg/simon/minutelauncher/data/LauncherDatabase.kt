@@ -11,8 +11,8 @@ import androidx.room.TypeConverters
     FavoriteApp::class,
     AccessTimerMapping::class
   ],
-  version = 12,
-  exportSchema = false
+  version = 1,
+  exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class LauncherDatabase : RoomDatabase() {

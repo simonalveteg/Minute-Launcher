@@ -31,7 +31,6 @@ object AppModule {
       LauncherDatabase::class.java,
       "launcher-database"
     )
-      .fallbackToDestructiveMigration()
       .addCallback(AccessTimerMappingCallback(accessTimerMappingProvider))
       .build()
   }
