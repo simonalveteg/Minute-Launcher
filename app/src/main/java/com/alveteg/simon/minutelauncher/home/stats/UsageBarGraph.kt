@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,7 @@ import com.patrykandpatrick.vico.core.cartesian.CartesianMeasureContext
 import com.patrykandpatrick.vico.core.cartesian.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
 import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
@@ -39,6 +41,14 @@ fun UsageBarGraph(
   val durations =
     usageStatistics.sortedBy { it.usageDate }.map { it.usageDuration }.ifEmpty { listOf(0L) }
   val millisInHour = 3600000f
+  val maxDuration = durations.max()
+  val hours = (maxDuration.div(millisInHour)).toInt()
+  val tenners = (maxDuration.div(millisInHour.div(6))).toInt()
+  val maxY = if (hours > 0) {
+    hours.plus(1).times(millisInHour)
+  } else {
+    tenners.plus(2).coerceAtMost(5).times(millisInHour.div(6))
+  }
   Surface(
     modifier = Modifier
       .height(220.dp)
@@ -58,20 +68,24 @@ fun UsageBarGraph(
               shape = remember { Shape.rounded(22) }
             )
           ),
-          spacing = 4.dp
+          spacing = 4.dp,
+          axisValueOverrider = AxisValueOverrider.fixed(
+            minY = 0f,
+            maxY = maxY
+          ),
         ),
         endAxis = rememberEndAxis(
           valueFormatter = { value, _, _ ->
             value.toLong().toTimeUsed()
           },
-          itemPlacer = remember { VerticalPlacer() },
+          itemPlacer = remember { VerticalPlacer(maxY) },
           guideline = rememberAxisGuidelineComponent(
             color = MaterialTheme.colorScheme.background,
             shape = Shape.Rectangle
           ),
           axis = rememberLineComponent(thickness = 0.dp),
           tick = rememberLineComponent(thickness = 0.dp)
-        ),
+        )
       ),
       model = CartesianChartModel(
         ColumnCartesianLayerModel.build {
@@ -85,6 +99,7 @@ fun UsageBarGraph(
 }
 
 class VerticalPlacer(
+  private val maxY: Float,
   private val shiftTopLines: Boolean = false
 ) : AxisItemPlacer.Vertical {
   override fun getBottomVerticalAxisInset(
@@ -144,11 +159,11 @@ class VerticalPlacer(
     val yRange = context.chartValues.getYRange(position)
     val minutes = yRange.maxY.div(60000)
     if (minutes >= 60) {
-      val hours = minutes.div(60).toInt()
-      repeat(hours.plus(2)) { values += 0f.plus(3600000).times(it) }
+      val hours = maxY.div(3600000).toInt() + 1
+      repeat(hours) { values += 0f.plus(3600000).times(it) }
     } else {
-      val tenners = (minutes % 10).coerceAtLeast(2f).toInt()
-      repeat(tenners.plus(2)) { values += 0f.plus(600000).times(it) }
+      val tenners = maxY.div(600000).toInt() + 1
+      repeat(tenners) { values += 0f.plus(600000).times(it) }
     }
     Timber.d("Y Axis: $values")
     return values
