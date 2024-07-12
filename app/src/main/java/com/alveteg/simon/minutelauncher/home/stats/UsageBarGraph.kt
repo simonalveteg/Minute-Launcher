@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,16 +31,17 @@ import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.patrykandpatrick.vico.core.common.half
 import com.patrykandpatrick.vico.core.common.shape.Shape
 import timber.log.Timber
+import java.time.LocalDate
 import kotlin.math.max
 
 @Composable
 fun UsageBarGraph(
   usageStatistics: List<UsageStatistics>
 ) {
-  val durations =
-    usageStatistics.sortedBy { it.usageDate }.map { it.usageDuration }.ifEmpty { listOf(0L) }
+  val sortedStats =
+    usageStatistics.sortedBy { it.usageDate }
   val millisInHour = 3600000f
-  val maxDuration = durations.max()
+  val maxDuration = sortedStats.maxOf { it.usageDuration }
   val hours = (maxDuration.div(millisInHour)).toInt()
   val tenners = (maxDuration.div(millisInHour.div(6))).toInt()
   val maxY = if (hours > 0) {
@@ -59,6 +59,7 @@ fun UsageBarGraph(
     tonalElevation = 8.dp
   ) {
     CartesianChartHost(
+      modifier = Modifier.padding(start = 12.dp, top = 8.dp, end = 2.dp),
       chart = rememberCartesianChart(
         rememberColumnCartesianLayer(
           columnProvider = ColumnCartesianLayer.ColumnProvider.series(
@@ -89,7 +90,10 @@ fun UsageBarGraph(
       ),
       model = CartesianChartModel(
         ColumnCartesianLayerModel.build {
-          series(y = durations)
+          val dates = sortedStats.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7  }
+          val durations = sortedStats.map { it.usageDuration }
+          Timber.d("$dates, ${durations.map { it.toTimeUsed() }}")
+          series(y = durations, x = dates)
         }
       ),
       zoomState = rememberVicoZoomState(zoomEnabled = false),
