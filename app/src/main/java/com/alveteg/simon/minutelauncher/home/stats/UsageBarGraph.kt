@@ -66,7 +66,7 @@ fun UsageBarGraph(
             rememberLineComponent(
               color = MaterialTheme.colorScheme.primary,
               thickness = 40.dp,
-              shape = remember { Shape.rounded(22) }
+              shape = remember { Shape.rounded(8f) }
             )
           ),
           spacing = 4.dp,
