@@ -42,7 +42,7 @@ fun UsageCard(
           fontFamily = archivoFamily
         )
         Text(
-          text = "+25%",
+          text = "",
           style = MaterialTheme.typography.labelSmall,
           fontFamily = archivoFamily
         )

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.home.AppCard
 import com.alveteg.simon.minutelauncher.home.ScreenState
 import com.alveteg.simon.minutelauncher.utilities.Gesture
@@ -49,6 +50,7 @@ fun Dashboard(
   apps: List<AppInfo>,
   offsetY: Animatable<Float, AnimationVector1D>,
   onAppClick: (AppInfo) -> Unit,
+  usageStatistics: List<UsageStatistics>,
   onSearch: KeyboardActionScope.() -> Unit
 ) {
   AnimatedVisibility(
@@ -78,6 +80,7 @@ fun Dashboard(
           searchText = searchText,
           onSearch = onSearch,
           onEvent = onEvent,
+          usageStatistics = usageStatistics,
           onGloballyPositioned = {
             searchHeight = with(density) { it.toDp() }
           },
