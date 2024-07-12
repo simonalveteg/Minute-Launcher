@@ -1,9 +1,7 @@
 package com.alveteg.simon.minutelauncher.data
 
-import androidx.room.Embedded
-
 data class AppInfo(
-  @Embedded val app: App,
+  val app: App,
   val favorite: Boolean,
   val usage: List<UsageStatistics>,
 )

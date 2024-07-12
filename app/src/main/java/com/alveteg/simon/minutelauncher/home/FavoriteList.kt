@@ -22,6 +22,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -194,12 +195,7 @@ fun FavoriteList(
       modifier = Modifier.fillMaxWidth()
     ) {
       items(data.value, { it.favoriteApp.app.packageName }) { favoriteAppInfo ->
-        FavoriteCard(
-          appTitle = favoriteAppInfo.favoriteApp.app.appTitle,
-          appUsage = favoriteAppInfo.usage.firstOrNull{ it.usageDate == LocalDate.now() }?.usageDuration,
-        ) {
-          onAppClick(favoriteAppInfo.toAppInfo())
-        }
+        FavoriteCard(favoriteAppInfo.toAppInfo()) { onAppClick(favoriteAppInfo.toAppInfo()) }
       }
     }
     val density = LocalDensity.current
