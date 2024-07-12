@@ -1,21 +1,24 @@
 package com.alveteg.simon.minutelauncher.home.stats
 
 import android.graphics.Typeface
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFontFamilyResolver
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
@@ -52,7 +55,7 @@ fun UsageBarGraph(
   val sortedStats =
     usageStatistics.sortedBy { it.usageDate }
   val millisInHour = 3600000f
-  val maxDuration = sortedStats.maxOf { it.usageDuration }
+  val maxDuration = sortedStats.maxOfOrNull { it.usageDuration } ?: 0L
   val hours = (maxDuration.div(millisInHour)).toInt()
   val tenners = (maxDuration.div(millisInHour.div(6))).toInt()
   val maxY = if (hours > 0) {
@@ -82,61 +85,75 @@ fun UsageBarGraph(
     shape = MaterialTheme.shapes.large,
     tonalElevation = 8.dp
   ) {
-    CartesianChartHost(
-      modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 6.dp, bottom = 8.dp),
-      chart = rememberCartesianChart(
-        rememberColumnCartesianLayer(
-          columnProvider = ColumnCartesianLayer.ColumnProvider.series(
-            rememberLineComponent(
-              color = MaterialTheme.colorScheme.primary,
-              thickness = 40.dp,
-              shape = remember { Shape.rounded(8f) }
+    if (maxDuration > 0L) {
+      CartesianChartHost(
+        modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 6.dp, bottom = 8.dp),
+        chart = rememberCartesianChart(
+          rememberColumnCartesianLayer(
+            columnProvider = ColumnCartesianLayer.ColumnProvider.series(
+              rememberLineComponent(
+                color = MaterialTheme.colorScheme.primary,
+                thickness = 40.dp,
+                shape = remember { Shape.rounded(8f) }
+              )
+            ),
+            spacing = 4.dp,
+            axisValueOverrider = AxisValueOverrider.fixed(
+              minY = 0f,
+              maxY = maxY,
+              minX = 1f,
+              maxX = 7f
+            ),
+          ),
+          bottomAxis = rememberBottomAxis(
+            valueFormatter = { value, _, _ ->
+              val date = LocalDate.now().minusDays(7.minus(value).toLong())
+              date.format(DateTimeFormatter.ofPattern("EEE"))
+            },
+            guideline = null,
+            tick = null,
+            axis = rememberLineComponent(color = MaterialTheme.colorScheme.background),
+            label = rememberTextComponent(
+              typeface = typeface,
+              color = LocalContentColor.current
             )
           ),
-          spacing = 4.dp,
-          axisValueOverrider = AxisValueOverrider.fixed(minY = 0f, maxY = maxY, minX = 1f, maxX = 7f),
-        ),
-        bottomAxis = rememberBottomAxis(
-          valueFormatter = { value, _, _ ->
-            val date = LocalDate.now().minusDays(7.minus(value).toLong())
-            date.format(DateTimeFormatter.ofPattern("EEE"))
-          },
-          guideline = null,
-          tick = null,
-          axis = rememberLineComponent(color = MaterialTheme.colorScheme.background),
-          label = rememberTextComponent(
-            typeface = typeface,
-            color = LocalContentColor.current
+          endAxis = rememberEndAxis(
+            valueFormatter = { value, _, _ ->
+              value.toLong().toTimeUsed()
+            },
+            itemPlacer = remember { VerticalPlacer(maxY) },
+            guideline = rememberAxisGuidelineComponent(
+              color = MaterialTheme.colorScheme.background,
+              shape = Shape.Rectangle
+            ),
+            axis = rememberLineComponent(thickness = 0.dp),
+            tick = rememberLineComponent(thickness = 0.dp),
+            label = rememberTextComponent(
+              typeface = typeface,
+              color = LocalContentColor.current
+            )
           )
         ),
-        endAxis = rememberEndAxis(
-          valueFormatter = { value, _, _ ->
-            value.toLong().toTimeUsed()
-          },
-          itemPlacer = remember { VerticalPlacer(maxY) },
-          guideline = rememberAxisGuidelineComponent(
-            color = MaterialTheme.colorScheme.background,
-            shape = Shape.Rectangle
-          ),
-          axis = rememberLineComponent(thickness = 0.dp),
-          tick = rememberLineComponent(thickness = 0.dp),
-          label = rememberTextComponent(
-            typeface = typeface,
-            color = LocalContentColor.current
-          )
-        )
-      ),
-      model = CartesianChartModel(
-        ColumnCartesianLayerModel.build {
-          val dates = sortedStats.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7  }
-          val durations = sortedStats.map { it.usageDuration }
-          Timber.d("$dates, ${durations.map { it.toTimeUsed() }}")
-          series(y = durations, x = dates)
-        }
-      ),
-      zoomState = rememberVicoZoomState(zoomEnabled = false),
-      scrollState = rememberVicoScrollState(scrollEnabled = false)
-    )
+        model = CartesianChartModel(
+          ColumnCartesianLayerModel.build {
+            val dates =
+              sortedStats.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7 }
+            val durations = sortedStats.map { it.usageDuration }
+            Timber.d("$dates, ${durations.map { it.toTimeUsed() }}")
+            series(y = durations, x = dates)
+          }
+        ),
+        zoomState = rememberVicoZoomState(zoomEnabled = false),
+        scrollState = rememberVicoScrollState(scrollEnabled = false)
+      )
+    } else {
+      Text(
+        text = "No recent usage found.",
+        modifier = Modifier.fillMaxSize().wrapContentHeight().padding(bottom = 8.dp),
+        textAlign = TextAlign.Center,
+      )
+    }
   }
 }
 
