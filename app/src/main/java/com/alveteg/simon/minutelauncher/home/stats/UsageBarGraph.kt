@@ -3,21 +3,42 @@ package com.alveteg.simon.minutelauncher.home.stats
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEndAxis
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.core.cartesian.CartesianDrawContext
+import com.patrykandpatrick.vico.core.cartesian.CartesianMeasureContext
+import com.patrykandpatrick.vico.core.cartesian.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
+import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
+import com.patrykandpatrick.vico.core.common.half
+import com.patrykandpatrick.vico.core.common.shape.Shape
+import timber.log.Timber
+import kotlin.math.max
 
 @Composable
 fun UsageBarGraph(
   usageStatistics: List<UsageStatistics>
 ) {
+  val durations =
+    usageStatistics.sortedBy { it.usageDate }.map { it.usageDuration }.ifEmpty { listOf(0L) }
+  val millisInHour = 3600000f
   Surface(
     modifier = Modifier
       .height(220.dp)
@@ -27,10 +48,109 @@ fun UsageBarGraph(
     shape = MaterialTheme.shapes.large,
     tonalElevation = 8.dp
   ) {
-    LazyColumn {
-      items(usageStatistics) {
-        Text(text = "${it.usageDate}: ${it.usageDuration.toTimeUsed()}")
-      }
+    CartesianChartHost(
+      chart = rememberCartesianChart(
+        rememberColumnCartesianLayer(
+          columnProvider = ColumnCartesianLayer.ColumnProvider.series(
+            rememberLineComponent(
+              color = MaterialTheme.colorScheme.primary,
+              thickness = 40.dp,
+              shape = remember { Shape.rounded(22) }
+            )
+          ),
+          spacing = 4.dp
+        ),
+        endAxis = rememberEndAxis(
+          valueFormatter = { value, _, _ ->
+            value.toLong().toTimeUsed()
+          },
+          itemPlacer = remember { VerticalPlacer() },
+          guideline = rememberAxisGuidelineComponent(
+            color = MaterialTheme.colorScheme.background,
+            shape = Shape.Rectangle
+          ),
+          axis = rememberLineComponent(thickness = 0.dp),
+          tick = rememberLineComponent(thickness = 0.dp)
+        ),
+      ),
+      model = CartesianChartModel(
+        ColumnCartesianLayerModel.build {
+          series(y = durations)
+        }
+      ),
+      zoomState = rememberVicoZoomState(zoomEnabled = false),
+      scrollState = rememberVicoScrollState(scrollEnabled = false)
+    )
+  }
+}
+
+class VerticalPlacer(
+  private val shiftTopLines: Boolean = false
+) : AxisItemPlacer.Vertical {
+  override fun getBottomVerticalAxisInset(
+    context: CartesianMeasureContext,
+    verticalLabelPosition: VerticalAxis.VerticalLabelPosition,
+    maxLabelHeight: Float,
+    maxLineThickness: Float
+  ): Float = when (verticalLabelPosition) {
+    VerticalAxis.VerticalLabelPosition.Top -> maxLineThickness
+    VerticalAxis.VerticalLabelPosition.Center ->
+      (maxOf(maxLabelHeight, maxLineThickness) + maxLineThickness).half
+
+    else -> maxLabelHeight + maxLineThickness.half
+  }
+
+  override fun getHeightMeasurementLabelValues(
+    context: CartesianMeasureContext,
+    position: AxisPosition.Vertical
+  ): List<Float> = axisValues(context, position)
+
+  override fun getLabelValues(
+    context: CartesianDrawContext,
+    axisHeight: Float,
+    maxLabelHeight: Float,
+    position: AxisPosition.Vertical
+  ): List<Float> = axisValues(context, position)
+
+  override fun getTopVerticalAxisInset(
+    context: CartesianMeasureContext,
+    verticalLabelPosition: VerticalAxis.VerticalLabelPosition,
+    maxLabelHeight: Float,
+    maxLineThickness: Float
+  ): Float = when (verticalLabelPosition) {
+    VerticalAxis.VerticalLabelPosition.Top ->
+      maxLabelHeight + (if (shiftTopLines) maxLineThickness else -maxLineThickness).half
+
+    VerticalAxis.VerticalLabelPosition.Center ->
+      (max(maxLabelHeight, maxLineThickness) +
+          if (shiftTopLines) maxLineThickness else -maxLineThickness)
+        .half
+
+    else -> if (shiftTopLines) maxLineThickness else 0f
+  }
+
+  override fun getWidthMeasurementLabelValues(
+    context: CartesianMeasureContext,
+    axisHeight: Float,
+    maxLabelHeight: Float,
+    position: AxisPosition.Vertical
+  ): List<Float> = axisValues(context, position)
+
+  private fun axisValues(
+    context: CartesianMeasureContext,
+    position: AxisPosition.Vertical
+  ): List<Float> {
+    val values = mutableListOf<Float>()
+    val yRange = context.chartValues.getYRange(position)
+    val minutes = yRange.maxY.div(60000)
+    if (minutes >= 60) {
+      val hours = minutes.div(60).toInt()
+      repeat(hours.plus(2)) { values += 0f.plus(3600000).times(it) }
+    } else {
+      val tenners = (minutes % 10).coerceAtLeast(2f).toInt()
+      repeat(tenners.plus(2)) { values += 0f.plus(600000).times(it) }
     }
+    Timber.d("Y Axis: $values")
+    return values
   }
 }

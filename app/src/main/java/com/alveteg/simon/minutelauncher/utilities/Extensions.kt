@@ -19,13 +19,13 @@ import com.alveteg.simon.minutelauncher.data.AppInfo
 fun Long?.toTimeUsed(
   blankIfZero: Boolean = true
 ): String {
-  if (this == null) return if (!blankIfZero) "0 min" else ""
+  if (this == null) return if (!blankIfZero) "0m" else ""
   val minutes = div(60000)
   val hours = minutes.div(60)
   val sb = StringBuilder()
   if (hours != 0L) sb.append("${hours}h ")
-  if (minutes != 0L) sb.append("${minutes % 60} min")
-  return sb.toString().ifBlank { if (!blankIfZero) "0 min" else "" }
+  if (minutes % 60 != 0L) sb.append("${minutes % 60}m")
+  return sb.toString().ifBlank { if (!blankIfZero) "0m" else "" }
 }
 
 fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {

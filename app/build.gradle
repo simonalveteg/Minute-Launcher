@@ -109,4 +109,7 @@ dependencies {
 
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation "androidx.compose.ui:ui-text-google-fonts:1.6.1"
+
+    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.22")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.22")
 }
