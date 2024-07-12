@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
+import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
@@ -69,7 +70,7 @@ fun UsageBarGraph(
 
   val typeface = remember(resolver, style) {
     resolver.resolve(
-      fontFamily = style.fontFamily,
+      fontFamily = archivoFamily,
       fontWeight = style.fontWeight ?: FontWeight.Normal,
       fontStyle = style.fontStyle ?: FontStyle.Normal,
       fontSynthesis = style.fontSynthesis ?: FontSynthesis.All,
