@@ -32,21 +32,11 @@ fun UsageCard(
       modifier = Modifier.padding(12.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Text(
+      Text(
           text = label.uppercase(),
-          style = MaterialTheme.typography.labelSmall,
-          fontFamily = archivoFamily
-        )
-        Text(
-          text = "+25%",
-          style = MaterialTheme.typography.labelSmall,
-          fontFamily = archivoFamily
-        )
-      }
+      style = MaterialTheme.typography.labelSmall,
+      fontFamily = archivoFamily
+      )
       Text(
         text = usage.toTimeUsed(),
         style = MaterialTheme.typography.headlineSmall,

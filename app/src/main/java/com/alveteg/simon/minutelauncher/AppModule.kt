@@ -5,7 +5,7 @@ import androidx.room.Room
 import com.alveteg.simon.minutelauncher.data.AccessTimerMappingCallback
 import com.alveteg.simon.minutelauncher.data.AccessTimerMappingDao
 import com.alveteg.simon.minutelauncher.data.ApplicationRepository
-import com.alveteg.simon.minutelauncher.data.LauncherDAO
+import com.alveteg.simon.minutelauncher.data.LauncherDao
 import com.alveteg.simon.minutelauncher.data.LauncherDatabase
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
 import dagger.Module
@@ -31,14 +31,13 @@ object AppModule {
       LauncherDatabase::class.java,
       "launcher-database"
     )
-      .fallbackToDestructiveMigration()
       .addCallback(AccessTimerMappingCallback(accessTimerMappingProvider))
       .build()
   }
 
   @Provides
   @Singleton
-  fun provideDao(database: LauncherDatabase): LauncherDAO {
+  fun provideLauncherDao(database: LauncherDatabase): LauncherDao {
     return database.launcherDao()
   }
 
@@ -51,8 +50,8 @@ object AppModule {
   @Provides
   @Singleton
   fun provideRepository(
-    dao: LauncherDAO,
-    accessTimerMappingDao: AccessTimerMappingDao
+    dao: LauncherDao,
+    accessTimerMappingDao: AccessTimerMappingDao,
   ): LauncherRepository {
     return LauncherRepository(dao, accessTimerMappingDao)
   }

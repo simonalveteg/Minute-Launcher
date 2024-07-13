@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 
 @Dao
-interface LauncherDAO {
+interface LauncherDao {
 
   @Query("SELECT * FROM app")
   fun getAllApps(): Flow<List<App>>
@@ -23,8 +23,8 @@ interface LauncherDAO {
   @Query("SELECT * FROM FavoriteApp ORDER BY `order` ASC")
   fun getFavoriteApps(): Flow<List<FavoriteAppWithApp>>
 
-  @Query("SELECT * FROM App WHERE id = :id")
-  fun getAppById(id: Int): App?
+  @Query("SELECT * FROM App WHERE packageName = :packageName")
+  fun getAppById(packageName: String): App?
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insertApp(app: App)
@@ -32,39 +32,39 @@ interface LauncherDAO {
   @Delete
   fun removeApp(app: App)
 
-  @Query("UPDATE App SET timer = :timer WHERE id = :appId")
-  fun updateAppTimer(appId: Int, timer: AccessTimer)
+  @Query("UPDATE App SET timer = :timer WHERE packageName = :packageName")
+  fun updateAppTimer(packageName: String, timer: AccessTimer)
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertFavoriteApp(app: FavoriteApp)
 
-  @Query("UPDATE FavoriteApp SET `order` = :order WHERE app_id = :id")
-  fun updateFavoriteOrder(id: Int, order: Int)
+  @Query("UPDATE FavoriteApp SET `order` = :order WHERE packageName = :packageName")
+  fun updateFavoriteOrder(packageName: String, order: Int)
 
   @Delete
   fun deleteFavoriteApp(app: FavoriteApp)
 
   @Transaction
   fun toggleFavoriteApp(app: App) {
-    val fApp = getFavoriteById(app.id)
+    val fApp = getFavoriteById(app.packageName)
     if (fApp != null) {
       deleteFavoriteApp(fApp)
     } else {
       val order = getMaxFavoriteOrder() + 1
       Timber.d("Insert new favorite at position: $order")
-      insertFavoriteApp(FavoriteApp(app.id, order))
+      insertFavoriteApp(FavoriteApp(app.packageName, order))
     }
   }
 
   @Query("SELECT MAX(`order`) FROM FavoriteApp")
   fun getMaxFavoriteOrder(): Int
 
-  @Query("SELECT * FROM FavoriteApp WHERE app_id = :id")
-  fun getFavoriteById(id: Int): FavoriteApp?
+  @Query("SELECT * FROM FavoriteApp WHERE packageName = :packageName")
+  fun getFavoriteById(packageName: String): FavoriteApp?
 
 
-  @Query("SELECT 'order' FROM FavoriteApp WHERE app_id = :id")
-  fun getOrderForFavoriteById(id: Int): Int
+  @Query("SELECT 'order' FROM FavoriteApp WHERE packageName = :packageName")
+  fun getOrderForFavoriteById(packageName: String): Int
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertGestureApp(swipeApp: SwipeApp)

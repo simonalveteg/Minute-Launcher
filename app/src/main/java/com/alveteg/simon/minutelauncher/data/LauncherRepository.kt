@@ -6,7 +6,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 class LauncherRepository @Inject constructor(
-  private val launcherDao: LauncherDAO,
+  private val launcherDao: LauncherDao,
   private val accessTimerMappingDao: AccessTimerMappingDao
 ) {
 
@@ -18,12 +18,11 @@ class LauncherRepository @Inject constructor(
   fun favoriteApps() = launcherDao.getFavoriteApps()
   fun insertApp(app: App) = launcherDao.insertApp(app)
   fun updateApp(app: App) {
-    launcherDao.updateAppTimer(app.id, app.timer)
+    launcherDao.updateAppTimer(app.packageName, app.timer)
   }
 
   fun removeApp(app: App) = launcherDao.removeApp(app)
 
-  fun getAppById(id: Int) = launcherDao.getAppById(id)
   fun toggleFavorite(app: App) = launcherDao.toggleFavoriteApp(app)
   fun insertGestureApp(swipeApp: SwipeApp) {
     launcherDao.removeAppForGesture(swipeApp.swipeDirection.toString())
@@ -37,11 +36,11 @@ class LauncherRepository @Inject constructor(
       Timber.d(
         "Updating order for: ${appInfo.favoriteApp.app.appTitle} from ${
           launcherDao.getOrderForFavoriteById(
-            appInfo.favoriteApp.app.id
+            appInfo.favoriteApp.app.packageName
           )
         } to $index"
       )
-      launcherDao.updateFavoriteOrder(appInfo.favoriteApp.app.id, index)
+      launcherDao.updateFavoriteOrder(appInfo.favoriteApp.app.packageName, index)
     }
   }
 

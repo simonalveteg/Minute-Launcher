@@ -2,11 +2,8 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/accessibility_service_description"
     android:summary="@string/accessibility_service_summary"
-    android:packageNames="com.android.settings"
-    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:packageNames="@null"
     android:accessibilityFlags="flagDefault"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:notificationTimeout="100"
-    android:canRetrieveWindowContent="true"
-    android:settingsActivity="com.example.android.accessibility.ServiceSettingsActivity"
+    android:canRetrieveWindowContent="false"
     />

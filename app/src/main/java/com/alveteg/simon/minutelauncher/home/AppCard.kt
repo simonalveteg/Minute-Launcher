@@ -1,10 +1,9 @@
 package com.alveteg.simon.minutelauncher.home
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,8 +11,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,40 +21,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.theme.ScaleIndicationNodeFactory
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
-import timber.log.Timber
+import java.time.LocalDate
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppCard(
-  appTitle: String,
-  appUsage: Long,
-  selected: Boolean = false,
-  onLongClick: () -> Unit = {},
+  appInfo: AppInfo,
   onClick: () -> Unit
 ) {
-
-  LaunchedEffect(key1 = selected) {
-    Timber.d("Selected is now $selected")
-  }
-
-  val surfaceColor by animateColorAsState(
-    targetValue = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
-    label = "",
-    animationSpec = tween(700)
-  )
+  val appTitle = appInfo.app.appTitle
+  val appUsage by remember { derivedStateOf { appInfo.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration } }
+  val interactionSource = remember { MutableInteractionSource() }
 
   Surface(
     tonalElevation = 2.dp,
     shape = MaterialTheme.shapes.large,
-    color = surfaceColor,
+    color = Color.Transparent,
     modifier = Modifier
       .fillMaxWidth()
       .padding(vertical = 2.dp, horizontal = 32.dp)
       .animateContentSize()
       .combinedClickable(
-//        onLongClick = onLongClick,
+        indication = ScaleIndicationNodeFactory,
+        interactionSource = interactionSource,
         onClick = onClick
       )
   ) {

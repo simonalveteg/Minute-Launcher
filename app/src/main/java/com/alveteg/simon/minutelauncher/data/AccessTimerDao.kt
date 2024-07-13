@@ -19,4 +19,7 @@ interface AccessTimerMappingDao {
 
   @Query("SELECT * FROM AccessTimerMapping WHERE enum = :accessTimer")
   fun hasMapping(accessTimer: AccessTimer): Boolean
+
+  @Query("SELECT EXISTS(SELECT * FROM AccessTimerMapping LIMIT 1)")
+  fun hasMappings(): Boolean
 }

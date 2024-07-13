@@ -1,85 +1,59 @@
 package com.alveteg.simon.minutelauncher.home
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.theme.ScaleIndicationNodeFactory
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
+import java.time.LocalDate
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FavoriteCard(
-  appTitle: String,
-  appUsage: Long,
-  editState: Boolean = false,
-  isDragged: Boolean = false,
+  appInfo: AppInfo,
   onClick: () -> Unit
 ) {
-  val tonalElevation by animateDpAsState(
-    targetValue =
-    if (editState) 1.dp else 0.dp,
-    label = ""
-  )
-  val surfaceColor by animateColorAsState(
-    targetValue = if (editState) {
-      if (isDragged) MaterialTheme.colorScheme.surface.copy(alpha = 0.99f)
-      else MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-    } else MaterialTheme.colorScheme.surface.copy(alpha = 0f),
-    label = "",
-    animationSpec = tween(700)
-  )
-  val topPadding by animateDpAsState(
-    targetValue = if (editState) 16.dp else 2.dp,
-    label = "",
-    animationSpec = if (editState) tween(400, 200) else tween(300)
-  )
-  val usageAlpha by animateFloatAsState(
-    targetValue = if (editState) 0f else 1f,
-    label = "",
-    animationSpec = if (editState) tween(150, 300) else tween(400, 600)
-  )
-  val textHeight = with(LocalDensity.current) {
-    LocalTextStyle.current.lineHeight.toDp()
-  }
-  val usageHeight by animateDpAsState(
-    targetValue = if (editState) 0.dp else textHeight,
-    animationSpec = if (editState) tween(150, 100) else tween(300, 300),
-    label = ""
-  )
+  val interactionSource = remember { MutableInteractionSource() }
+  val appTitle = appInfo.app.appTitle
+  val appUsage by remember { derivedStateOf { appInfo.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration } }
 
   Surface(
-    onClick = { onClick() },
-    tonalElevation = tonalElevation,
     shape = MaterialTheme.shapes.large,
-    color = surfaceColor,
+    color = Color.Transparent,
     modifier = Modifier
       .fillMaxWidth()
       .animateContentSize()
-      .padding(vertical = 2.dp, horizontal = topPadding)
+      .combinedClickable(
+        indication = ScaleIndicationNodeFactory,
+        interactionSource = interactionSource,
+        onClick = onClick
+      )
+      .padding(vertical = 2.dp)
   ) {
     Column(
-      horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier
-        .padding(vertical = topPadding)
+      horizontalAlignment = Alignment.CenterHorizontally
     ) {
       Text(
         text = appTitle,
@@ -93,8 +67,7 @@ fun FavoriteCard(
       Text(
         text = appUsage.toTimeUsed(),
         fontFamily = archivoFamily,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = usageAlpha),
-        modifier = Modifier.height(usageHeight)
+        color = MaterialTheme.colorScheme.primary,
       )
     }
   }

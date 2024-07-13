@@ -19,10 +19,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.transform
-import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -40,24 +38,21 @@ class LauncherViewModel @Inject constructor(
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
-  private val dailyUsage = applicationRepository.dailyUsage
-  val dailyUsageTotal = dailyUsage.map { it.values.sum() }
-
   val gestureApps = roomRepository.gestureApps()
   val favoriteApps = combine(
-    roomRepository.favoriteApps(), dailyUsage
+    roomRepository.favoriteApps(), applicationRepository.usageStats
   ) { favorites, usageStats ->
-    favorites.map {
-      val usage = usageStats.getOrDefault(it.app.packageName, 0L)
-      FavoriteAppInfo(it, usage)
+    favorites.map { favorite ->
+      val usage = usageStats.filter { favorite.app.packageName == it.packageName }
+      FavoriteAppInfo(favorite, usage)
     }
   }
-  private val installedApps = combine(
-    roomRepository.appList(), roomRepository.favoriteApps(), dailyUsage,
+  val installedApps = combine(
+    roomRepository.appList(), roomRepository.favoriteApps(), applicationRepository.usageStats
   ) { apps, favorites, usageStats ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
-      val usage = usageStats.getOrDefault(app.packageName, 0L)
+      val usage = usageStats.filter { app.packageName == it.packageName }
       AppInfo(app, favorite, usage)
     }
   }
@@ -67,10 +62,12 @@ class LauncherViewModel @Inject constructor(
     apps.filterBySearchTerm(searchTerm)
   }
   val defaultTimerApps = installedApps.transform { appList ->
-    emit(appList.filter { it.app.timer == AccessTimer.DEFAULT }.sortedBy { it.app.appTitle.lowercase() })
+    emit(appList.filter { it.app.timer == AccessTimer.DEFAULT }
+      .sortedBy { it.app.appTitle.lowercase() })
   }
   val nonDefaultTimerApps = installedApps.transform { appList ->
-    emit(appList.filter { it.app.timer != AccessTimer.DEFAULT }.sortedBy { it.app.appTitle.lowercase() })
+    emit(appList.filter { it.app.timer != AccessTimer.DEFAULT }
+      .sortedBy { it.app.appTitle.lowercase() })
   }
 
   val accessTimerMappings = roomRepository.getAccessTimerMappings()
@@ -123,7 +120,7 @@ class LauncherViewModel @Inject constructor(
         val newApps = installedApps.filter { !currentAppPackageNames.contains(it.packageName) }
         val removedApps = currentApps.filter { !installedAppPackageNames.contains(it.packageName) }
 
-        Timber.d("$newApps new apps and $removedApps removed apps found.")
+        Timber.d("${newApps.size} new apps and ${removedApps.size} removed apps found.")
 
         newApps.forEach { roomRepository.insertApp(it) }
         removedApps.forEach { roomRepository.removeApp(it) }
@@ -145,7 +142,11 @@ class LauncherViewModel @Inject constructor(
         applicationRepository.getLaunchIntentForPackage(appInfo.app.packageName)?.let { intent ->
           sendUiEvent(UiEvent.LaunchActivity(intent))
           sendUiEvent(
-            UiEvent.ShowToast("${appInfo.app.appTitle} used for ${appInfo.usage.toTimeUsed(false)}")
+            UiEvent.ShowToast(
+              "${appInfo.app.appTitle} used for ${
+                (appInfo.usage.firstOrNull()?.usageDuration ?: 0L).toTimeUsed(false)
+              }"
+            )
           )
           viewModelScope.launch {
             delay(100)
