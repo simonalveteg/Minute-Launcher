@@ -168,7 +168,6 @@ fun FavoriteList(
         coroutineScope.launch {
           offsetY.snapTo(originalY + easedDragAmount)
         }
-        Timber.d("EasingFactor: $easingFactor")
         gesture = if (easingFactor < 0.14) {
           if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
         } else Gesture.NONE

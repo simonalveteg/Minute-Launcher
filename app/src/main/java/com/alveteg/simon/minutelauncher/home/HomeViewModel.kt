@@ -17,6 +17,7 @@ import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,6 +96,7 @@ class HomeViewModel @Inject constructor(
   }
 
   init {
+    Timber.d("ViewModel initialized!")
     applicationRepository.registerCallback(packageCallback)
     updateDatabase()
     viewModelScope.launch {
@@ -225,6 +227,7 @@ class HomeViewModel @Inject constructor(
   }
 
   override fun onCleared() {
+    Timber.d("HomeViewModel Cleared.")
     applicationRepository.unregisterCallback()
     super.onCleared()
   }
