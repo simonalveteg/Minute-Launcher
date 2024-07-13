@@ -47,7 +47,7 @@ class LauncherViewModel @Inject constructor(
       FavoriteAppInfo(favorite, usage)
     }
   }
-  private val installedApps = combine(
+  val installedApps = combine(
     roomRepository.appList(), roomRepository.favoriteApps(), applicationRepository.usageStats
   ) { apps, favorites, usageStats ->
     apps.map { app ->

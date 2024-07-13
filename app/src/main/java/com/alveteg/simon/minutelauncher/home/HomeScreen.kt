@@ -49,9 +49,10 @@ fun HomeScreen(
   var screenState by rememberSaveable { mutableStateOf(ScreenState.FAVORITES) }
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
+  val installedApps by viewModel.installedApps.collectAsState(initial = emptyList())
   val timerMappings by viewModel.accessTimerMappings.collectAsState(initial = emptyList())
   val totalUsage by derivedStateOf {
-    apps.sumOf { it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration ?: 0L }
+    installedApps.sumOf { it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration ?: 0L }
   }
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
 
@@ -134,7 +135,7 @@ fun HomeScreen(
           onAppClick = { appListSelectionAction(it) },
           apps = apps,
           offsetY = offsetY,
-          usageStatistics = apps.flatMap { it.usage },
+          usageStatistics = installedApps.flatMap { it.usage },
           onSearch = {
             apps.firstOrNull()?.let {
               appListSelectionAction(it)
