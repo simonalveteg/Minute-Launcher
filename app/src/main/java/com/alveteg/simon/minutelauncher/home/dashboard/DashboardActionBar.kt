@@ -47,11 +47,13 @@ fun DashboardActionBar(
       imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
       description = "Open Digital Wellbeing",
       action = {
-        val intent = Intent()
-        intent.setClassName(
-          "com.google.android.apps.wellbeing",
-          "com.google.android.apps.wellbeing.settings.TopLevelSettingsActivity"
-        )
+        val intent = Intent().apply {
+          setClassName(
+            "com.google.android.apps.wellbeing",
+            "com.google.android.apps.wellbeing.settings.TopLevelSettingsActivity"
+          )
+          flags += Intent.FLAG_ACTIVITY_NEW_TASK
+        }
         ContextCompat.startActivity(mContext, intent, null)
       }
     ),
@@ -60,6 +62,7 @@ fun DashboardActionBar(
       description = "Change Wallpaper",
       action = {
         val intent = Intent(Intent.ACTION_SET_WALLPAPER).apply {
+          setPackage("com.google.android.apps.wallpaper")
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
         }
         ContextCompat.startActivity(
