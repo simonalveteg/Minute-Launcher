@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -59,10 +58,13 @@ fun UsageBarGraph(
   val maxDuration = sortedStats.maxOfOrNull { it.usageDuration } ?: 0L
   val hours = (maxDuration.div(millisInHour)).toInt()
   val tenners = (maxDuration.div(millisInHour.div(6))).toInt()
+  val twos = (maxDuration.div(millisInHour.div(30))).toInt()
   val maxY = if (hours > 0) {
     hours.plus(1).times(millisInHour)
-  } else {
+  } else if (tenners > 0) {
     tenners.plus(2).coerceAtMost(5).times(millisInHour.div(6))
+  } else {
+    twos.plus(2).coerceIn(2, 4).times(millisInHour.div(30))
   }
 
   val style = MaterialTheme.typography.bodySmall
@@ -151,7 +153,10 @@ fun UsageBarGraph(
     } else {
       Text(
         text = "No recent usage found.",
-        modifier = Modifier.fillMaxSize().wrapContentHeight().padding(bottom = 8.dp),
+        modifier = Modifier
+          .fillMaxSize()
+          .wrapContentHeight()
+          .padding(bottom = 8.dp),
         textAlign = TextAlign.Center,
       )
     }
@@ -162,6 +167,12 @@ class VerticalPlacer(
   private val maxY: Float,
   private val shiftTopLines: Boolean = false
 ) : AxisItemPlacer.Vertical {
+
+  private val HOUR = 3600000L
+  private val TEN_MINUTES = 600000L
+  private val TWO_MINUTES = 120000L
+  private val MINUTE = 60000L
+
   override fun getBottomVerticalAxisInset(
     context: CartesianMeasureContext,
     verticalLabelPosition: VerticalAxis.VerticalLabelPosition,
@@ -217,13 +228,16 @@ class VerticalPlacer(
   ): List<Float> {
     val values = mutableListOf<Float>()
     val yRange = context.chartValues.getYRange(position)
-    val minutes = yRange.maxY.div(60000)
+    val minutes = yRange.maxY.div(MINUTE)
     if (minutes >= 60) {
-      val hours = maxY.div(3600000).toInt() + 1
-      repeat(hours) { values += 0f.plus(3600000).times(it) }
+      val hours = maxY.div(HOUR).toInt() + 1
+      repeat(hours) { values += 0f.plus(HOUR).times(it) }
+    } else if (minutes >= 10) {
+      val tenners = maxY.div(TEN_MINUTES).toInt() + 1
+      repeat(tenners) { values += 0f.plus(TEN_MINUTES).times(it) }
     } else {
-      val tenners = maxY.div(600000).toInt() + 1
-      repeat(tenners) { values += 0f.plus(600000).times(it) }
+      val twos = maxY.div(TWO_MINUTES).toInt() + 1
+      repeat(twos) { values += 0f.plus(TWO_MINUTES).times(it) }
     }
     Timber.d("Y Axis: $values")
     return values
