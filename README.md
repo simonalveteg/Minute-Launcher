@@ -1,20 +1,28 @@
-# Minute-Launcher
-This is an open source minimal digital wellbeing launcher for Android with no unneccessary bloat and no paywalls, written with Jetpack Compose. After having tried almost all minimal launchers on the Play Store I found that none of them were really what I was looking for. This launcher is still in development, but it has all the basic functionalities and I personally use it as my daily driver. 
+## Minute-Launcher: A Minimalist Digital Wellbeing Launcher
 
-Current features:
-- Usage statistics right on the homescreen
-- No arbitrary limit on amount of favorite apps
-- Six different gesture zones
-  - Swipe up = open app drawer
-  - Swipe down = expand notifications drawer
-  - Swipe left or right on upper or lower part of screen = settable shortcuts to any apps of your choice (four in total)
-- Big *pulsating* button that prompts you to put down your phone instead of opening whatever app you're trying to open
-  - Pressing it instantly locks your screen without you having to press the power button.
-- Countdown timer before being allowed to open an app
+**Tired of cluttered home screens and endless distractions?** Minute-Launcher is a simple, yet powerful launcher designed to help you regain control of your digital life. By focusing on essential features and eliminating unnecessary bloat, we've created a tool that promotes mindful phone usage.
 
-The idea is that by using a stripped down, minimal launcher that constantly reminds you of your phone usage and gives you opportunities to "disconnect", it might become easier to reduce the time spent scrolling mindlessly. A phone is a tool and should be used with intent and purpose. Sometimes that purpose is to get some mindless entertainment, but when it isn't it should be easy to break free. 
+### Key Features
+* **Intuitive interface:** Enjoy a clean and clutter-free home screen with easy access to your favorite apps.
+* **Powerful gestures:** Quickly access notifications, the app drawer, and custom shortcuts with simple swipes.
+* **Mindful reminders:** The pulsating button encourages you to take a break and disconnect.
+* **Usage insights:** Stay informed about your phone usage with clear and informative statistics - directly on your home screen.
+* **Material You:** Automatically adapts to the colors of your wallpaper and operating system, making for a more cohesive experience.
 
-# Short demo
+### How it Works
+Minute-Launcher offers a streamlined experience by providing essential functions without overwhelming you with options. The countdown timer helps you resist the urge to immediately open apps, allowing for more intentional phone use.
+
+### Getting Started
+Minute-Launcher is still in development, if you're eager to try it out there will be some releases here on Github under the releases-tab. 
+
+### Contributing
+Contributions are welcome! The project is completely open source, so if you'd like to get involved you can easily fork it and make any changes you want, and then submit a pull request. 
+
+### Contact
+For feedback, questions, or bug reports, please open a new issue or discussion thread here on Github. 
+
+[Insert screenshots or GIFs of the launcher]
+
 <video src="https://github.com/simonalveteg/Minute-Launcher/assets/41792248/4253d1f7-4ab8-42ee-82e8-e31f8b9b22ed"></video>
 
 
