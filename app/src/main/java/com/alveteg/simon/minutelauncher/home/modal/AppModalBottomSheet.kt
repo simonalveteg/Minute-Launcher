@@ -3,17 +3,11 @@ package com.alveteg.simon.minutelauncher.home.modal
 import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,22 +15,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.MinuteAccessibilityService
-import com.alveteg.simon.minutelauncher.data.AccessTimer
 import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
-import com.alveteg.simon.minutelauncher.home.SegmentedControl
 import com.alveteg.simon.minutelauncher.isAccessibilityServiceEnabled
-import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
-import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,7 +57,7 @@ fun AppModalBottomSheet(
         timerMapping = timerMappings,
         onEvent = onEvent,
         onConfirmation = {
-          onEvent(Event.LaunchActivity(appInfo))
+          onEvent(HomeEvent.LaunchActivity(appInfo))
           onDismiss()
         },
         onCancel = {

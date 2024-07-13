@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
@@ -17,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
@@ -40,6 +40,7 @@ fun AppModalActionBar(
       action = {
         val intent = Intent().apply {
           action = Intent.ACTION_DELETE
+          flags += Intent.FLAG_ACTIVITY_NEW_TASK
           data = Uri.fromParts("package", appInfo.app.packageName, null)
         }
         ContextCompat.startActivity(mContext, intent, null)
@@ -57,6 +58,7 @@ fun AppModalActionBar(
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APP_USAGE_SETTINGS
+          flags += Intent.FLAG_ACTIVITY_NEW_TASK
           putExtra(Intent.EXTRA_PACKAGE_NAME, appInfo.app.packageName)
         }
         ContextCompat.startActivity(mContext, intent, null)
@@ -65,7 +67,7 @@ fun AppModalActionBar(
     ActionBarAction(
       imageVector = favoriteIcon,
       description = "Toggle app favorite",
-      action = { onEvent(Event.ToggleFavorite(appInfo.app)) },
+      action = { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) },
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,
@@ -73,6 +75,7 @@ fun AppModalActionBar(
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+          flags += Intent.FLAG_ACTIVITY_NEW_TASK
           data = Uri.fromParts("package", appInfo.app.packageName, null)
         }
         ContextCompat.startActivity(mContext, intent, null)

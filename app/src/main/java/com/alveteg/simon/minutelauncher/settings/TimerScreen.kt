@@ -33,18 +33,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.MinuteRoute
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AccessTimer
 import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.LauncherViewModel
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import timber.log.Timber
@@ -53,7 +51,7 @@ import timber.log.Timber
 @Composable
 fun TimerScreen(
   onNavigate: (UiEvent.Navigate) -> Unit,
-  viewModel: LauncherViewModel = hiltViewModel()
+  viewModel: SettingsViewModel = hiltViewModel()
 ) {
   LaunchedEffect(key1 = true) {
     Timber.d("launched effect")
@@ -86,7 +84,7 @@ fun TimerScreen(
             )
           },
           navigationIcon = {
-            IconButton(onClick = { onNavigate(UiEvent.Navigate(MinuteRoute.HOME, true)) }) {
+            IconButton(onClick = { onNavigate(UiEvent.Navigate(SettingsScreen.HOME, true)) }) {
               Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Navigate Back"
@@ -137,7 +135,7 @@ fun TimerScreen(
                     text = { Text(text = "${it.enum.name} (${it.integerValue}s)") },
                     onClick = {
                       viewModel.onEvent(
-                        Event.SetDefaultTimer(
+                        SettingsEvent.SetDefaultTimer(
                           AccessTimerMapping(
                             enum = AccessTimer.DEFAULT,
                             integerValue = it.integerValue
@@ -175,7 +173,7 @@ fun AppTimerCard(
   timerMappings: List<AccessTimerMapping>,
   onEvent: (Event) -> Unit
 ) {
-  var expanded by mutableStateOf(false)
+  var expanded by remember { mutableStateOf(false) }
   Surface(
     modifier = Modifier.padding(vertical = 1.dp)
   ) {
@@ -215,7 +213,7 @@ fun AppTimerCard(
               text = { Text(text = "${it.enum.name} (${it.integerValue}s)") },
               onClick = {
                 onEvent(
-                  Event.UpdateApp(
+                  HomeEvent.UpdateApp(
                     appInfo.app.copy(timer = it.enum)
                   )
                 )

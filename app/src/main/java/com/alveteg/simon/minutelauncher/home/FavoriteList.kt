@@ -22,7 +22,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,7 +45,6 @@ import com.alveteg.simon.minutelauncher.utilities.GestureZone
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.time.LocalDate
 import kotlin.math.abs
 
 @Suppress("NAME_SHADOWING")
@@ -118,7 +116,7 @@ fun FavoriteList(
           }
           currentZone = GestureZone.NONE
           currentDirection = GestureDirection.NONE
-          onEvent(Event.HandleGesture(gesture))
+          onEvent(HomeEvent.HandleGesture(gesture))
         },
       ) { change, dragAmount ->
         currentDirection = if (dragAmount > 0) {
@@ -156,7 +154,7 @@ fun FavoriteList(
         onDragCancel = { onDragEnd() },
         onDragEnd = {
           onDragEnd()
-          onEvent(Event.HandleGesture(gesture))
+          onEvent(HomeEvent.HandleGesture(gesture))
         },
       ) { _, dragAmount ->
         val originalY = offsetY.value

@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.utilities.clearFocusOnKeyboardDismiss
 
 @Composable
@@ -57,7 +58,7 @@ fun SearchBar(
         )
       }) {
     TextField(value = searchText,
-      onValueChange = { onEvent(Event.UpdateSearch(it)) },
+      onValueChange = { onEvent(HomeEvent.UpdateSearch(it)) },
       modifier = Modifier
         .fillMaxWidth()
         .focusRequester(focusRequester)
@@ -90,7 +91,7 @@ fun SearchBar(
       },
       trailingIcon = {
         IconButton(onClick = {
-          onEvent(Event.UpdateSearch(""))
+          onEvent(HomeEvent.UpdateSearch(""))
         }
         ) {
           val tint = if (searchText.isNotBlank()) LocalContentColor.current else Color.Transparent

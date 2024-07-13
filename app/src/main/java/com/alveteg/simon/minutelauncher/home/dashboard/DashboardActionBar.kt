@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Timer
@@ -18,9 +17,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
+import com.alveteg.simon.minutelauncher.home.HomeActivity
 
 
 @Composable
@@ -40,7 +41,7 @@ fun DashboardActionBar(
     ActionBarAction(
       imageVector = Icons.Default.Gesture,
       description = "Change gesture shortcuts",
-      action = { onEvent(Event.OpenGestureSettings) }
+      action = { onEvent(HomeEvent.OpenGestureSettings) }
     ),
     ActionBarAction(
       imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
@@ -58,7 +59,9 @@ fun DashboardActionBar(
       imageVector = Icons.Default.Wallpaper,
       description = "Change Wallpaper",
       action = {
-        val intent = Intent(Intent.ACTION_SET_WALLPAPER)
+        val intent = Intent(Intent.ACTION_SET_WALLPAPER).apply {
+          flags += Intent.FLAG_ACTIVITY_NEW_TASK
+        }
         ContextCompat.startActivity(
           mContext,
           Intent.createChooser(intent, "Select Wallpaper"),
@@ -69,23 +72,19 @@ fun DashboardActionBar(
     ActionBarAction(
       imageVector = Icons.Outlined.Timer,
       description = "Change Timer Settings",
-      action = { onEvent(Event.OpenTimerSettings) }
+      action = { onEvent(HomeEvent.OpenTimerSettings) }
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,
       description = "Open App Info",
       action = {
         val intent = Intent().apply {
+          flags += Intent.FLAG_ACTIVITY_NEW_TASK
           action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
           data = Uri.fromParts("package", mContext.packageName, null)
         }
         ContextCompat.startActivity(mContext, intent, null)
       }
-    ),
-    ActionBarAction(
-      imageVector = Icons.Default.RestartAlt,
-      description = "Restart Minute Launcher",
-      action = {}
     ),
     ActionBarAction(
       imageVector = Icons.Default.Feedback,

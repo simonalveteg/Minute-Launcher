@@ -29,12 +29,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.util.fastSumBy
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
 import timber.log.Timber
@@ -44,15 +41,19 @@ import java.time.LocalDate
 @Composable
 fun HomeScreen(
   onNavigate: (UiEvent.Navigate) -> Unit,
-  viewModel: LauncherViewModel = hiltViewModel()
+  viewModel: HomeViewModel = hiltViewModel()
 ) {
   var screenState by rememberSaveable { mutableStateOf(ScreenState.FAVORITES) }
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
   val installedApps by viewModel.installedApps.collectAsState(initial = emptyList())
   val timerMappings by viewModel.accessTimerMappings.collectAsState(initial = emptyList())
-  val totalUsage by derivedStateOf {
-    installedApps.sumOf { it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration ?: 0L }
+  val totalUsage by remember {
+    derivedStateOf {
+      installedApps.sumOf {
+        it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration ?: 0L
+      }
+    }
   }
   val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
 
@@ -68,7 +69,6 @@ fun HomeScreen(
       ScreenState.FAVORITES -> MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
       ScreenState.DASHBOARD -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
       ScreenState.APPS -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-      ScreenState.SELECTOR -> MaterialTheme.colorScheme.surface.copy(alpha = 0.97f)
     },
     label = ""
   )
@@ -114,7 +114,7 @@ fun HomeScreen(
         val offsetY = remember { Animatable(0f) }
         val keyboardController = LocalSoftwareKeyboardController.current
         val appListSelectionAction: (AppInfo) -> Unit = {
-          viewModel.onEvent(Event.OpenApplication(it))
+          viewModel.onEvent(HomeEvent.OpenApplication(it))
           keyboardController?.hide()
         }
 

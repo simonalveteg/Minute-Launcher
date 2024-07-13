@@ -1,4 +1,4 @@
-package com.alveteg.simon.minutelauncher
+package com.alveteg.simon.minutelauncher.home
 
 import android.app.AppOpsManager
 import android.content.Context
@@ -11,25 +11,31 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
-import androidx.navigation.compose.rememberNavController
+import com.alveteg.simon.minutelauncher.settings.SettingsActivity
 import com.alveteg.simon.minutelauncher.theme.MinuteLauncherTheme
 import dagger.hilt.android.AndroidEntryPoint
 
-@ExperimentalMaterial3Api
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class HomeActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
       MinuteLauncherTheme {
-        val navController = rememberNavController()
         if (!isAccessGranted(LocalContext.current)) {
           // TODO: open dialog informing user about permission before opening settings
-          startActivity(Intent().apply { action = Settings.ACTION_USAGE_ACCESS_SETTINGS })
+          startActivity(Intent().apply {
+            action = Settings.ACTION_USAGE_ACCESS_SETTINGS
+            flags += Intent.FLAG_ACTIVITY_NEW_TASK
+          })
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        LauncherNavHost(navController)
+        HomeScreen(onNavigate = {
+          val intent = Intent(this, SettingsActivity::class.java)
+          intent.putExtra("screen", it.route)
+          intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          startActivity(intent)
+        })
       }
     }
   }

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.data.AccessTimer
 import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.AppInfo
@@ -74,7 +75,7 @@ fun TimerBottomSheet(
         selectedItem = selectedTimer,
         onItemSelection = { selected ->
           onEvent(
-            Event.UpdateApp(
+            HomeEvent.UpdateApp(
               appInfo.app.copy(timer = timerMappings.first { it.integerValue == selected }.enum)
             )
           )
@@ -83,7 +84,7 @@ fun TimerBottomSheet(
       TextButton(
         enabled = !hasDefaultTimer,
         onClick = {
-          onEvent(Event.UpdateApp(appInfo.app.copy(timer = AccessTimer.DEFAULT)))
+          onEvent(HomeEvent.UpdateApp(appInfo.app.copy(timer = AccessTimer.DEFAULT)))
         }
       ) {
         val resetText = "Reset to default"

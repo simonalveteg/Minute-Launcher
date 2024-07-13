@@ -5,4 +5,8 @@
         <item name="android:windowShowWallpaper">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
+
+    <style name="Theme.MinuteLauncher.Settings" parent="Theme.MinuteLauncher">
+        <item name="android:windowBackground">@android:color/background_dark</item>
+    </style>
 </resources>

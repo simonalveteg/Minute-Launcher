@@ -31,11 +31,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.MinuteRoute
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
-import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
@@ -45,7 +42,7 @@ import timber.log.Timber
 @Composable
 fun GestureScreen(
   onNavigate: (UiEvent.Navigate) -> Unit,
-  viewModel: LauncherViewModel = hiltViewModel()
+  viewModel: SettingsViewModel = hiltViewModel()
 ) {
   LaunchedEffect(key1 = true) {
     Timber.d("launched effect")
@@ -75,7 +72,7 @@ fun GestureScreen(
             )
           },
           navigationIcon = {
-            IconButton(onClick = { onNavigate(UiEvent.Navigate(MinuteRoute.HOME, true)) }) {
+            IconButton(onClick = { onNavigate(UiEvent.Navigate(SettingsScreen.HOME, true)) }) {
               Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Navigate Back"
@@ -147,7 +144,7 @@ fun GestureEntry(
   name: String,
   gesture: Gesture,
   app: App?,
-  onEvent: (Event) -> Unit
+  onEvent: (SettingsEvent) -> Unit
 ) {
   val appTitle = app?.appTitle ?: "No app selected"
   Surface(
@@ -171,7 +168,7 @@ fun GestureEntry(
       ) {
         FilledTonalButton(
           onClick = {
-            onEvent(Event.OpenGestureList(gesture))
+            onEvent(SettingsEvent.OpenGestureList(gesture))
           },
           modifier = Modifier.weight(1f),
           shape = MaterialTheme.shapes.medium
@@ -180,7 +177,7 @@ fun GestureEntry(
         }
         IconButton(
           onClick = {
-            onEvent(Event.ClearAppGesture(gesture))
+            onEvent(SettingsEvent.ClearAppGesture(gesture))
           },
           enabled = app != null,
           modifier = Modifier.wrapContentWidth()
