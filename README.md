@@ -1,27 +1,38 @@
-## Minute-Launcher: A Minimalist Digital Wellbeing Launcher
+## Minute Launcher: A Minimalist Digital Wellbeing Launcher
 
-**Tired of cluttered home screens and endless distractions?** Minute-Launcher is a simple, yet powerful launcher designed to help you regain control of your digital life. By focusing on essential features and eliminating unnecessary bloat, we've created a tool that promotes mindful phone usage.
+Minute Launcher is a free and open-source launcher designed to promote mindful phone usage. Experience a minimalist interface focused on essential functions and digital well-being.
 
 ### Key Features
-* **Intuitive interface:** Enjoy a clean and clutter-free home screen with easy access to your favorite apps.
-* **Powerful gestures:** Quickly access notifications, the app drawer, and custom shortcuts with simple swipes.
-* **Mindful reminders:** The pulsating button encourages you to take a break and disconnect.
-* **Usage insights:** Stay informed about your phone usage with clear and informative statistics - directly on your home screen.
-* **Material You:** Automatically adapts to the colors of your wallpaper and operating system, making for a more cohesive experience.
+* **Minimalist design:** Enjoy a clean and distraction-free home screen with easy access to your essential apps.
+* **Intuitive gestures:** Quickly access notifications, the app drawer, and four custom shortcuts with simple swipes.
+* **Usage insights:** Stay informed about your phone usage with clear and informative usage statistics - directly in your launcher.
+* **Material You integration:** Enjoy a cohesive look and feel that adapts to your wallpaper.
 
 
 <p align="center">
-  <img src="screenshots/Homescreen_1.png" width="350">
-  <img src="screenshots/App_1.png" width="350">
-  <img src="screenshots/Applist_1.png" width="350">
-  <img src="screenshots/Dashboard_1.png" width="350">
+  <img src="screenshots/Homescreen_3.png" width="150">
+  <img src="screenshots/App_3.png" width="150">
+  <img src="screenshots/Applist_3.png" width="150">
+  <img src="screenshots/Dashboard_3.png" width="150">
+</p>
+<p align="center">
+  <img src="screenshots/Homescreen_2.png" width="150">
+  <img src="screenshots/App_2.png" width="150">
+  <img src="screenshots/Applist_2.png" width="150">
+  <img src="screenshots/Dashboard_2.png" width="150">
+</p>
+<p align="center">
+  <img src="screenshots/Homescreen_1.png" width="150">
+  <img src="screenshots/App_1.png" width="150">
+  <img src="screenshots/Applist_1.png" width="150">
+  <img src="screenshots/Dashboard_1.png" width="150">
 </p>
 
 ### How it Works
-Minute-Launcher offers a streamlined experience by providing essential functions without overwhelming you with options. The included countdown timer helps you resist the urge to immediately open apps, allowing for more intentional phone use.
+Minute Launcher offers a streamlined experience focused on mindful phone usage. Usage statistics are prominently displayed on your homescreen to give you conscious awareness of screen time, while the integrated countdown timer helps you resist impulsive app opening and encourages more intentional phone usage.
 
 ### Getting Started
-Minute-Launcher is still in development, if you're eager to try it out there will be some releases here on Github under the releases-tab. 
+The launcher is still in development, if you're eager to try it out there will be some releases here on Github under the releases-tab. 
 
 ### Contributing
 Contributions are welcome! The project is completely open source, so if you'd like to get involved you can easily fork it and make any changes you want, and then submit a pull request. 
