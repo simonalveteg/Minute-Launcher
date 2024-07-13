@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.style.TextAlign
@@ -37,7 +36,11 @@ fun AppCard(
   onClick: () -> Unit
 ) {
   val appTitle = appInfo.app.appTitle
-  val appUsage by remember { derivedStateOf { appInfo.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration } }
+  val appUsage by remember(appInfo.app.packageName) {
+    derivedStateOf {
+      appInfo.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration
+    }
+  }
   val interactionSource = remember { MutableInteractionSource() }
 
   Surface(
