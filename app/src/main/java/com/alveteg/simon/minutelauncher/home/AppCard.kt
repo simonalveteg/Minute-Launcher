@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -16,7 +17,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,7 +41,6 @@ fun AppCard(
   val interactionSource = remember { MutableInteractionSource() }
 
   Surface(
-    tonalElevation = 2.dp,
     shape = MaterialTheme.shapes.large,
     color = Color.Transparent,
     modifier = Modifier
@@ -61,6 +63,12 @@ fun AppCard(
         fontSize = 25.sp,
         textAlign = TextAlign.Center,
         overflow = TextOverflow.Clip,
+        style = LocalTextStyle.current.copy(
+          shadow = Shadow(
+            color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+            blurRadius = 12f
+          )
+        ),
         modifier = Modifier
           .fillMaxWidth()
       )
@@ -68,6 +76,12 @@ fun AppCard(
         text = appUsage.toTimeUsed(),
         fontFamily = archivoFamily,
         color = MaterialTheme.colorScheme.primary,
+        style = LocalTextStyle.current.copy(
+          shadow = Shadow(
+            color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+            blurRadius = 12f
+          )
+        )
       )
     }
   }
