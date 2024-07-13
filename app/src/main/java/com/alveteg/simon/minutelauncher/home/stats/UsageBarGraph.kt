@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFontFamilyResolver
@@ -39,10 +40,17 @@ import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
+import com.patrykandpatrick.vico.core.common.Defaults
 import com.patrykandpatrick.vico.core.common.half
 import com.patrykandpatrick.vico.core.common.shape.Shape
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -69,7 +77,7 @@ fun UsageBarGraph(
 
   val style = MaterialTheme.typography.bodySmall
   val resolver = LocalFontFamilyResolver.current
-
+  val modelProducer = remember { CartesianChartModelProducer() }
   val typeface = remember(resolver, style) {
     resolver.resolve(
       fontFamily = archivoFamily,
@@ -78,6 +86,23 @@ fun UsageBarGraph(
       fontSynthesis = style.fontSynthesis ?: FontSynthesis.All,
     )
   }.value as Typeface
+
+  LaunchedEffect(Unit) {
+    withContext(Dispatchers.Default) {
+      while (isActive) {
+        modelProducer.runTransaction {
+          columnSeries {
+            val dates =
+              sortedStats.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7 }
+            val durations = sortedStats.map { it.usageDuration }
+            Timber.d("$dates, ${durations.map { it.toTimeUsed(false) }}")
+            series(y = durations, x = dates)
+          }
+        }
+        delay(60000L)
+      }
+    }
+  }
 
   Surface(
     modifier = Modifier
@@ -91,6 +116,7 @@ fun UsageBarGraph(
     if (maxDuration > 0L) {
       CartesianChartHost(
         modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 6.dp, bottom = 8.dp),
+        getXStep = { 1f },
         chart = rememberCartesianChart(
           rememberColumnCartesianLayer(
             columnProvider = ColumnCartesianLayer.ColumnProvider.series(
@@ -138,15 +164,7 @@ fun UsageBarGraph(
             )
           )
         ),
-        model = CartesianChartModel(
-          ColumnCartesianLayerModel.build {
-            val dates =
-              sortedStats.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7 }
-            val durations = sortedStats.map { it.usageDuration }
-            Timber.d("$dates, ${durations.map { it.toTimeUsed() }}")
-            series(y = durations, x = dates)
-          }
-        ),
+        modelProducer = modelProducer,
         zoomState = rememberVicoZoomState(zoomEnabled = false),
         scrollState = rememberVicoScrollState(scrollEnabled = false)
       )
