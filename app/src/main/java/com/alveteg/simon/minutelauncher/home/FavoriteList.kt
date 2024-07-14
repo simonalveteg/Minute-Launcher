@@ -23,7 +23,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +35,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
@@ -77,20 +76,13 @@ fun FavoriteList(
     label = "",
     animationSpec = if (screenState.isFavorites()) slowFloatSpec else tween(300)
   )
-  val usageAlpha by animateFloatAsState(
-    targetValue = if (screenState.isFavorites()) 1f else 0f,
-    label = "",
-    animationSpec = if (!screenState.isFavorites()) tween(500) else tween(
-      durationMillis = 500, delayMillis = 600
-    )
-  )
 
   Column(modifier = Modifier
     .fillMaxSize()
     .graphicsLayer {
       alpha = favoritesAlpha
     }
-    .offset(y = offsetY.value.dp)
+    .offset { IntOffset(x = 0, y = offsetY.value.toInt()) }
     .pointerInput(Unit) {
       detectHorizontalDragGestures(
         onDragCancel = {
@@ -178,7 +170,7 @@ fun FavoriteList(
   ) {
     Text(
       text = totalUsage.toTimeUsed(),
-      color = LocalContentColor.current.copy(alpha = usageAlpha),
+      color = LocalContentColor.current,
       fontFamily = archivoFamily,
       style = LocalTextStyle.current.copy(
         shadow = Shadow(
@@ -187,12 +179,7 @@ fun FavoriteList(
         )
       )
     )
-    val data = remember { mutableStateOf(favorites) }
-    LaunchedEffect(favorites) {
-      if (favorites.size != data.value.size) {
-        data.value = favorites
-      }
-    }
+
     val listState = rememberLazyListState()
     LazyColumn(
       state = listState,
@@ -200,7 +187,7 @@ fun FavoriteList(
       userScrollEnabled = false,
       modifier = Modifier.fillMaxWidth()
     ) {
-      items(data.value, { it.favoriteApp.app.packageName }) { favoriteAppInfo ->
+      items(favorites) { favoriteAppInfo ->
         FavoriteCard(favoriteAppInfo.toAppInfo()) { onAppClick(favoriteAppInfo.toAppInfo()) }
       }
     }

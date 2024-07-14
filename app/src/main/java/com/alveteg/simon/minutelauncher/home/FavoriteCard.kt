@@ -38,7 +38,9 @@ fun FavoriteCard(
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val appTitle = appInfo.app.appTitle
-  val appUsage by remember { derivedStateOf { appInfo.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration } }
+  val appUsage by remember(appInfo) {
+    derivedStateOf { appInfo.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration }
+  }
 
   Surface(
     shape = MaterialTheme.shapes.large,

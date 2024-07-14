@@ -17,15 +17,16 @@ import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -50,7 +51,8 @@ class HomeViewModel @Inject constructor(
       val usage = usageStats.filter { favorite.app.packageName == it.packageName }
       FavoriteAppInfo(favorite, usage)
     }
-  }
+  }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
   val installedApps = combine(
     roomRepository.appList(), roomRepository.favoriteApps(), applicationRepository.usageStats
   ) { apps, favorites, usageStats ->
@@ -59,14 +61,16 @@ class HomeViewModel @Inject constructor(
       val usage = usageStats.filter { app.packageName == it.packageName }
       AppInfo(app, favorite, usage)
     }
-  }
+  }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
   val filteredApps = combine(
     installedApps, searchTerm
   ) { apps, searchTerm ->
     apps.filterBySearchTerm(searchTerm)
-  }
+  }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
   val accessTimerMappings = roomRepository.getAccessTimerMappings()
+    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
   private val packageCallback = object : LauncherApps.Callback() {
     override fun onPackageRemoved(packageName: String?, user: UserHandle?) {

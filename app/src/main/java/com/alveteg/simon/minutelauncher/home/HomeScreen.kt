@@ -45,9 +45,9 @@ fun HomeScreen(
 ) {
   var screenState by rememberSaveable { mutableStateOf(ScreenState.FAVORITES) }
   val searchText by viewModel.searchTerm.collectAsState()
-  val apps by viewModel.filteredApps.collectAsState(initial = emptyList())
-  val installedApps by viewModel.installedApps.collectAsState(initial = emptyList())
-  val timerMappings by viewModel.accessTimerMappings.collectAsState(initial = emptyList())
+  val apps by viewModel.filteredApps.collectAsState()
+  val installedApps by viewModel.installedApps.collectAsState()
+  val timerMappings by viewModel.accessTimerMappings.collectAsState()
   val totalUsage by remember {
     derivedStateOf {
       installedApps.sumOf {
@@ -55,7 +55,7 @@ fun HomeScreen(
       }
     }
   }
-  val favorites by viewModel.favoriteApps.collectAsState(initial = emptyList())
+  val favorites by viewModel.favoriteApps.collectAsState()
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
