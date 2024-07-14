@@ -6,16 +6,6 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,17 +18,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.data.App
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
-import com.alveteg.simon.minutelauncher.home.AppCard
 import com.alveteg.simon.minutelauncher.home.ScreenState
-import com.alveteg.simon.minutelauncher.utilities.Gesture
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +52,7 @@ fun Dashboard(
     }
     DisposableEffect(Unit) {
       onDispose {
-        onEvent(Event.UpdateSearch(""))
+        onEvent(HomeEvent.UpdateSearch(""))
       }
     }
     var searchHeight by remember { mutableStateOf(0.dp) }

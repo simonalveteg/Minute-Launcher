@@ -19,10 +19,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,10 +31,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
@@ -46,7 +47,6 @@ import com.alveteg.simon.minutelauncher.utilities.GestureZone
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.time.LocalDate
 import kotlin.math.abs
 
 @Suppress("NAME_SHADOWING")
@@ -76,20 +76,13 @@ fun FavoriteList(
     label = "",
     animationSpec = if (screenState.isFavorites()) slowFloatSpec else tween(300)
   )
-  val usageAlpha by animateFloatAsState(
-    targetValue = if (screenState.isFavorites()) 1f else 0f,
-    label = "",
-    animationSpec = if (!screenState.isFavorites()) tween(500) else tween(
-      durationMillis = 500, delayMillis = 600
-    )
-  )
 
   Column(modifier = Modifier
     .fillMaxSize()
     .graphicsLayer {
       alpha = favoritesAlpha
     }
-    .offset(y = offsetY.value.dp)
+    .offset { IntOffset(x = 0, y = offsetY.value.toInt()) }
     .pointerInput(Unit) {
       detectHorizontalDragGestures(
         onDragCancel = {
@@ -118,7 +111,7 @@ fun FavoriteList(
           }
           currentZone = GestureZone.NONE
           currentDirection = GestureDirection.NONE
-          onEvent(Event.HandleGesture(gesture))
+          onEvent(HomeEvent.HandleGesture(gesture))
         },
       ) { change, dragAmount ->
         currentDirection = if (dragAmount > 0) {
@@ -156,7 +149,7 @@ fun FavoriteList(
         onDragCancel = { onDragEnd() },
         onDragEnd = {
           onDragEnd()
-          onEvent(Event.HandleGesture(gesture))
+          onEvent(HomeEvent.HandleGesture(gesture))
         },
       ) { _, dragAmount ->
         val originalY = offsetY.value
@@ -167,7 +160,6 @@ fun FavoriteList(
         coroutineScope.launch {
           offsetY.snapTo(originalY + easedDragAmount)
         }
-        Timber.d("EasingFactor: $easingFactor")
         gesture = if (easingFactor < 0.14) {
           if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
         } else Gesture.NONE
@@ -178,15 +170,16 @@ fun FavoriteList(
   ) {
     Text(
       text = totalUsage.toTimeUsed(),
-      color = LocalContentColor.current.copy(alpha = usageAlpha),
-      fontFamily = archivoFamily
+      color = LocalContentColor.current,
+      fontFamily = archivoFamily,
+      style = LocalTextStyle.current.copy(
+        shadow = Shadow(
+          color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+          blurRadius = 12f
+        )
+      )
     )
-    val data = remember { mutableStateOf(favorites) }
-    LaunchedEffect(favorites) {
-      if (favorites.size != data.value.size) {
-        data.value = favorites
-      }
-    }
+
     val listState = rememberLazyListState()
     LazyColumn(
       state = listState,
@@ -194,7 +187,7 @@ fun FavoriteList(
       userScrollEnabled = false,
       modifier = Modifier.fillMaxWidth()
     ) {
-      items(data.value, { it.favoriteApp.app.packageName }) { favoriteAppInfo ->
+      items(favorites) { favoriteAppInfo ->
         FavoriteCard(favoriteAppInfo.toAppInfo()) { onAppClick(favoriteAppInfo.toAppInfo()) }
       }
     }

@@ -39,19 +39,14 @@ import com.patrykandpatrick.vico.core.cartesian.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
-import com.patrykandpatrick.vico.core.common.Defaults
-import com.patrykandpatrick.vico.core.common.half
 import com.patrykandpatrick.vico.core.common.shape.Shape
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
@@ -72,7 +67,7 @@ fun UsageBarGraph(
   } else if (tenners > 0) {
     tenners.plus(2).coerceAtMost(5).times(millisInHour.div(6))
   } else {
-    twos.plus(2).coerceIn(2, 4).times(millisInHour.div(30))
+    twos.plus(1).coerceIn(1, 4).times(millisInHour.div(30))
   }
 
   val style = MaterialTheme.typography.bodySmall
@@ -95,7 +90,6 @@ fun UsageBarGraph(
             val dates =
               sortedStats.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7 }
             val durations = sortedStats.map { it.usageDuration }
-            Timber.d("$dates, ${durations.map { it.toTimeUsed(false) }}")
             series(y = durations, x = dates)
           }
         }
@@ -199,9 +193,9 @@ class VerticalPlacer(
   ): Float = when (verticalLabelPosition) {
     VerticalAxis.VerticalLabelPosition.Top -> maxLineThickness
     VerticalAxis.VerticalLabelPosition.Center ->
-      (maxOf(maxLabelHeight, maxLineThickness) + maxLineThickness).half
+      (maxOf(maxLabelHeight, maxLineThickness) + maxLineThickness).div(2)
 
-    else -> maxLabelHeight + maxLineThickness.half
+    else -> maxLabelHeight + maxLineThickness.div(2)
   }
 
   override fun getHeightMeasurementLabelValues(
@@ -223,12 +217,12 @@ class VerticalPlacer(
     maxLineThickness: Float
   ): Float = when (verticalLabelPosition) {
     VerticalAxis.VerticalLabelPosition.Top ->
-      maxLabelHeight + (if (shiftTopLines) maxLineThickness else -maxLineThickness).half
+      maxLabelHeight + (if (shiftTopLines) maxLineThickness else -maxLineThickness).div(2)
 
     VerticalAxis.VerticalLabelPosition.Center ->
       (max(maxLabelHeight, maxLineThickness) +
           if (shiftTopLines) maxLineThickness else -maxLineThickness)
-        .half
+        .div(2)
 
     else -> if (shiftTopLines) maxLineThickness else 0f
   }
@@ -257,7 +251,6 @@ class VerticalPlacer(
       val twos = maxY.div(TWO_MINUTES).toInt() + 1
       repeat(twos) { values += 0f.plus(TWO_MINUTES).times(it) }
     }
-    Timber.d("Y Axis: $values")
     return values
   }
 }

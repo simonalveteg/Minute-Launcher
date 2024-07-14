@@ -17,9 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
-import com.alveteg.simon.minutelauncher.data.LauncherViewModel
 import com.alveteg.simon.minutelauncher.home.dashboard.AppList
 import com.alveteg.simon.minutelauncher.home.dashboard.SearchBar
 import com.alveteg.simon.minutelauncher.utilities.Gesture
@@ -28,7 +26,7 @@ import timber.log.Timber
 @Composable
 fun GestureList(
   onNavigate: (UiEvent.Navigate) -> Unit,
-  viewModel: LauncherViewModel = hiltViewModel(),
+  viewModel: SettingsViewModel = hiltViewModel(),
   gesture: Gesture
 ) {
 
@@ -59,14 +57,14 @@ fun GestureList(
     ) {
       AppList(
         apps = apps,
-        onAppClick = { viewModel.onEvent(Event.SetAppGesture(it.app, gesture)) },
+        onAppClick = { viewModel.onEvent(SettingsEvent.SetAppGesture(it.app, gesture)) },
         searchHeight = searchHeight
       )
       SearchBar(
         searchText = searchText,
         onSearch = {
           apps.firstOrNull()?.let {
-            viewModel.onEvent(Event.SetAppGesture(it.app, gesture))
+            viewModel.onEvent(SettingsEvent.SetAppGesture(it.app, gesture))
           }
         },
         topPadding = 0.dp,

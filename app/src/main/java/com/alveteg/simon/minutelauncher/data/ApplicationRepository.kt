@@ -69,33 +69,32 @@ class ApplicationRepository @Inject constructor(
   }
 
   suspend fun startUsageUpdater() {
+    Timber.d("Starting usage updater.")
     while (currentCoroutineContext().isActive) {
-      val usageStats = getDailyStatsForWeek()
-
-      _usageStats.emit(usageStats)
+      Timber.d("Emitting usage stats.")
+      _usageStats.emit(getDailyStatsForWeek())
       delay(TimeUnit.MINUTES.toMillis(1))
     }
   }
 
   private fun getDailyStatsForWeek(): List<UsageStatistics> {
     val today = LocalDate.now()
-    val dates = listOf(
-      today,
-      today.minusDays(1),
-      today.minusDays(2),
-      today.minusDays(3),
-      today.minusDays(4),
-      today.minusDays(5),
-      today.minusDays(6)
-    )
+    val dates = mutableListOf<LocalDate>()
+    repeat(7) { dates += today.minusDays(it.toLong()) }
 
     val launcherApps = getLauncherApps()
     return dates.flatMap { date ->
-      Timber.d("Getting stats for date: $date")
       getDailyStats(date)
         .filter { !launcherApps.contains(it.packageName) }
         .filter { context.packageName != it.packageName }
-    }.also { Timber.d("--- ${it.size} packages, ${it.sumOf { it.usageDuration }.toTimeUsed()} ") }
+        .also {
+          Timber.d(
+            "$date: ${it.size} packages, ${
+              it.sumOf { it.usageDuration }.toTimeUsed()
+            }"
+          )
+        }
+    }
   }
 
   /**
