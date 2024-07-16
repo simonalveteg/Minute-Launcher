@@ -3,7 +3,6 @@ package com.alveteg.simon.minutelauncher.home
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +22,8 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,8 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
@@ -61,6 +62,7 @@ fun FavoriteList(
   offsetY: Animatable<Float, AnimationVector1D>,
   onAppClick: (AppInfo) -> Unit
 ) {
+  val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
   val screenHeight by rememberUpdatedState(screenHeight)
   var gesture by remember { mutableStateOf(Gesture.NONE) }
   val coroutineScope = rememberCoroutineScope()
@@ -72,16 +74,44 @@ fun FavoriteList(
   var currentZone by remember { mutableStateOf(GestureZone.NONE) }
   var currentDirection by remember { mutableStateOf(GestureDirection.NONE) }
   val slowFloatSpec: AnimationSpec<Float> = tween(durationMillis = 1000)
-  val favoritesAlpha by animateFloatAsState(
-    targetValue = if (screenState.isFavorites()) 1f else 0f,
-    label = "",
-    animationSpec = if (screenState.isFavorites()) slowFloatSpec else tween(300)
-  )
+  val favoritesAlpha = remember { Animatable(0f) }
+
+  LaunchedEffect(key1 = lifecycleState) {
+    when (lifecycleState) {
+      Lifecycle.State.RESUMED -> {
+        coroutineScope.launch {
+          offsetY.snapTo(-60f)
+          offsetY.animateTo(0f, spring(0.44f, 300f))
+        }
+        coroutineScope.launch {
+          favoritesAlpha.snapTo(0f)
+          favoritesAlpha.animateTo(1f)
+        }
+      }
+
+      else -> Unit
+    }
+  }
+
+  LaunchedEffect(screenState) {
+    when (screenState) {
+      ScreenState.FAVORITES -> {
+        coroutineScope.launch {
+          favoritesAlpha.animateTo(1f, slowFloatSpec)
+        }
+      }
+      ScreenState.DASHBOARD -> {
+        coroutineScope.launch {
+          favoritesAlpha.animateTo(0f, tween(300))
+        }
+      }
+    }
+  }
 
   Column(modifier = Modifier
     .fillMaxSize()
     .graphicsLayer {
-      alpha = favoritesAlpha
+      alpha = favoritesAlpha.value
     }
     .offset { IntOffset(x = 0, y = offsetY.value.toInt()) }
     .pointerInput(Unit) {

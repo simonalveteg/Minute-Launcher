@@ -68,7 +68,6 @@ fun HomeScreen(
     targetValue = when (screenState) {
       ScreenState.FAVORITES -> MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
       ScreenState.DASHBOARD -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-      ScreenState.APPS -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
     },
     label = ""
   )
@@ -88,6 +87,7 @@ fun HomeScreen(
       }
     }
   }
+
 
   BackHandler(true) {
     screenState = ScreenState.FAVORITES
