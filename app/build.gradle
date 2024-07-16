@@ -78,13 +78,11 @@ dependencies {
     implementation(libs.androidx.tooling.preview)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     // Integration with navigation
     implementation(libs.androidx.navigation.compose)
-
-    // accompanist ui controller (REPLACE WITH Activity.enableEdgeToEdge?
-    implementation "com.google.accompanist:accompanist-systemuicontroller:0.26.0-alpha"
 
     //Dagger - Hilt
     implementation "com.google.dagger:hilt-android:$hilt_version"

@@ -7,7 +7,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import com.alveteg.simon.minutelauncher.settings.SettingsActivity
@@ -18,6 +21,10 @@ import dagger.hilt.android.AndroidEntryPoint
 class HomeActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    enableEdgeToEdge(
+      statusBarStyle = SystemBarStyle.dark(0),
+      navigationBarStyle = SystemBarStyle.dark(0)
+    )
     super.onCreate(savedInstanceState)
     setContent {
       MinuteLauncherTheme {
