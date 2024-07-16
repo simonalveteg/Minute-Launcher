@@ -151,7 +151,7 @@ class ApplicationRepository @Inject constructor(
           endTime = 0L
         }
       }
-      totalTime = TimeUnit.MILLISECONDS.toMinutes(totalTime)
+      totalTime = TimeUnit.MILLISECONDS.toSeconds(totalTime)
       if ( totalTime > 0L) {
         stats.add(
           UsageStatistics(

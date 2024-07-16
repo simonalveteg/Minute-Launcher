@@ -64,7 +64,7 @@ fun UsageBarGraph(
     usageStatistics.sortedBy { it.usageDate }
   }
   val maxDuration = remember(sortedStats) {
-    sortedStats.maxOfOrNull { it.usageDuration } ?: 0L
+    TimeUnit.SECONDS.toMinutes(sortedStats.maxOfOrNull { it.usageDuration } ?: 0L)
   }
   val yAxisValues = remember { mutableListOf<Float>() }
   var yMaxValue by remember { mutableLongStateOf(0L) }
@@ -75,9 +75,11 @@ fun UsageBarGraph(
 
   LaunchedEffect(usageStatistics) {
     if (usageStatistics.isEmpty()) return@LaunchedEffect
-    val timeStep =
+    var timeStep =
       if (maxDuration < 5) 1 else if (maxDuration < 10) 2 else if (maxDuration < 50) 10 else 60
-    yMaxValue = maxDuration.plus(maxDuration.mod(timeStep)).plus(timeStep)
+    timeStep = TimeUnit.MINUTES.toSeconds(timeStep.toLong()).toInt()
+    val maxDurationSeconds = TimeUnit.MINUTES.toSeconds(maxDuration)
+    yMaxValue = maxDurationSeconds.plus(maxDurationSeconds.mod(timeStep)).plus(timeStep)
     (0..yMaxValue step timeStep.toLong()).forEach {
       yAxisValues.add(it.toFloat())
     }
