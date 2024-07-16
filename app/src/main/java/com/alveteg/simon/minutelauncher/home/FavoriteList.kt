@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -168,32 +169,33 @@ fun FavoriteList(
     verticalArrangement = Arrangement.Bottom,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
-    Text(
-      text = totalUsage.toTimeUsed(),
-      color = LocalContentColor.current,
-      fontFamily = archivoFamily,
-      style = LocalTextStyle.current.copy(
-        shadow = Shadow(
-          color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
-          blurRadius = 12f
-        )
-      )
-    )
-
     val listState = rememberLazyListState()
+    Spacer(modifier = Modifier.weight(4f))
     LazyColumn(
       state = listState,
       horizontalAlignment = Alignment.CenterHorizontally,
       userScrollEnabled = false,
-      modifier = Modifier.fillMaxWidth()
+      modifier = Modifier
+        .fillMaxWidth()
+        .wrapContentHeight()
     ) {
+      item {
+        Text(
+          text = totalUsage.toTimeUsed(),
+          color = LocalContentColor.current,
+          fontFamily = archivoFamily,
+          style = LocalTextStyle.current.copy(
+            shadow = Shadow(
+              color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+              blurRadius = 12f
+            )
+          )
+        )
+      }
       items(favorites) { favoriteAppInfo ->
         FavoriteCard(favoriteAppInfo.toAppInfo()) { onAppClick(favoriteAppInfo.toAppInfo()) }
       }
     }
-    val density = LocalDensity.current
-    val bottomHeight = screenHeight.div(6)
-    val bottomHeightDp = with(density) { bottomHeight.toDp() }
-    Spacer(modifier = Modifier.height(bottomHeightDp))
+    Spacer(modifier = Modifier.weight(1.2f))
   }
 }
