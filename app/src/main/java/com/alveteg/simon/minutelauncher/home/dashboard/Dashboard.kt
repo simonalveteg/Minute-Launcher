@@ -64,6 +64,7 @@ fun Dashboard(
       sheetDragHandle = {},
       sheetContent = {
         DashboardBottomSheet(
+          scaffoldState = scaffoldState,
           searchText = searchText,
           onSearch = onSearch,
           onEvent = onEvent,

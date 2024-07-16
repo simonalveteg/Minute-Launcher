@@ -47,8 +47,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import kotlin.math.max
 
 @Composable
@@ -82,9 +84,11 @@ fun UsageBarGraph(
     )
   }.value as Typeface
 
-  LaunchedEffect(Unit) {
+  LaunchedEffect(usageStatistics) {
+    if (usageStatistics.isEmpty()) return@LaunchedEffect
     withContext(Dispatchers.Default) {
       while (isActive) {
+        Timber.d("Running transaction...")
         modelProducer.runTransaction {
           columnSeries {
             val dates =
@@ -93,7 +97,7 @@ fun UsageBarGraph(
             series(y = durations, x = dates)
           }
         }
-        delay(60000L)
+        delay(TimeUnit.MINUTES.toMillis(1))
       }
     }
   }
@@ -107,7 +111,7 @@ fun UsageBarGraph(
     shape = MaterialTheme.shapes.large,
     tonalElevation = 8.dp
   ) {
-    if (maxDuration > 0L) {
+    if (usageStatistics.isNotEmpty()) {
       CartesianChartHost(
         modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 6.dp, bottom = 8.dp),
         getXStep = { 1f },
