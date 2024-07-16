@@ -16,7 +16,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun MinuteLauncherTheme(
   // Dynamic color is available on Android 12+
-  dynamicColor: Boolean = false,
+  dynamicColor: Boolean = true,
   content: @Composable () -> Unit
 ) {
   val colorScheme = when {

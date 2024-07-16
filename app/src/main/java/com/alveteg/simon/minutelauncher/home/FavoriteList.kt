@@ -79,13 +79,15 @@ fun FavoriteList(
   LaunchedEffect(key1 = lifecycleState) {
     when (lifecycleState) {
       Lifecycle.State.RESUMED -> {
-        coroutineScope.launch {
-          offsetY.snapTo(-60f)
-          offsetY.animateTo(0f, spring(0.44f, 300f))
-        }
-        coroutineScope.launch {
-          favoritesAlpha.snapTo(0f)
-          favoritesAlpha.animateTo(1f)
+        if (screenState.isFavorites()) {
+          coroutineScope.launch {
+            offsetY.snapTo(-60f)
+            offsetY.animateTo(0f, spring(0.44f, 300f))
+          }
+          coroutineScope.launch {
+            favoritesAlpha.snapTo(0f)
+            favoritesAlpha.animateTo(1f)
+          }
         }
       }
 
@@ -100,6 +102,7 @@ fun FavoriteList(
           favoritesAlpha.animateTo(1f, slowFloatSpec)
         }
       }
+
       ScreenState.DASHBOARD -> {
         coroutineScope.launch {
           favoritesAlpha.animateTo(0f, tween(300))
