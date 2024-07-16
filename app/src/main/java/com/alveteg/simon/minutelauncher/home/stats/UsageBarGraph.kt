@@ -12,7 +12,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.font.FontStyle
@@ -57,49 +60,28 @@ import kotlin.math.max
 fun UsageBarGraph(
   usageStatistics: List<UsageStatistics>
 ) {
-  val sortedStats =
+  val sortedStats = remember(usageStatistics) {
     usageStatistics.sortedBy { it.usageDate }
-  val millisInHour = 3600000f
-  val maxDuration = sortedStats.maxOfOrNull { it.usageDuration } ?: 0L
-  val hours = (maxDuration.div(millisInHour)).toInt()
-  val tenners = (maxDuration.div(millisInHour.div(6))).toInt()
-  val twos = (maxDuration.div(millisInHour.div(30))).toInt()
-  val maxY = if (hours > 0) {
-    hours.plus(1).times(millisInHour)
-  } else if (tenners > 0) {
-    tenners.plus(2).coerceAtMost(5).times(millisInHour.div(6))
-  } else {
-    twos.plus(1).coerceIn(1, 4).times(millisInHour.div(30))
   }
-
-  val style = MaterialTheme.typography.bodySmall
-  val resolver = LocalFontFamilyResolver.current
+  val maxDuration = remember(sortedStats) {
+    sortedStats.maxOfOrNull { it.usageDuration } ?: 0L
+  }
+  val yAxisValues = remember { mutableListOf<Float>() }
+  var yMaxValue by remember { mutableLongStateOf(0L) }
   val modelProducer = remember { CartesianChartModelProducer() }
-  val typeface = remember(resolver, style) {
-    resolver.resolve(
-      fontFamily = archivoFamily,
-      fontWeight = style.fontWeight ?: FontWeight.Normal,
-      fontStyle = style.fontStyle ?: FontStyle.Normal,
-      fontSynthesis = style.fontSynthesis ?: FontSynthesis.All,
-    )
-  }.value as Typeface
+  val dates =
+    sortedStats.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7 }
+  val durations = sortedStats.map { it.usageDuration }
 
   LaunchedEffect(usageStatistics) {
     if (usageStatistics.isEmpty()) return@LaunchedEffect
-    withContext(Dispatchers.Default) {
-      while (isActive) {
-        Timber.d("Running transaction...")
-        modelProducer.runTransaction {
-          columnSeries {
-            val dates =
-              sortedStats.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7 }
-            val durations = sortedStats.map { it.usageDuration }
-            series(y = durations, x = dates)
-          }
-        }
-        delay(TimeUnit.MINUTES.toMillis(1))
-      }
+    val timeStep =
+      if (maxDuration < 5) 1 else if (maxDuration < 10) 2 else if (maxDuration < 50) 10 else 60
+    yMaxValue = maxDuration.plus(maxDuration.mod(timeStep)).plus(timeStep)
+    (0..yMaxValue step timeStep.toLong()).forEach {
+      yAxisValues.add(it.toFloat())
     }
+    Timber.d("Calculating graph values: \n -- MaxValue: $yMaxValue, timeStep: $timeStep, values: $yAxisValues")
   }
 
   Surface(
@@ -112,59 +94,13 @@ fun UsageBarGraph(
     tonalElevation = 8.dp
   ) {
     if (usageStatistics.isNotEmpty()) {
-      CartesianChartHost(
+      UsageColumnChart(
         modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 6.dp, bottom = 8.dp),
-        getXStep = { 1f },
-        chart = rememberCartesianChart(
-          rememberColumnCartesianLayer(
-            columnProvider = ColumnCartesianLayer.ColumnProvider.series(
-              rememberLineComponent(
-                color = MaterialTheme.colorScheme.primary,
-                thickness = 40.dp,
-                shape = remember { Shape.rounded(8f) }
-              )
-            ),
-            spacing = 4.dp,
-            axisValueOverrider = AxisValueOverrider.fixed(
-              minY = 0f,
-              maxY = maxY,
-              minX = 1f,
-              maxX = 7f
-            ),
-          ),
-          bottomAxis = rememberBottomAxis(
-            valueFormatter = { value, _, _ ->
-              val date = LocalDate.now().minusDays(7.minus(value).toLong())
-              date.format(DateTimeFormatter.ofPattern("EEE"))
-            },
-            guideline = null,
-            tick = null,
-            axis = rememberLineComponent(color = MaterialTheme.colorScheme.background),
-            label = rememberTextComponent(
-              typeface = typeface,
-              color = LocalContentColor.current
-            )
-          ),
-          endAxis = rememberEndAxis(
-            valueFormatter = { value, _, _ ->
-              value.toLong().toTimeUsed()
-            },
-            itemPlacer = remember { VerticalPlacer(maxY) },
-            guideline = rememberAxisGuidelineComponent(
-              color = MaterialTheme.colorScheme.background,
-              shape = Shape.Rectangle
-            ),
-            axis = rememberLineComponent(thickness = 0.dp),
-            tick = rememberLineComponent(thickness = 0.dp),
-            label = rememberTextComponent(
-              typeface = typeface,
-              color = LocalContentColor.current
-            )
-          )
-        ),
         modelProducer = modelProducer,
-        zoomState = rememberVicoZoomState(zoomEnabled = false),
-        scrollState = rememberVicoScrollState(scrollEnabled = false)
+        maxValue = yMaxValue.toFloat(),
+        yAxisValues = yAxisValues,
+        xValues = dates,
+        yValues = durations
       )
     } else {
       Text(
@@ -179,15 +115,100 @@ fun UsageBarGraph(
   }
 }
 
+@Composable
+fun UsageColumnChart(
+  modifier: Modifier,
+  modelProducer: CartesianChartModelProducer,
+  maxValue: Float,
+  yAxisValues: List<Float>,
+  xValues: List<Long>,
+  yValues: List<Long>
+) {
+  LaunchedEffect(maxValue) {
+    if (maxValue == 0f) return@LaunchedEffect
+    withContext(Dispatchers.Default) {
+      while (isActive) {
+        Timber.d("Running transaction with maxValue: $maxValue \n -- yAxisValues: $yAxisValues \n -- durations: $yValues, \n -- dates: $xValues")
+        modelProducer.runTransaction {
+          columnSeries {
+            series(xValues, yValues)
+          }
+        }
+        delay(TimeUnit.MINUTES.toMillis(1))
+      }
+    }
+  }
+
+  val style = MaterialTheme.typography.bodySmall
+  val resolver = LocalFontFamilyResolver.current
+  val typeface = remember(resolver, style) {
+    resolver.resolve(
+      fontFamily = archivoFamily,
+      fontWeight = style.fontWeight ?: FontWeight.Normal,
+      fontStyle = style.fontStyle ?: FontStyle.Normal,
+      fontSynthesis = style.fontSynthesis ?: FontSynthesis.All,
+    )
+  }.value as Typeface
+  CartesianChartHost(
+    modifier = modifier,
+    getXStep = { 1f },
+    chart = rememberCartesianChart(
+      rememberColumnCartesianLayer(
+        columnProvider = ColumnCartesianLayer.ColumnProvider.series(
+          rememberLineComponent(
+            color = MaterialTheme.colorScheme.primary,
+            thickness = 40.dp,
+            shape = remember { Shape.rounded(8f) }
+          )
+        ),
+        spacing = 4.dp,
+        axisValueOverrider = AxisValueOverrider.fixed(
+          minY = 0f,
+          maxY = maxValue,
+          minX = 1f,
+          maxX = 7f
+        ),
+      ),
+      bottomAxis = rememberBottomAxis(
+        valueFormatter = { value, _, _ ->
+          val date = LocalDate.now().minusDays(7.minus(value).toLong())
+          date.format(DateTimeFormatter.ofPattern("EEE"))
+        },
+        guideline = null,
+        tick = null,
+        axis = rememberLineComponent(color = MaterialTheme.colorScheme.background),
+        label = rememberTextComponent(
+          typeface = typeface,
+          color = LocalContentColor.current
+        )
+      ),
+      endAxis = rememberEndAxis(
+        valueFormatter = { value, _, _ ->
+          value.toLong().toTimeUsed()
+        },
+        itemPlacer = remember { VerticalPlacer(yAxisValues) },
+        guideline = rememberAxisGuidelineComponent(
+          color = MaterialTheme.colorScheme.background,
+          shape = Shape.Rectangle
+        ),
+        axis = rememberLineComponent(thickness = 0.dp),
+        tick = rememberLineComponent(thickness = 0.dp),
+        label = rememberTextComponent(
+          typeface = typeface,
+          color = LocalContentColor.current
+        )
+      )
+    ),
+    modelProducer = modelProducer,
+    zoomState = rememberVicoZoomState(zoomEnabled = false),
+    scrollState = rememberVicoScrollState(scrollEnabled = false)
+  )
+}
+
 class VerticalPlacer(
-  private val maxY: Float,
+  private val values: List<Float>,
   private val shiftTopLines: Boolean = false
 ) : AxisItemPlacer.Vertical {
-
-  private val HOUR = 3600000L
-  private val TEN_MINUTES = 600000L
-  private val TWO_MINUTES = 120000L
-  private val MINUTE = 60000L
 
   override fun getBottomVerticalAxisInset(
     context: CartesianMeasureContext,
@@ -205,14 +226,14 @@ class VerticalPlacer(
   override fun getHeightMeasurementLabelValues(
     context: CartesianMeasureContext,
     position: AxisPosition.Vertical
-  ): List<Float> = axisValues(context, position)
+  ): List<Float> = values
 
   override fun getLabelValues(
     context: CartesianDrawContext,
     axisHeight: Float,
     maxLabelHeight: Float,
     position: AxisPosition.Vertical
-  ): List<Float> = axisValues(context, position)
+  ): List<Float> = values
 
   override fun getTopVerticalAxisInset(
     context: CartesianMeasureContext,
@@ -236,25 +257,5 @@ class VerticalPlacer(
     axisHeight: Float,
     maxLabelHeight: Float,
     position: AxisPosition.Vertical
-  ): List<Float> = axisValues(context, position)
-
-  private fun axisValues(
-    context: CartesianMeasureContext,
-    position: AxisPosition.Vertical
-  ): List<Float> {
-    val values = mutableListOf<Float>()
-    val yRange = context.chartValues.getYRange(position)
-    val minutes = yRange.maxY.div(MINUTE)
-    if (minutes >= 60) {
-      val hours = maxY.div(HOUR).toInt() + 1
-      repeat(hours) { values += 0f.plus(HOUR).times(it) }
-    } else if (minutes >= 10) {
-      val tenners = maxY.div(TEN_MINUTES).toInt() + 1
-      repeat(tenners) { values += 0f.plus(TEN_MINUTES).times(it) }
-    } else {
-      val twos = maxY.div(TWO_MINUTES).toInt() + 1
-      repeat(twos) { values += 0f.plus(TWO_MINUTES).times(it) }
-    }
-    return values
-  }
+  ): List<Float> = values
 }

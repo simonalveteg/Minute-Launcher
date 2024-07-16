@@ -15,16 +15,17 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import kotlin.time.Duration.Companion.minutes
 
 fun Long?.toTimeUsed(
   blankIfZero: Boolean = true
 ): String {
   if (this == null) return if (!blankIfZero) "0m" else ""
-  val minutes = div(60000)
-  val hours = minutes.div(60)
+  val hours = this.div(60)
+  val minutes = this.mod(60)
   val sb = StringBuilder()
   if (hours != 0L) sb.append("${hours}h ")
-  if (minutes % 60 != 0L) sb.append("${minutes % 60}m")
+  if (minutes != 0) sb.append("${minutes}m")
   return sb.toString().ifBlank { if (!blankIfZero) "0m" else "" }
 }
 

@@ -151,13 +151,16 @@ class ApplicationRepository @Inject constructor(
           endTime = 0L
         }
       }
-      stats.add(
-        UsageStatistics(
-          packageName = packageName,
-          usageDate = date,
-          usageDuration = totalTime
+      totalTime = TimeUnit.MILLISECONDS.toMinutes(totalTime)
+      if ( totalTime > 0L) {
+        stats.add(
+          UsageStatistics(
+            packageName = packageName,
+            usageDate = date,
+            usageDuration = totalTime
+          )
         )
-      )
+      }
     }
     return stats
   }

@@ -73,7 +73,6 @@ fun HomeScreen(
   )
 
   LaunchedEffect(key1 = true) {
-    Timber.d("launched effect")
     viewModel.uiEvent.collect { event ->
       Timber.d("event: $event")
       when (event) {

@@ -48,7 +48,7 @@ fun UsageCard(
         fontFamily = archivoFamily
       )
       AnimatedText(
-        text = usage.toTimeUsed(),
+        text = usage.toTimeUsed(false),
         style = MaterialTheme.typography.headlineSmall,
         fontFamily = archivoBlackFamily
       )
