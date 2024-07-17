@@ -21,6 +21,7 @@ import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
+import com.alveteg.simon.minutelauncher.utilities.launchIntent
 
 
 @Composable
@@ -58,10 +59,9 @@ fun AppModalActionBar(
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APP_USAGE_SETTINGS
-          flags += Intent.FLAG_ACTIVITY_NEW_TASK
           putExtra(Intent.EXTRA_PACKAGE_NAME, appInfo.app.packageName)
         }
-        ContextCompat.startActivity(mContext, intent, null)
+        launchIntent(mContext, intent)
       }
     ),
     ActionBarAction(
@@ -75,10 +75,9 @@ fun AppModalActionBar(
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-          flags += Intent.FLAG_ACTIVITY_NEW_TASK
           data = Uri.fromParts("package", appInfo.app.packageName, null)
         }
-        ContextCompat.startActivity(mContext, intent, null)
+        launchIntent(mContext, intent)
       },
       enabled = enabled
     ),

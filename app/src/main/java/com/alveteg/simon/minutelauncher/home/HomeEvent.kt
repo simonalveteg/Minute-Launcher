@@ -17,4 +17,5 @@ sealed class HomeEvent : Event {
   data class UpdateApp(val app: App) : HomeEvent()
   data object OpenGestureSettings : HomeEvent()
   data object OpenTimerSettings : HomeEvent()
+  data class ShowToast(val text: String, val length: Int) : HomeEvent()
 }

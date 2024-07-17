@@ -76,7 +76,7 @@ fun HomeScreen(
     viewModel.uiEvent.collect { event ->
       Timber.d("event: $event")
       when (event) {
-        is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, Toast.LENGTH_SHORT).show()
+        is UiEvent.ShowToast -> Toast.makeText(mContext, event.text, event.length).show()
         is UiEvent.VibrateLongPress -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)

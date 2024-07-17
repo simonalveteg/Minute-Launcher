@@ -132,6 +132,7 @@ class HomeViewModel @Inject constructor(
   fun onEvent(event: Event) {
     Timber.d(event.toString())
     when (event) {
+      is HomeEvent.ShowToast -> sendUiEvent(UiEvent.ShowToast(event.text, event.length))
       is HomeEvent.OpenApplication -> {
         sendUiEvent(UiEvent.ShowModal(event.appInfo))
         sendUiEvent(UiEvent.VibrateLongPress)
@@ -142,13 +143,6 @@ class HomeViewModel @Inject constructor(
         Timber.d("Launch Activity ${appInfo.app.appTitle}")
         applicationRepository.getLaunchIntentForPackage(appInfo.app.packageName)?.let { intent ->
           sendUiEvent(UiEvent.LaunchActivity(intent))
-          sendUiEvent(
-            UiEvent.ShowToast(
-              "${appInfo.app.appTitle} used for ${
-                (appInfo.usage.firstOrNull()?.usageDuration ?: 0L).toTimeUsed(false)
-              }"
-            )
-          )
           viewModelScope.launch {
             delay(100)
             _searchTerm.value = ""
