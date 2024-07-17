@@ -24,6 +24,7 @@ import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.home.ActionBarState
 import com.alveteg.simon.minutelauncher.home.ActionBarStateValue
+import com.alveteg.simon.minutelauncher.home.rememberActionBarState
 import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
 import com.alveteg.simon.minutelauncher.home.stats.UsageCard
 import java.time.LocalDate
@@ -45,9 +46,7 @@ fun DashboardBottomSheet(
     entry.value.sumOf { it.usageDuration }
   }.map { UsageStatistics("", it.key, it.value) }
 
-  val actionBarState by remember {
-    mutableStateOf(ActionBarState(initialValue = ActionBarStateValue.COLLAPSED))
-  }
+  val actionBarState = rememberActionBarState()
 
   var showUsageStatistics by remember { mutableStateOf(false) }
   val targetSheetValue = scaffoldState.bottomSheetState.targetValue

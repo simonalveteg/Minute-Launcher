@@ -20,7 +20,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
-import timber.log.Timber
 
 @Composable
 fun ActionBar(
@@ -143,6 +141,15 @@ class ActionBarState(initialValue: ActionBarStateValue = ActionBarStateValue.COL
       ActionBarStateValue.EXPANDED -> ActionBarStateValue.COLLAPSED
       ActionBarStateValue.COLLAPSED -> ActionBarStateValue.EXPANDED
     }
+  }
+}
+
+@Composable
+fun rememberActionBarState(
+  initialValue: ActionBarStateValue = ActionBarStateValue.COLLAPSED
+): ActionBarState {
+  return remember {
+    ActionBarState(initialValue)
   }
 }
 
