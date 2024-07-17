@@ -6,7 +6,6 @@ import android.provider.Settings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Gesture
-import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.Info
@@ -17,15 +16,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
-import com.alveteg.simon.minutelauncher.home.HomeActivity
+import com.alveteg.simon.minutelauncher.home.ActionBarState
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 
 
 @Composable
 fun DashboardActionBar(
+  actionBarState: ActionBarState,
   onEvent: (Event) -> Unit
 ) {
   val mContext = LocalContext.current
@@ -96,5 +96,5 @@ fun DashboardActionBar(
     ),
   )
 
-  ActionBar(actions = actions)
+  ActionBar(state = actionBarState, actions = actions)
 }

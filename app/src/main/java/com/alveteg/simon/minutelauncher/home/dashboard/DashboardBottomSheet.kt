@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
+import com.alveteg.simon.minutelauncher.home.ActionBarState
+import com.alveteg.simon.minutelauncher.home.ActionBarStateValue
 import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
 import com.alveteg.simon.minutelauncher.home.stats.UsageCard
 import java.time.LocalDate
@@ -43,6 +45,10 @@ fun DashboardBottomSheet(
     entry.value.sumOf { it.usageDuration }
   }.map { UsageStatistics("", it.key, it.value) }
 
+  val actionBarState by remember {
+    mutableStateOf(ActionBarState(initialValue = ActionBarStateValue.COLLAPSED))
+  }
+
   var showUsageStatistics by remember { mutableStateOf(false) }
   val targetSheetValue = scaffoldState.bottomSheetState.targetValue
   val currentSheetValue = scaffoldState.bottomSheetState.currentValue
@@ -51,6 +57,7 @@ fun DashboardBottomSheet(
       SheetValue.PartiallyExpanded -> {
         if (currentSheetValue == SheetValue.PartiallyExpanded) {
           showUsageStatistics = false
+          actionBarState.close()
         }
       }
 
@@ -99,6 +106,6 @@ fun DashboardBottomSheet(
       )
     }
     UsageBarGraph(usageStatistics = usage)
-    DashboardActionBar(onEvent = onEvent)
+    DashboardActionBar(actionBarState = actionBarState, onEvent = onEvent)
   }
 }

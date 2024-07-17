@@ -20,9 +20,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,17 +34,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
+import timber.log.Timber
 
 @Composable
 fun ActionBar(
+  state: ActionBarState = remember { ActionBarState() },
   actions: List<ActionBarAction>
 ) {
   val numberOfPriorityActions = 4
-  var actionBarState by remember { mutableStateOf(ActionBarState.COLLAPSED) }
   val priorityActions = actions.take(numberOfPriorityActions)
-
+  val currentState by rememberUpdatedState(newValue = state)
   val showMoreIcon =
-    if (actionBarState == ActionBarState.COLLAPSED) Icons.Default.ExpandMore else Icons.Default.ExpandLess
+    if (!currentState.isExpanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess
 
   Surface(
     modifier = Modifier
@@ -57,7 +61,7 @@ fun ActionBar(
         .padding(horizontal = 16.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      if (actionBarState == ActionBarState.COLLAPSED) {
+      if (!currentState.isExpanded) {
         Row(
           modifier = Modifier
             .height(60.dp)
@@ -73,12 +77,12 @@ fun ActionBar(
               Icon(imageVector = it.imageVector, contentDescription = it.description)
             }
           }
-          IconButton(onClick = { actionBarState = actionBarState.toggle() }) {
+          IconButton(onClick = { currentState.toggle() }) {
             Icon(imageVector = showMoreIcon, contentDescription = "Show more actions")
           }
         }
       }
-      if (actionBarState == ActionBarState.EXPANDED) {
+      if (currentState.isExpanded) {
         Spacer(modifier = Modifier.height(6.dp))
         actions.forEach {
           TextButton(
@@ -102,7 +106,7 @@ fun ActionBar(
         }
         IconButton(
           modifier = Modifier.fillMaxWidth(),
-          onClick = { actionBarState = ActionBarState.COLLAPSED }
+          onClick = { currentState.toggle() }
         ) {
           Icon(imageVector = showMoreIcon, contentDescription = "Show less actions")
         }
@@ -118,13 +122,30 @@ data class ActionBarAction(
   val enabled: Boolean = true
 )
 
-private enum class ActionBarState {
-  COLLAPSED, EXPANDED;
+@Stable
+class ActionBarState(initialValue: ActionBarStateValue = ActionBarStateValue.COLLAPSED) {
 
-  fun toggle(): ActionBarState {
-    return when (this) {
-      COLLAPSED -> EXPANDED
-      EXPANDED -> COLLAPSED
+  private var _value by mutableStateOf(initialValue)
+  val value: ActionBarStateValue get() = _value
+
+  val isExpanded: Boolean get() = value == ActionBarStateValue.EXPANDED
+
+  fun close() {
+    _value = ActionBarStateValue.COLLAPSED
+  }
+
+  fun open() {
+    _value = ActionBarStateValue.EXPANDED
+  }
+
+  fun toggle() {
+    _value = when (_value) {
+      ActionBarStateValue.EXPANDED -> ActionBarStateValue.COLLAPSED
+      ActionBarStateValue.COLLAPSED -> ActionBarStateValue.EXPANDED
     }
   }
+}
+
+enum class ActionBarStateValue {
+  COLLAPSED, EXPANDED,
 }
