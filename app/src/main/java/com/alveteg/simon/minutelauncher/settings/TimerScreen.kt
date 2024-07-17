@@ -134,6 +134,7 @@ fun TimerScreen(
                   DropdownMenuItem(
                     text = { Text(text = "${it.enum.name} (${it.integerValue}s)") },
                     onClick = {
+                      expanded = false
                       viewModel.onEvent(
                         SettingsEvent.SetDefaultTimer(
                           AccessTimerMapping(
@@ -158,7 +159,7 @@ fun TimerScreen(
         item {
           Spacer(modifier = Modifier.height(20.dp))
         }
-        items(defaultTimerApps) { app ->
+        items(defaultTimerApps, key = { it.app.packageName }) { app ->
           AppTimerCard(app, accessTimerMapping, viewModel::onEvent)
         }
       }
@@ -212,6 +213,7 @@ fun AppTimerCard(
             DropdownMenuItem(
               text = { Text(text = "${it.enum.name} (${it.integerValue}s)") },
               onClick = {
+                expanded = false
                 onEvent(
                   HomeEvent.UpdateApp(
                     appInfo.app.copy(timer = it.enum)
