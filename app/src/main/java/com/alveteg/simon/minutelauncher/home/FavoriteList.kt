@@ -124,25 +124,7 @@ fun FavoriteList(
           currentDirection = GestureDirection.NONE
         },
         onDragEnd = {
-          gesture = when (currentZone) {
-            GestureZone.UPPER -> {
-              when (currentDirection) {
-                GestureDirection.RIGHT -> Gesture.UPPER_RIGHT
-                GestureDirection.LEFT -> Gesture.UPPER_LEFT
-                else -> Gesture.NONE
-              }
-            }
-
-            GestureZone.LOWER -> {
-              when (currentDirection) {
-                GestureDirection.RIGHT -> Gesture.LOWER_RIGHT
-                GestureDirection.LEFT -> Gesture.LOWER_LEFT
-                else -> Gesture.NONE
-              }
-            }
-
-            else -> Gesture.NONE
-          }
+          gesture = Gesture.from(currentZone, currentDirection)
           currentZone = GestureZone.NONE
           currentDirection = GestureDirection.NONE
           onEvent(HomeEvent.HandleGesture(gesture))
