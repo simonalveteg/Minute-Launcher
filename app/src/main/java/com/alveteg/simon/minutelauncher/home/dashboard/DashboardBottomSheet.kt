@@ -22,8 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
-import com.alveteg.simon.minutelauncher.home.ActionBarState
-import com.alveteg.simon.minutelauncher.home.ActionBarStateValue
 import com.alveteg.simon.minutelauncher.home.rememberActionBarState
 import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
 import com.alveteg.simon.minutelauncher.home.stats.UsageCard
@@ -63,6 +61,12 @@ fun DashboardBottomSheet(
       else -> showUsageStatistics = true
     }
   }
+  val sevenDayAverage = remember(usageStats) {
+    usageStats.sumOf { it.usageDuration }.div(7)
+  }
+  val usageToday = remember(usageStats) {
+    usageStats.filter { it.usageDate == LocalDate.now() }.sumOf { it.usageDuration }
+  }
   val usage = remember(showUsageStatistics) {
     if (showUsageStatistics) usageStats else emptyList()
   }
@@ -90,7 +94,7 @@ fun DashboardBottomSheet(
     ) {
       UsageCard(
         label = "7 day average",
-        usage = usage.sumOf { it.usageDuration }.div(7),
+        usage = sevenDayAverage,
         modifier = Modifier
           .fillMaxWidth()
           .weight(1f)
@@ -98,7 +102,7 @@ fun DashboardBottomSheet(
       Spacer(modifier = Modifier.width(16.dp))
       UsageCard(
         label = "Today",
-        usage = usage.filter { it.usageDate == LocalDate.now() }.sumOf { it.usageDuration },
+        usage = usageToday,
         modifier = Modifier
           .fillMaxWidth()
           .weight(1f)

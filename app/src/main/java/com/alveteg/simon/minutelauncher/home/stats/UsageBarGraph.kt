@@ -1,6 +1,10 @@
 package com.alveteg.simon.minutelauncher.home.stats
 
 import android.graphics.Typeface
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -95,25 +99,14 @@ fun UsageBarGraph(
     shape = MaterialTheme.shapes.large,
     tonalElevation = 8.dp
   ) {
-    if (usageStatistics.isNotEmpty()) {
-      UsageColumnChart(
-        modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 6.dp, bottom = 8.dp),
-        modelProducer = modelProducer,
-        maxValue = yMaxValue.toFloat(),
-        yAxisValues = yAxisValues,
-        xValues = dates,
-        yValues = durations
-      )
-    } else {
-      Text(
-        text = "No recent usage found.",
-        modifier = Modifier
-          .fillMaxSize()
-          .wrapContentHeight()
-          .padding(bottom = 8.dp),
-        textAlign = TextAlign.Center,
-      )
-    }
+    UsageColumnChart(
+      modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 6.dp, bottom = 8.dp),
+      modelProducer = modelProducer,
+      maxValue = yMaxValue.toFloat(),
+      yAxisValues = yAxisValues,
+      xValues = dates,
+      yValues = durations
+    )
   }
 }
 
@@ -203,7 +196,17 @@ fun UsageColumnChart(
     ),
     modelProducer = modelProducer,
     zoomState = rememberVicoZoomState(zoomEnabled = false),
-    scrollState = rememberVicoScrollState(scrollEnabled = false)
+    scrollState = rememberVicoScrollState(scrollEnabled = false),
+    placeholder = {
+      Text(
+        text = "No recent usage found.",
+        modifier = Modifier
+          .fillMaxSize()
+          .wrapContentHeight()
+          .padding(bottom = 8.dp),
+        textAlign = TextAlign.Center,
+      )
+    }
   )
 }
 

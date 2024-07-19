@@ -66,9 +66,6 @@ fun AnimatedText(
   AnimatedContent(
     targetState = text,
     label = "Usage-text animation",
-    transitionSpec = {
-      (fadeIn()).togetherWith(fadeOut())
-    }
   ) { string ->
     Text(text = string, style = style, fontFamily = fontFamily)
   }
