@@ -1,12 +1,15 @@
 ## Minute Launcher: A Minimalist Digital Wellbeing Launcher
 
-Minute Launcher is a free and open-source launcher designed to promote mindful phone usage. Experience a minimalist interface focused on essential functions and digital well-being.
+Minute Launcher is a free and open-source launcher designed to promote mindful phone usage. 
+
+I was not satisfied with any of the minimal launchers available on the play store, and set out to create a launcher that does exactly what I need it to do - and nothing else. Usage statistics are prominently displayed on the homescreen to give you conscious awareness of screen time, while the countdown timer encourages more intentional phone usage by preventing you from mindlessly opening apps.
 
 ### Key Features
-* **Minimalist design:** Enjoy a clean and distraction-free home screen with easy access to your essential apps.
-* **Intuitive gestures:** Quickly access notifications, the app drawer, and four custom shortcuts with simple swipes.
-* **Usage insights:** Stay informed about your phone usage with clear and informative usage statistics - directly in your launcher.
-* **Material You integration:** Enjoy a cohesive look and feel that adapts to your wallpaper.
+* Minimalist and distraction-free home screen.
+* Integrated usage statistics.
+* Intuitive gestures to access notifications, the app darwer, and four custom app shortcuts.
+* Customizable per-app countdown timer to prevent you from mindlessly opening distracting apps.
+* Material You integration.
 
 
 <p align="center">
@@ -27,9 +30,6 @@ Minute Launcher is a free and open-source launcher designed to promote mindful p
   <img src="screenshots/Applist_1.png" width="150">
   <img src="screenshots/Dashboard_1.png" width="150">
 </p>
-
-### How it Works
-Minute Launcher offers a streamlined experience focused on mindful phone usage. Usage statistics are prominently displayed on your homescreen to give you conscious awareness of screen time, while the integrated countdown timer helps you resist impulsive app opening and encourages more intentional phone usage.
 
 ### Getting Started
 The launcher is still in development, if you're eager to try it out there will be some releases here on Github under the releases-tab. 
