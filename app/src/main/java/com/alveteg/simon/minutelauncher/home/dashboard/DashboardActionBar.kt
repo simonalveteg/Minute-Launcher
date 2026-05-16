@@ -33,6 +33,14 @@ fun DashboardActionBar(
   val mContext = LocalContext.current
   val actions = listOf(
     ActionBarAction(
+      imageVector = Icons.Default.Settings,
+      description = "Open system settings",
+      action = {
+        val intent = Intent(Settings.ACTION_SETTINGS)
+        ContextCompat.startActivity(mContext, intent, null)
+      }
+    ),
+    ActionBarAction(
       imageVector = Icons.Default.Wallpaper,
       description = "Change Wallpaper",
       action = {
@@ -62,6 +70,11 @@ fun DashboardActionBar(
       }
     ),
     ActionBarAction(
+      imageVector = Icons.Default.Tune,
+      description = "Open launcher settings",
+      action = { onEvent(HomeEvent.OpenSettings) }
+    ),
+    ActionBarAction(
       imageVector = Icons.Outlined.Info,
       description = "Open App Info",
       action = {
@@ -70,19 +83,6 @@ fun DashboardActionBar(
           action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
           data = Uri.fromParts("package", mContext.packageName, null)
         }
-        ContextCompat.startActivity(mContext, intent, null)
-      }
-    ),
-    ActionBarAction(
-      imageVector = Icons.Default.Tune,
-      description = "Open launcher settings",
-      action = { onEvent(HomeEvent.OpenSettings) }
-    ),
-    ActionBarAction(
-      imageVector = Icons.Default.Settings,
-      description = "Open system settings",
-      action = {
-        val intent = Intent(Settings.ACTION_SETTINGS)
         ContextCompat.startActivity(mContext, intent, null)
       }
     ),
