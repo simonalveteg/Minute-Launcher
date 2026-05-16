@@ -1,7 +1,9 @@
 package com.alveteg.simon.minutelauncher.home.modal
 
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
-import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -17,12 +19,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.MinuteAccessibilityService
+import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.isAccessibilityServiceEnabled
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,14 +57,16 @@ fun AppModalBottomSheet(
           onDismiss()
         },
         onCancel = {
-          val isAccessibilityServiceEnabled =
-            isAccessibilityServiceEnabled(mContext, MinuteAccessibilityService::class.java)
-          if (isAccessibilityServiceEnabled) {
-            MinuteAccessibilityService.turnScreenOff()
-            onDismiss()
+          val dpm = mContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+          val admin = ComponentName(mContext, MinuteDeviceAdminReceiver::class.java)
+
+          if (dpm.isAdminActive(admin)) {
+            dpm.lockNow()
           } else {
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            ContextCompat.startActivity(mContext, intent, null)
+            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+              putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin)
+            }
+            mContext.startActivity(intent)
           }
         },
         onChangeTimer = {
