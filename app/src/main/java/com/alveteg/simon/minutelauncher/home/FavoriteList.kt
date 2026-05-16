@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +44,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.settings.PermissionCheckers
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.GestureDirection
@@ -207,7 +209,15 @@ fun FavoriteList(
       userScrollEnabled = false,
       modifier = Modifier.fillMaxWidth()
     ) {
-      items(favorites, key = { it.app.packageName}) { appInfo ->
+      item {
+        PermissionCheckers(
+          modifier = Modifier.fillMaxWidth(0.8f),
+          buttonColors = ButtonDefaults.outlinedButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+          )
+        )
+      }
+      items(favorites, key = { it.app.packageName }) { appInfo ->
         ReorderableItem(
           state = reorderableLazyListState,
           key = appInfo.app.packageName

@@ -1,7 +1,19 @@
 package com.alveteg.simon.minutelauncher.settings
 
+import android.app.Activity
+import android.app.AppOpsManager
+import android.app.admin.DevicePolicyManager
+import android.app.role.RoleManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.os.Build
+import android.os.Process
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,18 +43,27 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.home.HomeEvent
+import com.alveteg.simon.minutelauncher.home.isDefaultLauncher
+import com.alveteg.simon.minutelauncher.home.isDeviceAdmin
+import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
+import com.alveteg.simon.minutelauncher.settings.components.ButtonInput
 import com.alveteg.simon.minutelauncher.settings.components.GenericInput
 import com.alveteg.simon.minutelauncher.settings.components.GestureInput
 import com.alveteg.simon.minutelauncher.settings.components.SegmentedInput
@@ -116,6 +137,11 @@ fun SettingsScreen(
         .padding(padding),
       horizontalAlignment = Alignment.Start
     ) {
+
+      item {
+        PermissionCheckers()
+      }
+
       settingsSection(title = "Preferences") {
         item {
           SliderInput(
@@ -209,10 +235,12 @@ fun SettingsScreen(
         }
 
         item {
-          GenericInput(
-            label = "Apps with custom timers set",
-            description = "View and reset the timers for apps that have one set."
-          )
+          if (appsWithTimers.isNotEmpty()) {
+            GenericInput(
+              label = "Apps with custom timers set",
+              description = "View and reset the timers for apps that have one set."
+            )
+          }
         }
         items(
           items = appsWithTimers,
