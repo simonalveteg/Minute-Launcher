@@ -34,6 +34,8 @@ import java.time.LocalDate
 @Composable
 fun FavoriteCard(
   appInfo: AppInfo,
+  modifier: Modifier = Modifier,
+  color: Color = Color.Transparent,
   onClick: () -> Unit
 ) {
   val interactionSource = remember { MutableInteractionSource() }
@@ -44,8 +46,8 @@ fun FavoriteCard(
 
   Surface(
     shape = MaterialTheme.shapes.large,
-    color = Color.Transparent,
-    modifier = Modifier
+    color = color,
+    modifier = modifier
       .fillMaxWidth()
       .animateContentSize()
       .combinedClickable(

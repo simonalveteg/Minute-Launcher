@@ -13,7 +13,7 @@ sealed class HomeEvent : Event {
   data class UpdateSearch(val searchTerm: String) : HomeEvent()
   data class ToggleFavorite(val app: App) : HomeEvent()
   data class HandleGesture(val gesture: Gesture) : HomeEvent()
-  data class UpdateFavoriteOrder(val favorites: List<FavoriteAppInfo>) : HomeEvent()
+  data class UpdateFavoriteOrder(val from: Int, val to: Int) : HomeEvent()
   data class UpdateAppTimer(val app: App, val timerValue: Int) : HomeEvent()
   data class ResetAppTimerToDefault(val app: App) : HomeEvent()
   data class SetDisplayName(val app: App, val displayName: String) : HomeEvent()

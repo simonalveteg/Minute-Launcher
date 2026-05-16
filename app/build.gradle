@@ -79,9 +79,6 @@ dependencies {
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.navigation.compose)
 
-    // TODO: replace with Activity.enableEdgeToEdge()
-    implementation(libs.accompanist.systemuicontroller)
-
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
@@ -95,6 +92,7 @@ dependencies {
 
     // Third party
     implementation(libs.timber)
+    implementation(libs.reorderable)
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
 }

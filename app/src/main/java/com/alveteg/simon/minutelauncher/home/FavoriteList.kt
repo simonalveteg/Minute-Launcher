@@ -1,5 +1,6 @@
 package com.alveteg.simon.minutelauncher.home
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
@@ -23,6 +24,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,10 +33,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
@@ -43,7 +48,10 @@ import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.GestureDirection
 import com.alveteg.simon.minutelauncher.utilities.GestureZone
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import timber.log.Timber
 import kotlin.math.abs
 
@@ -179,15 +187,43 @@ fun FavoriteList(
       )
     )
 
+    val listUpdatedChannel = remember { Channel<Unit>() }
+    val hapticFeedback = LocalHapticFeedback.current
     val listState = rememberLazyListState()
+    val reorderableLazyListState = rememberReorderableLazyListState(listState) { from, to ->
+      Timber.d("Reorder favorite ${from.key} to ${to.key}")
+      onEvent(HomeEvent.UpdateFavoriteOrder(from.index, to.index))
+      listUpdatedChannel.receive()
+      hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+    }
+
+    LaunchedEffect(favorites) {
+      listUpdatedChannel.trySend(Unit)
+    }
+
     LazyColumn(
       state = listState,
       horizontalAlignment = Alignment.CenterHorizontally,
       userScrollEnabled = false,
       modifier = Modifier.fillMaxWidth()
     ) {
-      items(favorites) { appInfo ->
-        FavoriteCard(appInfo) { onAppClick(appInfo) }
+      items(favorites, key = { it.app.packageName}) { appInfo ->
+        ReorderableItem(
+          state = reorderableLazyListState,
+          key = appInfo.app.packageName
+        ) { isDragging ->
+          FavoriteCard(
+            appInfo = appInfo,
+            modifier = Modifier.longPressDraggableHandle(
+              onDragStarted = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+              },
+              onDragStopped = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
+              },
+            )
+          ) { onAppClick(appInfo) }
+        }
       }
     }
     val density = LocalDensity.current

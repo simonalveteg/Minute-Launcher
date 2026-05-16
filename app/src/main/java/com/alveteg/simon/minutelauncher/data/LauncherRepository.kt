@@ -33,16 +33,16 @@ class LauncherRepository @Inject constructor(
 
   fun removeAppForGesture(gesture: Gesture) = launcherDao.removeAppForGesture(gesture.toString())
   fun getAppInfoForGesture(gesture: Gesture) = launcherDao.getAppForGesture(gesture.toString())
-  fun updateFavoritesOrder(new: List<FavoriteAppInfo>) {
-    new.forEachIndexed { index, appInfo ->
+  fun updateFavoritesOrder(new: List<App>) {
+    new.forEachIndexed { index, app ->
       Timber.d(
-        "Updating order for: ${appInfo.favoriteApp.app.appTitle} from ${
+        "Updating order for: ${app.appTitle} from ${
           launcherDao.getOrderForFavoriteById(
-            appInfo.favoriteApp.app.packageName
+            app.packageName
           )
         } to $index"
       )
-      launcherDao.updateFavoriteOrder(appInfo.favoriteApp.app.packageName, index)
+      launcherDao.updateFavoriteOrder(app.packageName, index)
     }
   }
 

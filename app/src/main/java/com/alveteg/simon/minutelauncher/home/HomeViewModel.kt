@@ -51,16 +51,9 @@ class HomeViewModel @Inject constructor(
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
-  val favoriteApps = combine(
-    roomRepository.favoriteApps(), applicationRepository.usageStats, roomRepository.timerApps()
-  ) { favorites, usageStats, timerApps ->
-    favorites.map { favorite ->
-      val usage = usageStats.filter { favorite.app.packageName == it.packageName }
-      val timer = timerApps.find { it.app.packageName == favorite.app.packageName }?.appTimer?.timer
-        ?: timerLength.value
-      AppInfo(favorite.app, true, timer, usage)
-    }
-  }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+  private val _favoriteApps = MutableStateFlow<List<AppInfo>>(emptyList())
+  val favoriteApps = _favoriteApps.asStateFlow()
+
 
   val installedApps = combine(
     roomRepository.appList(),
@@ -116,6 +109,29 @@ class HomeViewModel @Inject constructor(
     Timber.d("ViewModel initialized!")
     applicationRepository.registerCallback(packageCallback)
     updateDatabase()
+    monitorUsage()
+
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        combine(
+          roomRepository.favoriteApps(), applicationRepository.usageStats, roomRepository.timerApps()
+        ) { favorites, usageStats, timerApps ->
+          favorites.sortedBy { it.favoriteApp.order }.map { favorite ->
+            val usage = usageStats.filter { favorite.app.packageName == it.packageName }
+            val timer = timerApps.find { it.app.packageName == favorite.app.packageName }?.appTimer?.timer
+              ?: timerLength.value
+            AppInfo(favorite.app, true, timer, usage)
+          }
+        }.collect { favorites ->
+          Timber.d("Favorite apps updated: ${favorites.size}")
+          _favoriteApps.value = favorites
+        }
+
+      }
+    }
+  }
+
+  private fun monitorUsage() {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         applicationRepository.startUsageUpdater()
@@ -216,9 +232,16 @@ class HomeViewModel @Inject constructor(
       is HomeEvent.OpenTimerSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.TIMER_SETTINGS))
       is HomeEvent.OpenSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.HOME))
       is HomeEvent.UpdateFavoriteOrder -> {
+        val favorites = _favoriteApps.value.toMutableList()
+        val reorderedItem = favorites.removeAt(event.from)
+        favorites.add(event.to, reorderedItem)
+
+        _favoriteApps.value = favorites.toList()
+
+        Timber.d("Favorite order updated: $favorites")
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            roomRepository.updateFavoritesOrder(event.favorites)
+            roomRepository.updateFavoritesOrder(favorites.map { it.app } )
           }
         }
       }

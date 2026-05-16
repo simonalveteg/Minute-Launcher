@@ -9,7 +9,6 @@ data class AppInfo(
 
 data class FavoriteAppInfo(
   val favoriteApp: FavoriteAppWithApp,
-  val timer: Int,
-  val usage: List<UsageStatistics>,
+  val appInfo: AppInfo,
 )
 
