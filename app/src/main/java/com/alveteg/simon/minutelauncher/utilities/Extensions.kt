@@ -61,5 +61,5 @@ fun List<AppInfo>.filterBySearchTerm(searchTerm: String) : List<AppInfo> {
   return filter { appInfo ->
     appInfo.app.appTitle.lowercase().filterNot { it.isWhitespace() }
       .contains(searchTerm.lowercase().filterNot { it.isWhitespace() })
-  }.sortedBy { it.app.appTitle.lowercase() }
+  }.sortedBy { (it.app.displayTitle ?: it.app.appTitle).lowercase() }
 }

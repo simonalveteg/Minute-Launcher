@@ -7,7 +7,6 @@ import javax.inject.Inject
 
 class LauncherRepository @Inject constructor(
   private val launcherDao: LauncherDao,
-  private val accessTimerMappingDao: AccessTimerMappingDao
 ) {
 
   fun appList() = launcherDao.getAllApps()
@@ -16,10 +15,13 @@ class LauncherRepository @Inject constructor(
       .map { it.associate { gApp -> gApp.swipeApp.swipeDirection to gApp.app } }
 
   fun favoriteApps() = launcherDao.getFavoriteApps()
+  fun timerApps() = launcherDao.getAppsWithTimer()
   fun insertApp(app: App) = launcherDao.insertApp(app)
-  fun updateApp(app: App) {
-    launcherDao.updateAppTimer(app.packageName, app.timer)
+  fun updateApp(app: App) = launcherDao.updateApp(app)
+  fun updateAppTimer(app: App, timerValue: Int) {
+    launcherDao.updateAppTimer(app.packageName, timerValue)
   }
+  fun removeAppTimer(app: App) = launcherDao.removeAppTimer(app.packageName)
 
   fun removeApp(app: App) = launcherDao.removeApp(app)
 
@@ -31,20 +33,17 @@ class LauncherRepository @Inject constructor(
 
   fun removeAppForGesture(gesture: Gesture) = launcherDao.removeAppForGesture(gesture.toString())
   fun getAppInfoForGesture(gesture: Gesture) = launcherDao.getAppForGesture(gesture.toString())
-  fun updateFavoritesOrder(new: List<FavoriteAppInfo>) {
-    new.forEachIndexed { index, appInfo ->
+  fun updateFavoritesOrder(new: List<App>) {
+    new.forEachIndexed { index, app ->
       Timber.d(
-        "Updating order for: ${appInfo.favoriteApp.app.appTitle} from ${
+        "Updating order for: ${app.appTitle} from ${
           launcherDao.getOrderForFavoriteById(
-            appInfo.favoriteApp.app.packageName
+            app.packageName
           )
         } to $index"
       )
-      launcherDao.updateFavoriteOrder(appInfo.favoriteApp.app.packageName, index)
+      launcherDao.updateFavoriteOrder(app.packageName, index)
     }
   }
 
-  fun getAccessTimerMappings() = accessTimerMappingDao.getAllMappings()
-  fun setAccessTimerMapping(accessTimerMapping: AccessTimerMapping) =
-    accessTimerMappingDao.insertMapping(accessTimerMapping)
 }

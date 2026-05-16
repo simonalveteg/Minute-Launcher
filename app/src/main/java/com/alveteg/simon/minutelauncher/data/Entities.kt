@@ -16,14 +16,34 @@ import java.time.LocalDate
 data class App(
   @PrimaryKey val packageName: String,
   val appTitle: String,
-  val timer: AccessTimer = AccessTimer.DEFAULT
+  val displayTitle: String? = null
 )
 
 fun LauncherActivityInfo.toApp() =
   App(
-    this.applicationInfo.packageName,
-    this.label.toString()
+    packageName = this.applicationInfo.packageName,
+    appTitle = this.label.toString()
   )
+
+/**
+ * Stores specific AccessTimer overrides for apps.
+ * If an app is not in this table, it uses the global default from DataStore.
+ */
+@Entity(
+  foreignKeys = [
+    ForeignKey(
+      entity = App::class,
+      parentColumns = ["packageName"],
+      childColumns = ["packageName"],
+      onDelete = CASCADE
+    )
+  ],
+  indices = [Index(value = ["packageName"])]
+)
+data class AppTimer(
+  @PrimaryKey val packageName: String,
+  val timer: Int
+)
 
 @Entity(
   foreignKeys = [
@@ -52,7 +72,6 @@ data class SwipeAppWithApp(
   val app: App
 )
 
-
 @Entity(
   primaryKeys = ["packageName"],
   foreignKeys = [ForeignKey(
@@ -76,8 +95,10 @@ data class FavoriteAppWithApp(
   val app: App
 )
 
-@Entity(primaryKeys = ["enum"])
-data class AccessTimerMapping(
-  @ColumnInfo(name = "enum") val enum: AccessTimer,
-  @ColumnInfo(name = "integerValue") val integerValue: Int
+data class TimerAppWithApp(
+  @Embedded val appTimer: AppTimer,
+  @Relation(    parentColumn = "packageName",
+    entityColumn = "packageName"
+  )
+  val app: App
 )

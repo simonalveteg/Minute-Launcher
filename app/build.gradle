@@ -1,6 +1,7 @@
 plugins {
     alias libs.plugins.android.application
     alias libs.plugins.jetbrains.kotlin.android
+    alias libs.plugins.jetbrains.kotlin.compose
     alias libs.plugins.google.ksp
     alias libs.plugins.google.dagger.hilt
 }
@@ -10,9 +11,8 @@ def keyFile = file('signing/minute_keystore.jks')
 def props = new Properties()
 props.load(new FileInputStream(propsFile))
 
-
 android {
-    compileSdk 34
+    compileSdk 35
     signingConfigs {
         release {
             storeFile keyFile
@@ -24,12 +24,11 @@ android {
     defaultConfig {
         applicationId "com.alveteg.simon.minutelauncher"
         minSdk 29
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
 
         vectorDrawables {
             useSupportLibrary true
@@ -49,19 +48,16 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     buildFeatures {
         compose true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion '1.5.11'
-    }
-    packagingOptions {
+    packaging {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
@@ -74,34 +70,29 @@ dependencies {
     implementation platform(libs.androidx.compose.bom)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.material)
     implementation(libs.androidx.tooling.preview)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    // Integration with navigation
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.navigation.compose)
 
-    // accompanist ui controller (REPLACE WITH Activity.enableEdgeToEdge?
-    implementation "com.google.accompanist:accompanist-systemuicontroller:0.26.0-alpha"
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
-    //Dagger - Hilt
-    implementation "com.google.dagger:hilt-android:$hilt_version"
-    ksp "com.google.dagger:hilt-android-compiler:$hilt_version"
-    ksp "androidx.hilt:hilt-compiler:1.2.0"
-    implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
-
-
-    // ROOM
+    // Room
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
 
-    implementation(libs.androidx.ui.text.google.fonts)
-
-    // Third party libraries
+    // Third party
     implementation(libs.timber)
+    implementation(libs.reorderable)
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
 }

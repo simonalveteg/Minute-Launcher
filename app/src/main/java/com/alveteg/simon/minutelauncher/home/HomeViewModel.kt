@@ -9,8 +9,8 @@ import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.ApplicationRepository
-import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
+import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.settings.SettingsScreen
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
@@ -35,31 +35,42 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
   private val roomRepository: LauncherRepository,
-  private val applicationRepository: ApplicationRepository
+  private val applicationRepository: ApplicationRepository,
+  private val preferenceRepository: PreferenceRepository,
 ) : ViewModel() {
 
   private val _uiEvent = MutableSharedFlow<UiEvent>()
   val uiEvent = _uiEvent.asSharedFlow().onEach { Timber.d(it.toString()) }
 
+  val transparencyAmount = preferenceRepository.transparencyAmount
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.5f)
+
+  val timerLength = preferenceRepository.timerLength
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
+
+  val showPermissionPrompts = preferenceRepository.showPermissionPrompts
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
-  val favoriteApps = combine(
-    roomRepository.favoriteApps(), applicationRepository.usageStats
-  ) { favorites, usageStats ->
-    favorites.map { favorite ->
-      val usage = usageStats.filter { favorite.app.packageName == it.packageName }
-      FavoriteAppInfo(favorite, usage)
-    }
-  }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+  private val _favoriteApps = MutableStateFlow<List<AppInfo>>(emptyList())
+  val favoriteApps = _favoriteApps.asStateFlow()
+
 
   val installedApps = combine(
-    roomRepository.appList(), roomRepository.favoriteApps(), applicationRepository.usageStats
-  ) { apps, favorites, usageStats ->
+    roomRepository.appList(),
+    roomRepository.timerApps(),
+    roomRepository.favoriteApps(),
+    applicationRepository.usageStats,
+    timerLength
+  ) { apps, timerApps, favorites, usageStats, defaultTimerLength ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
       val usage = usageStats.filter { app.packageName == it.packageName }
-      AppInfo(app, favorite, usage)
+      val timer = timerApps.find { it.app.packageName == app.packageName }?.appTimer?.timer
+        ?: defaultTimerLength
+      AppInfo(app, favorite, timer, usage)
     }
   }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -69,8 +80,6 @@ class HomeViewModel @Inject constructor(
     apps.filterBySearchTerm(searchTerm)
   }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-  val accessTimerMappings = roomRepository.getAccessTimerMappings()
-    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
   private val packageCallback = object : LauncherApps.Callback() {
     override fun onPackageRemoved(packageName: String?, user: UserHandle?) {
@@ -103,6 +112,29 @@ class HomeViewModel @Inject constructor(
     Timber.d("ViewModel initialized!")
     applicationRepository.registerCallback(packageCallback)
     updateDatabase()
+    monitorUsage()
+
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        combine(
+          roomRepository.favoriteApps(), applicationRepository.usageStats, roomRepository.timerApps()
+        ) { favorites, usageStats, timerApps ->
+          favorites.sortedBy { it.favoriteApp.order }.map { favorite ->
+            val usage = usageStats.filter { favorite.app.packageName == it.packageName }
+            val timer = timerApps.find { it.app.packageName == favorite.app.packageName }?.appTimer?.timer
+              ?: timerLength.value
+            AppInfo(favorite.app, true, timer, usage)
+          }
+        }.collect { favorites ->
+          Timber.d("Favorite apps updated: ${favorites.size}")
+          _favoriteApps.value = favorites
+        }
+
+      }
+    }
+  }
+
+  private fun monitorUsage() {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         applicationRepository.startUsageUpdater()
@@ -200,20 +232,59 @@ class HomeViewModel @Inject constructor(
       }
 
 
-      is HomeEvent.OpenGestureSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.GESTURE_SETTINGS))
       is HomeEvent.OpenTimerSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.TIMER_SETTINGS))
+      is HomeEvent.OpenSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.HOME))
       is HomeEvent.UpdateFavoriteOrder -> {
+        val favorites = _favoriteApps.value.toMutableList()
+        val reorderedItem = favorites.removeAt(event.from)
+        favorites.add(event.to, reorderedItem)
+
+        _favoriteApps.value = favorites.toList()
+
+        Timber.d("Favorite order updated: $favorites")
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            roomRepository.updateFavoritesOrder(event.favorites)
+            roomRepository.updateFavoritesOrder(favorites.map { it.app } )
           }
         }
       }
 
-      is HomeEvent.UpdateApp -> {
+      is HomeEvent.UpdateAppTimer -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            roomRepository.updateApp(event.app)
+            roomRepository.updateAppTimer(event.app, event.timerValue)
+          }
+        }
+      }
+
+      is HomeEvent.ResetAppTimerToDefault -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.removeAppTimer(event.app)
+          }
+        }
+      }
+
+      is HomeEvent.SetDisplayName -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.updateApp(event.app.copy(displayTitle = event.displayName))
+          }
+        }
+      }
+
+      is HomeEvent.ResetDisplayName -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.updateApp(event.app.copy(displayTitle = null))
+          }
+        }
+      }
+
+      is HomeEvent.HidePermissionPrompts -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            preferenceRepository.hidePermissionPrompts()
           }
         }
       }

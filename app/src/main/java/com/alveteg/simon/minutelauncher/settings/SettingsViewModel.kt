@@ -4,22 +4,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
-import com.alveteg.simon.minutelauncher.data.AccessTimer
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.ApplicationRepository
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
+import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.data.SwipeApp
 import com.alveteg.simon.minutelauncher.home.HomeEvent
+import com.alveteg.simon.minutelauncher.theme.AppTheme
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -28,6 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
   private val roomRepository: LauncherRepository,
+  private val preferenceRepository: PreferenceRepository,
   private val applicationRepository: ApplicationRepository
 ) : ViewModel() {
 
@@ -35,16 +38,30 @@ class SettingsViewModel @Inject constructor(
   val searchTerm = _searchTerm.asStateFlow()
 
   val gestureApps = roomRepository.gestureApps()
+  val appsWithTimers = roomRepository.timerApps()
 
-  val accessTimerMappings = roomRepository.getAccessTimerMappings()
+  val appTheme = preferenceRepository.appTheme
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppTheme.SYSTEM)
+  val useDynamicColor = preferenceRepository.useDynamicColor
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+  val transparencyAmount = preferenceRepository.transparencyAmount
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.5f)
+  val timerLength = preferenceRepository.timerLength
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
 
   val installedApps = combine(
-    roomRepository.appList(), roomRepository.favoriteApps(), applicationRepository.usageStats
-  ) { apps, favorites, usageStats ->
+    roomRepository.appList(),
+    roomRepository.timerApps(),
+    roomRepository.favoriteApps(),
+    applicationRepository.usageStats,
+    timerLength
+  ) { apps, timerApps, favorites, usageStats, defaultTimerLength ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
       val usage = usageStats.filter { app.packageName == it.packageName }
-      AppInfo(app, favorite, usage)
+      val timer = timerApps.find { it.app.packageName == app.packageName }?.appTimer?.timer
+        ?: defaultTimerLength
+      AppInfo(app, favorite, timer, usage)
     }
   }
   val filteredApps = combine(
@@ -52,14 +69,27 @@ class SettingsViewModel @Inject constructor(
   ) { apps, searchTerm ->
     apps.filterBySearchTerm(searchTerm)
   }
-  val defaultTimerApps = installedApps.transform { appList ->
-    emit(appList.filter { it.app.timer == AccessTimer.DEFAULT }
-      .sortedBy { it.app.appTitle.lowercase() })
+
+  fun onTimerLengthChange(value: Int) {
+    viewModelScope.launch { preferenceRepository.updateTimerLength(value) }
   }
-  val nonDefaultTimerApps = installedApps.transform { appList ->
-    emit(appList.filter { it.app.timer != AccessTimer.DEFAULT }
-      .sortedBy { it.app.appTitle.lowercase() })
+
+  fun onTransparencyAmountChange(value: Float) {
+    viewModelScope.launch { preferenceRepository.updateTransparencyAmount(value) }
   }
+
+  fun onThemeChange(theme: AppTheme) {
+    viewModelScope.launch {
+      preferenceRepository.updateAppTheme(theme)
+    }
+  }
+
+  fun onDynamicColorChange(enabled: Boolean) {
+    viewModelScope.launch {
+      preferenceRepository.updateUseDynamicColor(enabled)
+    }
+  }
+
   private val _uiEvent = MutableSharedFlow<UiEvent>()
   val uiEvent = _uiEvent.asSharedFlow().onEach { Timber.d(it.toString()) }
 
@@ -72,10 +102,18 @@ class SettingsViewModel @Inject constructor(
   fun onEvent(event: Event) {
     Timber.d(event.toString())
     when (event) {
-      is HomeEvent.UpdateApp -> {
+      is HomeEvent.UpdateAppTimer -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            roomRepository.updateApp(event.app)
+            roomRepository.updateAppTimer(event.app, event.timerValue)
+          }
+        }
+      }
+
+      is HomeEvent.ResetAppTimerToDefault -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.removeAppTimer(event.app)
           }
         }
       }
@@ -93,21 +131,13 @@ class SettingsViewModel @Inject constructor(
         }
       }
 
-      is SettingsEvent.SetDefaultTimer -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.setAccessTimerMapping(event.accessTimerMapping)
-          }
-        }
-      }
-
       is SettingsEvent.SetAppGesture -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
             roomRepository.insertGestureApp(SwipeApp(event.gesture, event.app))
           }
         }
-        sendUiEvent(UiEvent.Navigate(route = SettingsScreen.GESTURE_SETTINGS, popBackStack = true))
+        sendUiEvent(UiEvent.Navigate(route = SettingsScreen.HOME, popBackStack = true))
       }
 
       is SettingsEvent.OpenGestureList -> sendUiEvent(UiEvent.Navigate(SettingsScreen.GESTURE_SETTINGS_LIST + "/${event.gesture}"))

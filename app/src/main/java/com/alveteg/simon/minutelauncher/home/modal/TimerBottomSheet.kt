@@ -14,7 +14,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -22,69 +24,65 @@ import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.data.AccessTimer
-import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
 import com.alveteg.simon.minutelauncher.home.SegmentedControl
+import com.alveteg.simon.minutelauncher.settings.components.SliderInput
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import timber.log.Timber
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimerBottomSheet(
   sheetState: SheetState,
   appInfo: AppInfo,
-  timerMappings: List<AccessTimerMapping>,
   onDismissRequest: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
-  val hasDefaultTimer = appInfo.app.timer == AccessTimer.DEFAULT
-  val selectedTimer by remember(appInfo.app.timer) {
-    derivedStateOf { timerMappings.first { it.enum == appInfo.app.timer }.integerValue }.also {
-      Timber.d("Derived new state: ${it.value}")
-    }
+  var _timerLength by remember(appInfo.timer) { mutableFloatStateOf(appInfo.timer.toFloat()) }
+  val timerLengthLabel by remember(_timerLength) {
+    derivedStateOf { _timerLength.roundToInt().toString() + "s" }
   }
 
   MinuteBottomSheet(
-    onDismissRequest = onDismissRequest,
-    sheetState = sheetState
+    onDismissRequest = onDismissRequest, sheetState = sheetState
   ) {
     Column(
       modifier = Modifier
         .fillMaxWidth()
         .navigationBarsPadding()
-        .padding(horizontal = 32.dp),
+        .padding(horizontal = 24.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       Text(
-        text = "Change app timer",
+        text = "Mindful Delay",
         style = MaterialTheme.typography.headlineSmall,
         fontFamily = archivoBlackFamily,
         modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
       )
       Text(
-        text = "The app timer decides how long you need to wait before being able to open the app. ",
+        text = "Set how long you want to wait before being able to open this app. A longer delay helps you pause and break the habit of mindless clicking.",
         style = MaterialTheme.typography.bodyMedium,
         textAlign = TextAlign.Center,
         fontFamily = archivoFamily,
-        modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp)
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp)
       )
-      SegmentedControl(
-        items = timerMappings.map { it.integerValue }.toSortedSet(),
-        selectedItem = selectedTimer,
-        onItemSelection = { selected ->
-          onEvent(
-            HomeEvent.UpdateApp(
-              appInfo.app.copy(timer = timerMappings.first { it.integerValue == selected }.enum)
-            )
-          )
-        }
+      SliderInput(
+        value = _timerLength,
+        valueLabel = timerLengthLabel,
+        valueRange = 0f..16f,
+        steps = 15,
+        roundToInt = true,
+        onValueChangeFinished = {
+          onEvent(HomeEvent.UpdateAppTimer(appInfo.app, _timerLength.roundToInt()))
+        },
+        onValueChange = { _timerLength = it }
       )
       TextButton(
-        enabled = !hasDefaultTimer,
         onClick = {
-          onEvent(HomeEvent.UpdateApp(appInfo.app.copy(timer = AccessTimer.DEFAULT)))
+          onEvent(HomeEvent.ResetAppTimerToDefault(appInfo.app))
         }
       ) {
         val resetText = "Reset to default"

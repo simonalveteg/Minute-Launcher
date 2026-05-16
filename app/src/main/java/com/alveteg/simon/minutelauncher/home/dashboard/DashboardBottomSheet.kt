@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActionScope
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ fun DashboardBottomSheet(
 ) {
   val bottomPadding = 8
   val topPadding = 16
+  val scrollState = rememberScrollState()
   val usageStats = usageStatistics.groupBy { it.usageDate }.mapValues { entry ->
     entry.value.sumOf { it.usageDuration }
   }.map { UsageStatistics("", it.key, it.value) }
@@ -39,6 +42,7 @@ fun DashboardBottomSheet(
       .navigationBarsPadding()
       .padding(horizontal = 16.dp)
       .padding(bottom = bottomPadding.dp, top = topPadding.dp)
+      .verticalScroll(scrollState)
   ) {
     SearchBar(
       searchText = searchText,

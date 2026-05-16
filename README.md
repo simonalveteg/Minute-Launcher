@@ -5,11 +5,11 @@ Minute Launcher is a free and open-source launcher designed to promote mindful p
 I was not satisfied with any of the minimal launchers available on the play store, and set out to create a launcher that does exactly what I need it to do - and nothing else. Usage statistics are prominently displayed on the homescreen to give you conscious awareness of screen time, while the countdown timer encourages more intentional phone usage by preventing you from mindlessly opening apps.
 
 ### Key Features
-* Minimalist and distraction-free home screen.
-* Integrated usage statistics.
-* Intuitive gestures to access notifications, the app darwer, and four custom app shortcuts.
-* Customizable per-app countdown timer to prevent you from mindlessly opening distracting apps.
-* Material You integration.
+* *Minimalist design*: A distraction free homescreen, with quick and easy access to the apps you need the most.
+* *Usage statistics*: Your app usage statistics is integrated into your homescreen, giving you .
+* *Mindful Delay*: Add a customizable delay before apps open, giving you a moment to reconsider, and helping you stay intentional,.
+* *Gesture Shortcuts*: Intuitive gestures to access notifications, the app darwer, and four custom app shortcuts.
+* *Material You integration*: Colors automatically match your wallpaper and the rest of your system.
 
 
 <p align="center">
