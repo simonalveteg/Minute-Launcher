@@ -2,15 +2,14 @@ package com.alveteg.simon.minutelauncher.settings
 
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
@@ -34,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,7 +42,7 @@ import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.settings.components.GestureInput
 import com.alveteg.simon.minutelauncher.settings.components.SegmentedInput
-import com.alveteg.simon.minutelauncher.settings.components.SettingsSection
+import com.alveteg.simon.minutelauncher.settings.components.settingsSection
 import com.alveteg.simon.minutelauncher.settings.components.SliderInput
 import com.alveteg.simon.minutelauncher.theme.AppTheme
 import com.alveteg.simon.minutelauncher.utilities.Gesture
@@ -54,7 +54,6 @@ fun SettingsScreen(
   onNavigate: (UiEvent.Navigate) -> Unit,
   viewModel: SettingsViewModel = hiltViewModel()
 ) {
-
   val appTheme by viewModel.appTheme.collectAsStateWithLifecycle()
   val useDynamicColor by viewModel.useDynamicColor.collectAsStateWithLifecycle()
   val transparencyAmount by viewModel.transparencyAmount.collectAsStateWithLifecycle()
@@ -102,111 +101,120 @@ fun SettingsScreen(
         },
         scrollBehavior = scrollBehavior
       )
-    },
+    }
   ) { padding ->
-    Column(
-      Modifier
+    LazyColumn(
+      modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 16.dp)
-        .padding(padding)
-        .verticalScroll(rememberScrollState()),
-      verticalArrangement = Arrangement.spacedBy(8.dp),
+        .padding(padding),
       horizontalAlignment = Alignment.Start
     ) {
-      SettingsSection(
-        title = "Preferences"
-      ) {
-        SliderInput(
-          label = "Background Transparency",
-          description = "Choose how transparent the color layer above your background picture should be. Default is 50%",
-          value = _transparencyAmount,
-          valueLabel = transparencyAmountLabel,
-          valueRange = 0f..1f,
-          roundToInt = false,
-          onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
-          onValueChange = { _transparencyAmount = it }
-        )
-      }
-      SettingsSection(
-        title = "Theme and Colors"
-      ) {
-        val supportsDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-        SegmentedInput(
-          label = "App Theme",
-          description = "Choose whether the app should be in Light, Dark, or follow System settings.",
-          options = AppTheme.entries,
-          selectedOption = appTheme,
-          onOptionSelect = { viewModel.onThemeChange(it) },
-          labelProvider = { it.label }
-        )
-        if (supportsDynamicColor) {
-          SegmentedInput(
-            label = "Color Palette",
-            description = "Choose whether to use the default theme or colors generated from your wallpaper (Material You).",
-            options = listOf(false, true),
-            selectedOption = useDynamicColor,
-            onOptionSelect = { viewModel.onDynamicColorChange(it) },
-            labelProvider = {
-              if (it) "Dynamic" else "Default"
-            }
+      settingsSection(title = "Preferences") {
+        item {
+          SliderInput(
+            label = "Background Transparency",
+            description = "Choose how transparent the color layer above your background picture should be. Default is 50%",
+            value = _transparencyAmount,
+            valueLabel = transparencyAmountLabel,
+            valueRange = 0f..1f,
+            roundToInt = false,
+            onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
+            onValueChange = { _transparencyAmount = it }
           )
         }
       }
-      SettingsSection(
-        title = "Gestures",
-        description = "Choose which apps to open when activating one of the gestures."
-      ) {
-        GestureInput(
-          gesture = Gesture.TOP_LEFT,
-          app = gestureApps[Gesture.TOP_LEFT],
-          iconResource = R.drawable.gesture_top_left,
-          onEvent = viewModel::onEvent
-        )
-        GestureInput(
-          gesture = Gesture.TOP_RIGHT,
-          app = gestureApps[Gesture.TOP_RIGHT],
-          iconResource = R.drawable.gesture_top_right,
-          onEvent = viewModel::onEvent
-        )
-        GestureInput(
-          gesture = Gesture.BOTTOM_LEFT,
-          app = gestureApps[Gesture.BOTTOM_LEFT],
-          iconResource = R.drawable.gesture_bottom_left,
-          onEvent = viewModel::onEvent
-        )
-        GestureInput(
-          gesture = Gesture.BOTTOM_RIGHT,
-          app = gestureApps[Gesture.BOTTOM_RIGHT],
-          iconResource = R.drawable.gesture_bottom_right,
-          onEvent = viewModel::onEvent
-        )
+
+      settingsSection(title = "Theme and Colors") {
+        item {
+          SegmentedInput(
+            label = "App Theme",
+            description = "Choose whether the app should be in Light, Dark, or follow System settings.",
+            options = AppTheme.entries,
+            selectedOption = appTheme,
+            onOptionSelect = { viewModel.onThemeChange(it) },
+            labelProvider = { it.label }
+          )
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          item {
+            SegmentedInput(
+              label = "Color Palette",
+              description = "Choose whether to use the default theme or colors generated from your wallpaper (Material You).",
+              options = listOf(false, true),
+              selectedOption = useDynamicColor,
+              onOptionSelect = { viewModel.onDynamicColorChange(it) },
+              labelProvider = {
+                if (it) "Dynamic" else "Default"
+              }
+            )
+          }
+        }
       }
-      SettingsSection(
+
+      settingsSection(
+        title = "Gestures",
+        description = "Choose which apps to open when swiping on the home screen."
+      ) {
+        item {
+          GestureInput(
+            gesture = Gesture.TOP_LEFT,
+            app = gestureApps[Gesture.TOP_LEFT],
+            iconResource = R.drawable.gesture_top_left,
+            onEvent = viewModel::onEvent
+          )
+          GestureInput(
+            gesture = Gesture.TOP_RIGHT,
+            app = gestureApps[Gesture.TOP_RIGHT],
+            iconResource = R.drawable.gesture_top_right,
+            onEvent = viewModel::onEvent
+          )
+          GestureInput(
+            gesture = Gesture.BOTTOM_LEFT,
+            app = gestureApps[Gesture.BOTTOM_LEFT],
+            iconResource = R.drawable.gesture_bottom_left,
+            onEvent = viewModel::onEvent
+          )
+          GestureInput(
+            gesture = Gesture.BOTTOM_RIGHT,
+            app = gestureApps[Gesture.BOTTOM_RIGHT],
+            iconResource = R.drawable.gesture_bottom_right,
+            onEvent = viewModel::onEvent
+          )
+        }
+      }
+
+      settingsSection(
         title = "Delayed Gratification Timer",
       ) {
-        SliderInput(
-          label = "Default Timer Length",
-          description = "Choose how many seconds you need to wait before being allowed to open an app. Default is 5 seconds.",
-          value = _timerLength.toFloat(),
-          valueLabel = timerLengthLabel,
-          valueRange = 0f..16f,
-          steps = 15,
-          roundToInt = true,
-          onValueChangeFinished = { viewModel.onTimerLengthChange(_timerLength) },
-          onValueChange = { _timerLength = it.roundToInt() }
-        )
-        appsWithTimers.forEach { item ->
+        item {
+          SliderInput(
+            label = "Default Timer Length",
+            description = "Choose how many seconds you need to wait before being allowed to open an app. Default is 5 seconds.",
+            value = _timerLength.toFloat(),
+            valueLabel = timerLengthLabel,
+            valueRange = 0f..16f,
+            steps = 15,
+            roundToInt = true,
+            onValueChangeFinished = { viewModel.onTimerLengthChange(_timerLength) },
+            onValueChange = { _timerLength = it.roundToInt() }
+          )
+        }
+
+        items(
+          items = appsWithTimers,
+          key = { it.app.packageName }
+        ) { item ->
           Row(
             modifier = Modifier
               .fillMaxWidth()
-              .padding(vertical = 4.dp),
+              .padding(vertical = 4.dp)
+              .animateItem(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
           ) {
             Text(text = item.app.appTitle)
-            Row(
-              verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
               Text(text = "${item.appTimer.timer}s")
               IconButton(
                 onClick = { viewModel.onEvent(HomeEvent.ResetAppTimerToDefault(item.app)) }
