@@ -38,8 +38,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
-import com.alveteg.simon.minutelauncher.data.toAppInfo
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.GestureDirection
@@ -53,7 +51,7 @@ import kotlin.math.abs
 @Composable
 fun FavoriteList(
   screenState: ScreenState,
-  favorites: List<FavoriteAppInfo>,
+  favorites: List<AppInfo>,
   onEvent: (Event) -> Unit,
   screenHeight: Float,
   totalUsage: Long,
@@ -77,94 +75,95 @@ fun FavoriteList(
     animationSpec = if (screenState.isFavorites()) slowFloatSpec else tween(300)
   )
 
-  Column(modifier = Modifier
-    .fillMaxSize()
-    .graphicsLayer {
-      alpha = favoritesAlpha
-    }
-    .offset { IntOffset(x = 0, y = offsetY.value.toInt()) }
-    .pointerInput(Unit) {
-      detectHorizontalDragGestures(
-        onDragCancel = {
-          currentZone = GestureZone.NONE
-          currentDirection = GestureDirection.NONE
-        },
-        onDragEnd = {
-          gesture = when (currentZone) {
-            GestureZone.UPPER -> {
-              when (currentDirection) {
-                GestureDirection.RIGHT -> Gesture.UPPER_RIGHT
-                GestureDirection.LEFT -> Gesture.UPPER_LEFT
-                else -> Gesture.NONE
-              }
-            }
-
-            GestureZone.LOWER -> {
-              when (currentDirection) {
-                GestureDirection.RIGHT -> Gesture.LOWER_RIGHT
-                GestureDirection.LEFT -> Gesture.LOWER_LEFT
-                else -> Gesture.NONE
-              }
-            }
-
-            else -> Gesture.NONE
-          }
-          currentZone = GestureZone.NONE
-          currentDirection = GestureDirection.NONE
-          onEvent(HomeEvent.HandleGesture(gesture))
-        },
-      ) { change, dragAmount ->
-        currentDirection = if (dragAmount > 0) {
-          when (currentDirection) {
-            GestureDirection.NONE -> GestureDirection.RIGHT
-            GestureDirection.LEFT -> GestureDirection.INVALID
-            else -> currentDirection
-          }
-        } else {
-          when (currentDirection) {
-            GestureDirection.NONE -> GestureDirection.LEFT
-            GestureDirection.RIGHT -> GestureDirection.INVALID
-            else -> currentDirection
-          }
-        }
-        Timber.d("Pos: ${change.position.y}, $screenHeight half: ${screenHeight.div(2f)}")
-        currentZone = if (change.position.y < screenHeight.div(2f)) {
-          when (currentZone) {
-            GestureZone.UPPER -> GestureZone.UPPER
-            GestureZone.NONE -> GestureZone.UPPER
-            else -> GestureZone.INVALID
-          }
-        } else {
-          when (currentZone) {
-            GestureZone.LOWER -> GestureZone.LOWER
-            GestureZone.NONE -> GestureZone.LOWER
-            else -> GestureZone.INVALID
-          }
-        }
-        Timber.d("Direction: $gesture")
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .graphicsLayer {
+        alpha = favoritesAlpha
       }
-    }
-    .pointerInput(Unit) {
-      detectVerticalDragGestures(
-        onDragCancel = { onDragEnd() },
-        onDragEnd = {
-          onDragEnd()
-          onEvent(HomeEvent.HandleGesture(gesture))
-        },
-      ) { _, dragAmount ->
-        val originalY = offsetY.value
-        val threshold = 100f
-        val weight = (abs(originalY) - threshold) / threshold
-        val easingFactor = (1 - weight * 0.85f) * 0.10f
-        val easedDragAmount = dragAmount * easingFactor
-        coroutineScope.launch {
-          offsetY.snapTo(originalY + easedDragAmount)
+      .offset { IntOffset(x = 0, y = offsetY.value.toInt()) }
+      .pointerInput(Unit) {
+        detectHorizontalDragGestures(
+          onDragCancel = {
+            currentZone = GestureZone.NONE
+            currentDirection = GestureDirection.NONE
+          },
+          onDragEnd = {
+            gesture = when (currentZone) {
+              GestureZone.UPPER -> {
+                when (currentDirection) {
+                  GestureDirection.RIGHT -> Gesture.TOP_LEFT
+                  GestureDirection.LEFT -> Gesture.TOP_RIGHT
+                  else -> Gesture.NONE
+                }
+              }
+
+              GestureZone.LOWER -> {
+                when (currentDirection) {
+                  GestureDirection.RIGHT -> Gesture.BOTTOM_LEFT
+                  GestureDirection.LEFT -> Gesture.BOTTOM_RIGHT
+                  else -> Gesture.NONE
+                }
+              }
+
+              else -> Gesture.NONE
+            }
+            currentZone = GestureZone.NONE
+            currentDirection = GestureDirection.NONE
+            onEvent(HomeEvent.HandleGesture(gesture))
+          },
+        ) { change, dragAmount ->
+          currentDirection = if (dragAmount > 0) {
+            when (currentDirection) {
+              GestureDirection.NONE -> GestureDirection.RIGHT
+              GestureDirection.LEFT -> GestureDirection.INVALID
+              else -> currentDirection
+            }
+          } else {
+            when (currentDirection) {
+              GestureDirection.NONE -> GestureDirection.LEFT
+              GestureDirection.RIGHT -> GestureDirection.INVALID
+              else -> currentDirection
+            }
+          }
+          Timber.d("Pos: ${change.position.y}, $screenHeight half: ${screenHeight.div(2f)}")
+          currentZone = if (change.position.y < screenHeight.div(2f)) {
+            when (currentZone) {
+              GestureZone.UPPER -> GestureZone.UPPER
+              GestureZone.NONE -> GestureZone.UPPER
+              else -> GestureZone.INVALID
+            }
+          } else {
+            when (currentZone) {
+              GestureZone.LOWER -> GestureZone.LOWER
+              GestureZone.NONE -> GestureZone.LOWER
+              else -> GestureZone.INVALID
+            }
+          }
+          Timber.d("Direction: $gesture")
         }
-        gesture = if (easingFactor < 0.14) {
-          if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
-        } else Gesture.NONE
       }
-    },
+      .pointerInput(Unit) {
+        detectVerticalDragGestures(
+          onDragCancel = { onDragEnd() },
+          onDragEnd = {
+            onDragEnd()
+            onEvent(HomeEvent.HandleGesture(gesture))
+          },
+        ) { _, dragAmount ->
+          val originalY = offsetY.value
+          val threshold = 100f
+          val weight = (abs(originalY) - threshold) / threshold
+          val easingFactor = (1 - weight * 0.85f) * 0.10f
+          val easedDragAmount = dragAmount * easingFactor
+          coroutineScope.launch {
+            offsetY.snapTo(originalY + easedDragAmount)
+          }
+          gesture = if (easingFactor < 0.14) {
+            if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
+          } else Gesture.NONE
+        }
+      },
     verticalArrangement = Arrangement.Bottom,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
@@ -187,8 +186,8 @@ fun FavoriteList(
       userScrollEnabled = false,
       modifier = Modifier.fillMaxWidth()
     ) {
-      items(favorites) { favoriteAppInfo ->
-        FavoriteCard(favoriteAppInfo.toAppInfo()) { onAppClick(favoriteAppInfo.toAppInfo()) }
+      items(favorites) { appInfo ->
+        FavoriteCard(appInfo) { onAppClick(appInfo) }
       }
     }
     val density = LocalDensity.current

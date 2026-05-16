@@ -9,8 +9,8 @@ import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.ApplicationRepository
-import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
+import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.settings.SettingsScreen
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
@@ -35,31 +35,46 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
   private val roomRepository: LauncherRepository,
-  private val applicationRepository: ApplicationRepository
+  private val applicationRepository: ApplicationRepository,
+  private val preferenceRepository: PreferenceRepository,
 ) : ViewModel() {
 
   private val _uiEvent = MutableSharedFlow<UiEvent>()
   val uiEvent = _uiEvent.asSharedFlow().onEach { Timber.d(it.toString()) }
 
+  val transparencyAmount = preferenceRepository.transparencyAmount
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.5f)
+
+  val timerLength = preferenceRepository.timerLength
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
+
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
   val favoriteApps = combine(
-    roomRepository.favoriteApps(), applicationRepository.usageStats
-  ) { favorites, usageStats ->
+    roomRepository.favoriteApps(), applicationRepository.usageStats, roomRepository.timerApps()
+  ) { favorites, usageStats, timerApps ->
     favorites.map { favorite ->
       val usage = usageStats.filter { favorite.app.packageName == it.packageName }
-      FavoriteAppInfo(favorite, usage)
+      val timer = timerApps.find { it.app.packageName == favorite.app.packageName }?.appTimer?.timer
+        ?: timerLength.value
+      AppInfo(favorite.app, true, timer, usage)
     }
   }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
   val installedApps = combine(
-    roomRepository.appList(), roomRepository.favoriteApps(), applicationRepository.usageStats
-  ) { apps, favorites, usageStats ->
+    roomRepository.appList(),
+    roomRepository.timerApps(),
+    roomRepository.favoriteApps(),
+    applicationRepository.usageStats,
+    timerLength
+  ) { apps, timerApps, favorites, usageStats, defaultTimerLength ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
       val usage = usageStats.filter { app.packageName == it.packageName }
-      AppInfo(app, favorite, usage)
+      val timer = timerApps.find { it.app.packageName == app.packageName }?.appTimer?.timer
+        ?: defaultTimerLength
+      AppInfo(app, favorite, timer, usage)
     }
   }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -69,8 +84,6 @@ class HomeViewModel @Inject constructor(
     apps.filterBySearchTerm(searchTerm)
   }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-  val accessTimerMappings = roomRepository.getAccessTimerMappings()
-    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
   private val packageCallback = object : LauncherApps.Callback() {
     override fun onPackageRemoved(packageName: String?, user: UserHandle?) {
@@ -200,8 +213,8 @@ class HomeViewModel @Inject constructor(
       }
 
 
-      is HomeEvent.OpenGestureSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.GESTURE_SETTINGS))
       is HomeEvent.OpenTimerSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.TIMER_SETTINGS))
+      is HomeEvent.OpenSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.HOME))
       is HomeEvent.UpdateFavoriteOrder -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
@@ -210,10 +223,18 @@ class HomeViewModel @Inject constructor(
         }
       }
 
-      is HomeEvent.UpdateApp -> {
+      is HomeEvent.UpdateAppTimer -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            roomRepository.updateApp(event.app)
+            roomRepository.updateAppTimer(event.app, event.timerValue)
+          }
+        }
+      }
+
+      is HomeEvent.ResetAppTimerToDefault -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.removeAppTimer(event.app)
           }
         }
       }

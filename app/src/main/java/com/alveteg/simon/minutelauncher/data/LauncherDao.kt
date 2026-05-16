@@ -23,6 +23,10 @@ interface LauncherDao {
   @Query("SELECT * FROM FavoriteApp ORDER BY `order` ASC")
   fun getFavoriteApps(): Flow<List<FavoriteAppWithApp>>
 
+  @Transaction
+  @Query("SELECT * FROM AppTimer")
+  fun getAppsWithTimer(): Flow<List<TimerAppWithApp>>
+
   @Query("SELECT * FROM App WHERE packageName = :packageName")
   fun getAppById(packageName: String): App?
 
@@ -32,8 +36,22 @@ interface LauncherDao {
   @Delete
   fun removeApp(app: App)
 
-  @Query("UPDATE App SET timer = :timer WHERE packageName = :packageName")
-  fun updateAppTimer(packageName: String, timer: AccessTimer)
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  fun insertAppTimer(timer: AppTimer)
+
+  @Query("UPDATE AppTimer SET timer = :timer WHERE packageName = :packageName")
+  fun updateAppTimerInternal(packageName: String, timer: Int): Int
+
+  @Transaction
+  fun updateAppTimer(packageName: String, timer: Int) {
+    val rowsUpdated = updateAppTimerInternal(packageName, timer)
+    if (rowsUpdated == 0) {
+      insertAppTimer(AppTimer(packageName, timer))
+    }
+  }
+
+  @Query("DELETE FROM AppTimer WHERE packageName = :packageName")
+  fun removeAppTimer(packageName: String)
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertFavoriteApp(app: FavoriteApp)
@@ -63,7 +81,7 @@ interface LauncherDao {
   fun getFavoriteById(packageName: String): FavoriteApp?
 
 
-  @Query("SELECT 'order' FROM FavoriteApp WHERE packageName = :packageName")
+  @Query("SELECT `order` FROM FavoriteApp WHERE packageName = :packageName")
   fun getOrderForFavoriteById(packageName: String): Int
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)

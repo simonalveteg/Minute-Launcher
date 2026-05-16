@@ -14,7 +14,8 @@ sealed class HomeEvent : Event {
   data class ToggleFavorite(val app: App) : HomeEvent()
   data class HandleGesture(val gesture: Gesture) : HomeEvent()
   data class UpdateFavoriteOrder(val favorites: List<FavoriteAppInfo>) : HomeEvent()
-  data class UpdateApp(val app: App) : HomeEvent()
-  data object OpenGestureSettings : HomeEvent()
+  data class UpdateAppTimer(val app: App, val timerValue: Int) : HomeEvent()
+  data class ResetAppTimerToDefault(val app: App) : HomeEvent()
   data object OpenTimerSettings : HomeEvent()
+  data object OpenSettings : HomeEvent()
 }

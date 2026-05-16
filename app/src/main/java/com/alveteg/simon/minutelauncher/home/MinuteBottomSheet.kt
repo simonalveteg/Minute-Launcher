@@ -21,7 +21,6 @@ fun MinuteBottomSheet(
     sheetState = sheetState,
     onDismissRequest = onDismissRequest,
     dragHandle = dragHandle,
-    windowInsets = WindowInsets(bottom = 0.dp)
   ) {
     content()
   }

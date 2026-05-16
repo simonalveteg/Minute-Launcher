@@ -47,7 +47,6 @@ fun HomeScreen(
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState()
   val installedApps by viewModel.installedApps.collectAsState()
-  val timerMappings by viewModel.accessTimerMappings.collectAsState()
   val totalUsage by remember {
     derivedStateOf {
       installedApps.sumOf {
@@ -63,12 +62,20 @@ fun HomeScreen(
   val currentAppModal by remember {
     derivedStateOf { apps.firstOrNull { it.app.packageName == currentAppPackage } }
   }
+  val backgroundTransparency by viewModel.transparencyAmount.collectAsState()
+  val backgroundAlpha by derivedStateOf { (1f - backgroundTransparency) }
+  val altBackgroundAlpha by derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
+
+  LaunchedEffect(altBackgroundAlpha) {
+    Timber.d("Background transparency: $backgroundTransparency")
+    Timber.d("Alternative background transparency: $altBackgroundAlpha")
+  }
 
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {
-      ScreenState.FAVORITES -> MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-      ScreenState.DASHBOARD -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-      ScreenState.APPS -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+      ScreenState.FAVORITES -> MaterialTheme.colorScheme.surface.copy(alpha = backgroundAlpha)
+      ScreenState.DASHBOARD -> MaterialTheme.colorScheme.surface.copy(alpha = altBackgroundAlpha)
+      ScreenState.APPS -> MaterialTheme.colorScheme.surface.copy(alpha = altBackgroundAlpha)
     },
     label = ""
   )
@@ -95,7 +102,6 @@ fun HomeScreen(
 
   AppModalBottomSheet(
     appInfo = currentAppModal,
-    timerMappings = timerMappings,
     onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent
   )

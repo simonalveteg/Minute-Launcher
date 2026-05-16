@@ -9,10 +9,4 @@ class Converters {
 
   @TypeConverter
   fun fromGestureDirection(value: Gesture) = value.name
-
-  @TypeConverter
-  fun toAccessTimer(value: String) = AccessTimer.valueOf(value)
-
-  @TypeConverter
-  fun fromAccessTimer(value: AccessTimer) = value.name
 }

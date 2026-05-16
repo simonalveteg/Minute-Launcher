@@ -7,7 +7,6 @@ import javax.inject.Inject
 
 class LauncherRepository @Inject constructor(
   private val launcherDao: LauncherDao,
-  private val accessTimerMappingDao: AccessTimerMappingDao
 ) {
 
   fun appList() = launcherDao.getAllApps()
@@ -16,10 +15,12 @@ class LauncherRepository @Inject constructor(
       .map { it.associate { gApp -> gApp.swipeApp.swipeDirection to gApp.app } }
 
   fun favoriteApps() = launcherDao.getFavoriteApps()
+  fun timerApps() = launcherDao.getAppsWithTimer()
   fun insertApp(app: App) = launcherDao.insertApp(app)
-  fun updateApp(app: App) {
-    launcherDao.updateAppTimer(app.packageName, app.timer)
+  fun updateAppTimer(app: App, timerValue: Int) {
+    launcherDao.updateAppTimer(app.packageName, timerValue)
   }
+  fun removeAppTimer(app: App) = launcherDao.removeAppTimer(app.packageName)
 
   fun removeApp(app: App) = launcherDao.removeApp(app)
 
@@ -44,7 +45,4 @@ class LauncherRepository @Inject constructor(
     }
   }
 
-  fun getAccessTimerMappings() = accessTimerMappingDao.getAllMappings()
-  fun setAccessTimerMapping(accessTimerMapping: AccessTimerMapping) =
-    accessTimerMappingDao.insertMapping(accessTimerMapping)
 }

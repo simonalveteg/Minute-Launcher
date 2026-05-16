@@ -35,9 +35,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.data.AccessTimer
-import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
@@ -49,7 +46,6 @@ import timber.log.Timber
 @Composable
 fun AppModal(
   appInfo: AppInfo,
-  timerMapping: List<AccessTimerMapping>,
   onEvent: (Event) -> Unit,
   onConfirmation: () -> Unit,
   onCancel: () -> Unit,
@@ -59,14 +55,13 @@ fun AppModal(
   var timer by remember { mutableIntStateOf(0) }
   val usage by remember { mutableStateOf(appInfo.usage) }
   var confirmationText by remember { mutableStateOf("") }
-  val animationPeriod = when (appInfo.app.timer) {
-    AccessTimer.SHORT -> 700
-    AccessTimer.MEDIUM -> 500
-    AccessTimer.LONG -> 250
-    AccessTimer.ETERNITY -> 150
+  val animationPeriod = when (appInfo.timer) {
+    in 12..16 -> 150
+    in 8..11 -> 250
+    in 4..7 -> 500
+    in 0..3 -> 700
     else -> Int.MAX_VALUE
   }
-  val timerValue = timerMapping.first { it.enum == appInfo.app.timer }.integerValue
   val infiniteTransition = rememberInfiniteTransition(label = "Put the phone down button")
   val scale by infiniteTransition.animateFloat(
     initialValue = 1f,
@@ -79,8 +74,8 @@ fun AppModal(
   )
 
   LaunchedEffect(appInfo) {
-    Timber.d("New timer: ${appInfo.app.timer}")
-    timer = timerValue
+    Timber.d("New timer: ${appInfo.timer}")
+    timer = appInfo.timer
   }
 
   LaunchedEffect(key1 = timer) {

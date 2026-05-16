@@ -4,7 +4,6 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -20,10 +19,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.MinuteAccessibilityService
-import com.alveteg.simon.minutelauncher.data.AccessTimerMapping
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.isAccessibilityServiceEnabled
 import kotlinx.coroutines.launch
 
@@ -31,7 +29,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppModalBottomSheet(
   appInfo: AppInfo?,
-  timerMappings: List<AccessTimerMapping>,
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
@@ -41,20 +38,17 @@ fun AppModalBottomSheet(
 
   if (visible) {
     val mContext = LocalContext.current
-    appInfo!!
     val sheetState = rememberModalBottomSheetState()
     val timerSheetState = rememberModalBottomSheetState()
     ModalBottomSheet(
       onDismissRequest = onDismiss,
       sheetState = sheetState,
       dragHandle = {},
-      windowInsets = WindowInsets(bottom = 0.dp)
     ) {
       Spacer(modifier = Modifier.height(4.dp))
       BackHandler(true) { onDismiss() }
       AppModal(
         appInfo = appInfo,
-        timerMapping = timerMappings,
         onEvent = onEvent,
         onConfirmation = {
           onEvent(HomeEvent.LaunchActivity(appInfo))
@@ -84,7 +78,6 @@ fun AppModalBottomSheet(
     if (timerVisible) {
       TimerBottomSheet(
         appInfo = appInfo,
-        timerMappings = timerMappings,
         sheetState = timerSheetState,
         onDismissRequest = {
           timerVisible = false
