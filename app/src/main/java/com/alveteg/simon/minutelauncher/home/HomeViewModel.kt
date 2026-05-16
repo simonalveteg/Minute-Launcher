@@ -48,6 +48,9 @@ class HomeViewModel @Inject constructor(
   val timerLength = preferenceRepository.timerLength
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
 
+  val showPermissionPrompts = preferenceRepository.showPermissionPrompts
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
@@ -274,6 +277,14 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
             roomRepository.updateApp(event.app.copy(displayTitle = null))
+          }
+        }
+      }
+
+      is HomeEvent.HidePermissionPrompts -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            preferenceRepository.hidePermissionPrompts()
           }
         }
       }

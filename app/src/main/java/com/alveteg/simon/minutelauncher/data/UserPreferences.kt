@@ -26,6 +26,7 @@ class PreferenceRepository @Inject constructor(
     val USE_DYNAMIC_COLOR = booleanPreferencesKey("use_dynamic_color")
     val TRANSPARENCY_AMOUNT = floatPreferencesKey("transparency_amount")
     val TIMER_LENGTH = intPreferencesKey("timer_length")
+    val SHOW_PERMISSION_PROMPTS_ON_HOMESCREEN = booleanPreferencesKey("show_permission_prompts")
   }
 
   val appTheme: Flow<AppTheme> = context.dataStore.data
@@ -43,6 +44,9 @@ class PreferenceRepository @Inject constructor(
   val timerLength: Flow<Int> = context.dataStore.data
     .map { it[PreferencesKeys.TIMER_LENGTH] ?: 5 }
 
+  val showPermissionPrompts: Flow<Boolean> = context.dataStore.data
+    .map { it[PreferencesKeys.SHOW_PERMISSION_PROMPTS_ON_HOMESCREEN] ?: true }
+
   suspend fun updateAppTheme(theme: AppTheme) {
     context.dataStore.edit { it[PreferencesKeys.APP_THEME] = theme.name }
   }
@@ -57,5 +61,9 @@ class PreferenceRepository @Inject constructor(
 
   suspend fun updateTimerLength(value: Int) {
     context.dataStore.edit { it[PreferencesKeys.TIMER_LENGTH] = value.coerceIn(0, 30) }
+  }
+
+  suspend fun hidePermissionPrompts() {
+    context.dataStore.edit { it[PreferencesKeys.SHOW_PERMISSION_PROMPTS_ON_HOMESCREEN] = false }
   }
 }

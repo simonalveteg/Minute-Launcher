@@ -56,6 +56,7 @@ fun HomeScreen(
     }
   }
   val favorites by viewModel.favoriteApps.collectAsState()
+  val showPermissionPrompts by viewModel.showPermissionPrompts.collectAsState()
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
@@ -132,6 +133,7 @@ fun HomeScreen(
           screenHeight = screenHeight,
           totalUsage = totalUsage,
           offsetY = offsetY,
+          showPermissionPrompts = showPermissionPrompts,
           onAppClick = appListSelectionAction
         )
 

@@ -66,6 +66,7 @@ fun FavoriteList(
   screenHeight: Float,
   totalUsage: Long,
   offsetY: Animatable<Float, AnimationVector1D>,
+  showPermissionPrompts: Boolean,
   onAppClick: (AppInfo) -> Unit
 ) {
   val screenHeight by rememberUpdatedState(screenHeight)
@@ -211,6 +212,9 @@ fun FavoriteList(
     ) {
       item {
         PermissionCheckers(
+          enabled = showPermissionPrompts,
+          showDismissButton = true,
+          onDismiss = { onEvent(HomeEvent.HidePermissionPrompts)},
           modifier = Modifier.fillMaxWidth(0.8f),
           buttonColors = ButtonDefaults.outlinedButtonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
