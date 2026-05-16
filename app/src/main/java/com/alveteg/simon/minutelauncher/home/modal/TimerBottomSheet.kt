@@ -53,25 +53,23 @@ fun TimerBottomSheet(
       modifier = Modifier
         .fillMaxWidth()
         .navigationBarsPadding()
-        .padding(horizontal = 32.dp),
+        .padding(horizontal = 24.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       Text(
-        text = "Change app timer",
+        text = "Mindful Delay",
         style = MaterialTheme.typography.headlineSmall,
         fontFamily = archivoBlackFamily,
         modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
       )
       Text(
-        text = "The app timer decides how long you need to wait before being able to open the app. ",
+        text = "Set how long you want to wait before being able to open this app. A longer delay helps you pause and break the habit of mindless clicking.",
         style = MaterialTheme.typography.bodyMedium,
         textAlign = TextAlign.Center,
         fontFamily = archivoFamily,
-        modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp)
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp)
       )
       SliderInput(
-        label = "Default Timer Length",
-        description = "Choose how many seconds you need to wait before being allowed to open an app. Default is 5 seconds.",
         value = _timerLength,
         valueLabel = timerLengthLabel,
         valueRange = 0f..16f,

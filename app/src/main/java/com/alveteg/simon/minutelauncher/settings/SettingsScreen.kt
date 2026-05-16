@@ -191,11 +191,12 @@ fun SettingsScreen(
       }
 
       settingsSection(
-        title = "Delayed Gratification Timer",
+        title = "Mindful Delay",
+        description = "Add a short pause before apps open to help you stay intentional. This delay gives you a moment to decide if you really want to spend time on the app."
       ) {
         item {
           SliderInput(
-            label = "Default Timer Length",
+            label = "Default Delay Length",
             description = "Choose how many seconds you need to wait before being allowed to open an app. Default is 5 seconds.",
             value = _timerLength.toFloat(),
             valueLabel = timerLengthLabel,

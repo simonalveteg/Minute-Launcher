@@ -12,18 +12,20 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun GenericInput(
-  label: String,
-  description: String,
+  label: String? = null,
+  description: String? = null,
   modifier: Modifier = Modifier,
   content: (@Composable () -> Unit)? = null
 ) {
   Column(modifier) {
-    Text(text = label)
-    Text(
-      text = description,
-      style = MaterialTheme.typography.labelSmall,
-      color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-    )
+    if (label != null) Text(text = label)
+    if (description != null) {
+      Text(
+        text = description,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+      )
+    }
     Column(
       modifier = Modifier.padding(horizontal = 2.dp)
     ) {

@@ -18,8 +18,8 @@ import kotlin.math.roundToInt
 
 @Composable
 fun SliderInput(
-  label: String,
-  description: String,
+  label: String? = null,
+  description: String? = null,
   onValueChange: (Float) -> Unit,
   onValueChangeFinished: (() -> Unit)? = null,
   value: Float,
