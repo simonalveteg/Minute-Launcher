@@ -2,14 +2,15 @@ package com.alveteg.simon.minutelauncher.settings
 
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
@@ -17,10 +18,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,20 +35,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.home.HomeEvent
+import com.alveteg.simon.minutelauncher.settings.components.GenericInput
 import com.alveteg.simon.minutelauncher.settings.components.GestureInput
 import com.alveteg.simon.minutelauncher.settings.components.SegmentedInput
-import com.alveteg.simon.minutelauncher.settings.components.settingsSection
 import com.alveteg.simon.minutelauncher.settings.components.SliderInput
+import com.alveteg.simon.minutelauncher.settings.components.settingsSection
 import com.alveteg.simon.minutelauncher.theme.AppTheme
 import com.alveteg.simon.minutelauncher.utilities.Gesture
+import kotlinx.coroutines.flow.map
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +64,8 @@ fun SettingsScreen(
   val transparencyAmount by viewModel.transparencyAmount.collectAsStateWithLifecycle()
   val timerLength by viewModel.timerLength.collectAsStateWithLifecycle()
   val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
-  val appsWithTimers by viewModel.appsWithTimers.collectAsState(initial = emptyList())
+  val appsWithTimers by viewModel.appsWithTimers.map { it.sortedBy { it.app.appTitle.lowercase() } }
+    .collectAsState(initial = emptyList())
 
   var _transparencyAmount by remember(transparencyAmount) { mutableFloatStateOf(transparencyAmount) }
   val transparencyAmountLabel by remember(_transparencyAmount) {
@@ -201,29 +207,67 @@ fun SettingsScreen(
           )
         }
 
+        item {
+          GenericInput(
+            label = "Apps with custom timers set",
+            description = "View and reset the timers for apps that have one set."
+          )
+        }
         items(
           items = appsWithTimers,
           key = { it.app.packageName }
         ) { item ->
-          Row(
+          val index = appsWithTimers.indexOf(item)
+          val isFirst = index == 0
+          val isLast = index == appsWithTimers.lastIndex
+
+          val shape = when {
+            isFirst && isLast -> MaterialTheme.shapes.medium
+            isFirst -> MaterialTheme.shapes.medium.copy(
+              bottomStart = CornerSize(0.dp),
+              bottomEnd = CornerSize(0.dp)
+            )
+
+            isLast -> MaterialTheme.shapes.medium.copy(
+              topStart = CornerSize(0.dp),
+              topEnd = CornerSize(0.dp)
+            )
+
+            else -> RectangleShape
+          }
+
+          Surface(
             modifier = Modifier
-              .fillMaxWidth()
-              .padding(vertical = 4.dp)
               .animateItem(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            shape = shape,
+            color = MaterialTheme.colorScheme.surfaceVariant
           ) {
-            Text(text = item.app.appTitle)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Text(text = "${item.appTimer.timer}s")
-              IconButton(
-                onClick = { viewModel.onEvent(HomeEvent.ResetAppTimerToDefault(item.app)) }
-              ) {
-                Icon(
-                  imageVector = Icons.AutoMirrored.Filled.Undo,
-                  contentDescription = "Reset Timer",
-                  modifier = Modifier.padding(start = 8.dp)
+            Row(
+              modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 4.dp)
+                .height(IntrinsicSize.Min),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Text(text = item.app.appTitle)
+              Row(
+                modifier = Modifier,
+                verticalAlignment = Alignment.CenterVertically
+              )
+              {
+                Text(text = "${item.appTimer.timer}s")
+                VerticalDivider(
+                  modifier = Modifier.padding(start = 16.dp, end = 8.dp)
                 )
+                IconButton(
+                  onClick = { viewModel.onEvent(HomeEvent.ResetAppTimerToDefault(item.app)) }
+                ) {
+                  Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Undo,
+                    contentDescription = "Reset Timer",
+                  )
+                }
               }
             }
           }

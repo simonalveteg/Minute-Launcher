@@ -1,6 +1,7 @@
 package com.alveteg.simon.minutelauncher.settings.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -14,7 +15,7 @@ fun GenericInput(
   label: String,
   description: String,
   modifier: Modifier = Modifier,
-  content: @Composable () -> Unit
+  content: (@Composable () -> Unit)? = null
 ) {
   Column(modifier) {
     Text(text = label)
@@ -26,7 +27,11 @@ fun GenericInput(
     Column(
       modifier = Modifier.padding(horizontal = 2.dp)
     ) {
-      content()
+      if (content != null) {
+        content()
+      } else {
+        Spacer(Modifier.height(16.dp))
+      }
     }
   }
 }
