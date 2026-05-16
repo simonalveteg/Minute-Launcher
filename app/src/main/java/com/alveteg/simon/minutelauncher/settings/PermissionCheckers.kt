@@ -122,7 +122,7 @@ fun PermissionCheckers(
           }
         )
       }
-      if (showDismissButton) {
+      if (showDismissButton && !(isAdminActive && hasUsageAccess && isDefaultLauncher)) {
         Button(
           colors = buttonColors,
           onClick = onDismiss
