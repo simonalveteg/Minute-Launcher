@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,6 +54,7 @@ import com.alveteg.simon.minutelauncher.utilities.GestureZone
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableColumn
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import timber.log.Timber
@@ -86,13 +89,15 @@ fun FavoriteList(
     animationSpec = if (screenState.isFavorites()) slowFloatSpec else tween(300)
   )
 
+  val hapticFeedback = LocalHapticFeedback.current
+
+
   Column(
     modifier = Modifier
-      .fillMaxSize()
-      .graphicsLayer {
-        alpha = favoritesAlpha
-      }
+      .fillMaxWidth()
+      .fillMaxHeight()
       .offset { IntOffset(x = 0, y = offsetY.value.toInt()) }
+      .graphicsLayer(alpha = favoritesAlpha)
       .pointerInput(Unit) {
         detectHorizontalDragGestures(
           onDragCancel = {
@@ -175,9 +180,18 @@ fun FavoriteList(
           } else Gesture.NONE
         }
       },
+    horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Bottom,
-    horizontalAlignment = Alignment.CenterHorizontally
   ) {
+    PermissionCheckers(
+      enabled = showPermissionPrompts,
+      showDismissButton = true,
+      onDismiss = { onEvent(HomeEvent.HidePermissionPrompts) },
+      modifier = Modifier.fillMaxWidth(0.8f),
+      buttonColors = ButtonDefaults.outlinedButtonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant
+      )
+    )
     Text(
       text = totalUsage.toTimeUsed(),
       color = LocalContentColor.current,
@@ -189,43 +203,23 @@ fun FavoriteList(
         )
       )
     )
-
-    val listUpdatedChannel = remember { Channel<Unit>() }
-    val hapticFeedback = LocalHapticFeedback.current
-    val listState = rememberLazyListState()
-    val reorderableLazyListState = rememberReorderableLazyListState(listState) { from, to ->
-      Timber.d("Reorder favorite ${from.key} to ${to.key}")
-      onEvent(HomeEvent.UpdateFavoriteOrder(from.index, to.index))
-      listUpdatedChannel.receive()
-      hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-    }
-
-    LaunchedEffect(favorites) {
-      listUpdatedChannel.trySend(Unit)
-    }
-
-    LazyColumn(
-      state = listState,
+    ReorderableColumn(
+      list = favorites,
+      onSettle = { from, to ->
+        Timber.d("Reorder favorite $from to $to")
+        val itemsAbove = 0
+        val fromIndex = from - itemsAbove
+        val toIndex = to - itemsAbove
+        onEvent(HomeEvent.UpdateFavoriteOrder(fromIndex, toIndex))
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+      },
       horizontalAlignment = Alignment.CenterHorizontally,
-      userScrollEnabled = false,
-      modifier = Modifier.fillMaxWidth()
-    ) {
-      item {
-        PermissionCheckers(
-          enabled = showPermissionPrompts,
-          showDismissButton = true,
-          onDismiss = { onEvent(HomeEvent.HidePermissionPrompts)},
-          modifier = Modifier.fillMaxWidth(0.8f),
-          buttonColors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-          )
-        )
-      }
-      items(favorites, key = { it.app.packageName }) { appInfo ->
-        ReorderableItem(
-          state = reorderableLazyListState,
-          key = appInfo.app.packageName
-        ) { isDragging ->
+      verticalArrangement = Arrangement.Bottom,
+      modifier = Modifier
+        .fillMaxWidth()
+    ) { _, appInfo, _ ->
+      key(appInfo.app.packageName) {
+        ReorderableItem {
           FavoriteCard(
             appInfo = appInfo,
             modifier = Modifier.longPressDraggableHandle(
