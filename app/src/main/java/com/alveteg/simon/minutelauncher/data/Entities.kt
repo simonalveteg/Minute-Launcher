@@ -16,12 +16,13 @@ import java.time.LocalDate
 data class App(
   @PrimaryKey val packageName: String,
   val appTitle: String,
+  val displayTitle: String? = null
 )
 
 fun LauncherActivityInfo.toApp() =
   App(
-    this.applicationInfo.packageName,
-    this.label.toString()
+    packageName = this.applicationInfo.packageName,
+    appTitle = this.label.toString()
   )
 
 /**

@@ -16,6 +16,8 @@ sealed class HomeEvent : Event {
   data class UpdateFavoriteOrder(val favorites: List<FavoriteAppInfo>) : HomeEvent()
   data class UpdateAppTimer(val app: App, val timerValue: Int) : HomeEvent()
   data class ResetAppTimerToDefault(val app: App) : HomeEvent()
+  data class SetDisplayName(val app: App, val displayName: String) : HomeEvent()
+  data class ResetDisplayName(val app: App) : HomeEvent()
   data object OpenTimerSettings : HomeEvent()
   data object OpenSettings : HomeEvent()
 }

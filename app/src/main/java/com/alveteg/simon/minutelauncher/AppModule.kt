@@ -29,7 +29,8 @@ object AppModule {
     )
       .addMigrations(
         LauncherDatabase.MIGRATION_1_2,
-        LauncherDatabase.MIGRATION_2_3
+        LauncherDatabase.MIGRATION_2_3,
+        LauncherDatabase.MIGRATION_3_4
       )
       .build()
   }

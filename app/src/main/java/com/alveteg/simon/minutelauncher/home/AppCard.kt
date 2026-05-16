@@ -35,7 +35,7 @@ fun AppCard(
   appInfo: AppInfo,
   onClick: () -> Unit
 ) {
-  val appTitle = appInfo.app.appTitle
+  val appTitle = appInfo.app.displayTitle ?: appInfo.app.appTitle
   val appUsage by remember(appInfo) {
     derivedStateOf {
       appInfo.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration

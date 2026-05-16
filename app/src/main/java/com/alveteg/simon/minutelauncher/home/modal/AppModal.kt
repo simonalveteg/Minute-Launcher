@@ -49,7 +49,8 @@ fun AppModal(
   onEvent: (Event) -> Unit,
   onConfirmation: () -> Unit,
   onCancel: () -> Unit,
-  onChangeTimer: () -> Unit
+  onChangeTimer: () -> Unit,
+  onEditName: () -> Unit
 ) {
   var enabled by remember { mutableStateOf(false) }
   var timer by remember { mutableIntStateOf(0) }
@@ -98,7 +99,7 @@ fun AppModal(
       .animateContentSize()
   ) {
     Text(
-      text = appInfo.app.appTitle,
+      text = appInfo.app.displayTitle ?: appInfo.app.appTitle,
       style = MaterialTheme.typography.headlineSmall,
       fontFamily = archivoBlackFamily,
       modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
@@ -107,6 +108,7 @@ fun AppModal(
       appInfo = appInfo,
       enabled = enabled,
       onChangeTimer = onChangeTimer,
+      onEditName = onEditName,
       onEvent = onEvent
     )
     UsageBarGraph(usage)

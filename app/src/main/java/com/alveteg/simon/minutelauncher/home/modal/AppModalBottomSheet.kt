@@ -35,11 +35,13 @@ fun AppModalBottomSheet(
   val coroutineScope = rememberCoroutineScope()
   val visible = appInfo != null
   var timerVisible by remember { mutableStateOf(false) }
+  var nameChangeVisible by remember { mutableStateOf(false) }
 
   if (visible) {
     val mContext = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
     val timerSheetState = rememberModalBottomSheetState()
+    val nameChangeSheetState = rememberModalBottomSheetState()
     ModalBottomSheet(
       onDismissRequest = onDismiss,
       sheetState = sheetState,
@@ -71,6 +73,13 @@ fun AppModalBottomSheet(
             sheetState.hide()
             timerSheetState.expand()
           }
+        },
+        onEditName = {
+          nameChangeVisible = true
+          coroutineScope.launch {
+            sheetState.hide()
+            nameChangeSheetState.expand()
+          }
         }
       )
       Spacer(modifier = Modifier.height(4.dp))
@@ -82,9 +91,21 @@ fun AppModalBottomSheet(
         onDismissRequest = {
           timerVisible = false
           coroutineScope.launch {
-            timerSheetState.hide()
             sheetState.show()
           }
+        },
+        onEvent = onEvent
+      )
+    }
+    if (nameChangeVisible) {
+      NameBottomSheet(
+        appInfo = appInfo,
+        sheetState = nameChangeSheetState,
+        onDismissRequest = {
+          coroutineScope.launch {
+            sheetState.show()
+          }
+          nameChangeVisible = false
         },
         onEvent = onEvent
       )

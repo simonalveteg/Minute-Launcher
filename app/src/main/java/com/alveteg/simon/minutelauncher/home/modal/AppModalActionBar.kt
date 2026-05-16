@@ -28,6 +28,7 @@ fun AppModalActionBar(
   appInfo: AppInfo,
   enabled: Boolean,
   onChangeTimer: () -> Unit,
+  onEditName: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
   val mContext = LocalContext.current
@@ -85,7 +86,7 @@ fun AppModalActionBar(
     ActionBarAction(
       imageVector = Icons.Outlined.Edit,
       description = "Edit app name",
-      action = { /*TODO*/ },
+      action = { onEditName() },
     ),
   )
 

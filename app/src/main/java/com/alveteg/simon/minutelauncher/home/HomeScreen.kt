@@ -34,6 +34,7 @@ import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.lang.reflect.Method
 import java.time.LocalDate

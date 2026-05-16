@@ -238,6 +238,22 @@ class HomeViewModel @Inject constructor(
           }
         }
       }
+
+      is HomeEvent.SetDisplayName -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.updateApp(event.app.copy(displayTitle = event.displayName))
+          }
+        }
+      }
+
+      is HomeEvent.ResetDisplayName -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            roomRepository.updateApp(event.app.copy(displayTitle = null))
+          }
+        }
+      }
     }
   }
 

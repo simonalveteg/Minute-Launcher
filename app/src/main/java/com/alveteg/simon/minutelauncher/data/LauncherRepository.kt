@@ -17,6 +17,7 @@ class LauncherRepository @Inject constructor(
   fun favoriteApps() = launcherDao.getFavoriteApps()
   fun timerApps() = launcherDao.getAppsWithTimer()
   fun insertApp(app: App) = launcherDao.insertApp(app)
+  fun updateApp(app: App) = launcherDao.updateApp(app)
   fun updateAppTimer(app: App, timerValue: Int) {
     launcherDao.updateAppTimer(app.packageName, timerValue)
   }

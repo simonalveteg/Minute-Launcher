@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 
@@ -32,6 +33,9 @@ interface LauncherDao {
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   fun insertApp(app: App)
+
+  @Update
+  fun updateApp(app: App)
 
   @Delete
   fun removeApp(app: App)
