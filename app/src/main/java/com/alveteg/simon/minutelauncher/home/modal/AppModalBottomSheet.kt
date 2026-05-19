@@ -39,7 +39,7 @@ fun AppModalBottomSheet(
 
   if (visible) {
     val mContext = LocalContext.current
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val timerSheetState = rememberModalBottomSheetState()
     val nameChangeSheetState = rememberModalBottomSheetState()
     ModalBottomSheet(
