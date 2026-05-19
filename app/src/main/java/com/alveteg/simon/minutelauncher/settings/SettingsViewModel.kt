@@ -41,13 +41,13 @@ class SettingsViewModel @Inject constructor(
   val appsWithTimers = roomRepository.timerApps()
 
   val appTheme = preferenceRepository.appTheme
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppTheme.SYSTEM)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.APP_THEME)
   val useDynamicColor = preferenceRepository.useDynamicColor
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.USE_DYNAMIC_COLOR)
   val transparencyAmount = preferenceRepository.transparencyAmount
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.5f)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT)
   val timerLength = preferenceRepository.timerLength
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TIMER_LENGTH)
 
   val installedApps = combine(
     roomRepository.appList(),
