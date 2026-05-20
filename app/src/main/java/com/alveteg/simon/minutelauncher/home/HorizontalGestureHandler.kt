@@ -41,7 +41,7 @@ fun Modifier.horizontalGestureHandler(
     var hapticTriggered = false
     var maxDistance = 0f
 
-    val baseThreshold = screenWidthPx.div(3)
+    val baseThreshold = screenWidthPx.div(4)
     val hysteresisBuffer = baseThreshold.div(4)
 
 
