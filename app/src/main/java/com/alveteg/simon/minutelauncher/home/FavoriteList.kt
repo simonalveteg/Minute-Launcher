@@ -106,54 +106,16 @@ fun FavoriteList(
         .fillMaxHeight()
         .offset { IntOffset(x = 0, y = offsetY.value.toInt()) }
         .graphicsLayer(alpha = favoritesAlpha)
-        .pointerInput(Unit) {
-          var currentZone = GestureZone.NONE
-          var startPosition = Offset.Zero
-          val triggerThreshold = screenWidth.div(3)
-
-          detectHorizontalDragGestures(
-            onDragStart = { offset ->
-              startPosition = offset
-              dragProgress = 0f
-              currentZone =
-                if (offset.y < screenHeight / 2f) GestureZone.UPPER else GestureZone.LOWER
-            },
-            onDragCancel = {
-              dragProgress = 0f
-              isTriggered = false
-              activeGesture = Gesture.NONE
-            },
-            onDragEnd = {
-              if (dragProgress >= 1f) {
-                onEvent(HomeEvent.HandleGesture(activeGesture))
-              }
-
-              dragProgress = 0f
-              isTriggered = false
-            },
-            onHorizontalDrag = { change, _ ->
-
-              val direction =
-                if (change.position.x > startPosition.x) GestureDirection.RIGHT else GestureDirection.LEFT
-              activeGesture = when (currentZone) {
-                GestureZone.UPPER -> if (direction == GestureDirection.RIGHT) Gesture.TOP_LEFT else Gesture.TOP_RIGHT
-                GestureZone.LOWER -> if (direction == GestureDirection.RIGHT) Gesture.BOTTOM_LEFT else Gesture.BOTTOM_RIGHT
-                else -> Gesture.NONE
-              }
-
-              val distance = abs(change.position.x - startPosition.x)
-              dragProgress = (distance / triggerThreshold).coerceIn(0f, 1f)
-
-              val reachedThreshold = dragProgress >= 1f
-
-              if (reachedThreshold && !isTriggered) {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-              }
-
-              isTriggered = reachedThreshold
-            }
-          )
-        }
+        .horizontalGestureHandler(
+          screenWidth = screenWidth,
+          screenHeight = screenHeight,
+          activeGesture = activeGesture,
+          dragProgress = dragProgress,
+          onDragProgressChange = { dragProgress = it },
+          onActiveGestureChange = { activeGesture = it },
+          onIsTriggeredChange = { isTriggered = it },
+          onEvent = { onEvent(it) }
+        )
         .pointerInput(Unit) {
           detectVerticalDragGestures(
             onDragCancel = { onDragEnd() },
