@@ -28,7 +28,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.utilities.Gesture
-import timber.log.Timber
 import kotlin.math.abs
 
 @Composable
@@ -64,8 +63,8 @@ fun BoxScope.GestureIndicator(
   val animatedProgress = (baseWidth / 24.dp).coerceIn(0f, 1f)
 
   val indicatorColor by animateColorAsState(
-    targetValue = if (isTriggered) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-    else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f),
+    targetValue = if (isTriggered) MaterialTheme.colorScheme.primary.copy(alpha = 1f)
+    else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 1f),
     label = "IndicatorColor"
   )
 
