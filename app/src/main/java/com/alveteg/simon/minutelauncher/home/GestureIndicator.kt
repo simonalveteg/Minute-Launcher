@@ -3,7 +3,9 @@ package com.alveteg.simon.minutelauncher.home
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -14,6 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,20 +41,22 @@ fun BoxScope.GestureIndicator(
     animationSpec = spring(dampingRatio = 0.45f, stiffness = 500f),
     label = "PopAnimation"
   )
-
   val baseWidth by animateDpAsState(
     targetValue = 24.dp * dragProgress,
+    animationSpec = if (dragProgress == 0f) tween(durationMillis = 300) else snap(),
     label = "BaseWidth"
   )
   val finalWidth = baseWidth * popScaleHorizontal
 
+  val animatedProgress = (baseWidth / 24.dp).coerceIn(0f, 1f)
 
   val indicatorColor by animateColorAsState(
     targetValue = if (isTriggered) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-    else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f), label = "IndicatorColor"
+    else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f),
+    label = "IndicatorColor"
   )
 
-  if (finalWidth > 0.5.dp) {
+  if (finalWidth > 0.1.dp && activeGesture != Gesture.NONE) {
 
     val alignment = when (activeGesture) {
       Gesture.TOP_LEFT -> Alignment.TopStart
@@ -73,12 +80,10 @@ fun BoxScope.GestureIndicator(
     ) {
       Box(
         modifier = Modifier
-          .fillMaxHeight(dragProgress.times(0.3f).plus(0.3f * popScaleVertical))
+          .fillMaxHeight(animatedProgress * 0.3f + (0.3f * popScaleVertical))
           .fillMaxWidth()
           .align(Alignment.Center)
-          .background(
-            color = indicatorColor, shape = shape
-          )
+          .background(color = indicatorColor, shape = shape)
       )
     }
   }
