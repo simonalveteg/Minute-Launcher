@@ -1,15 +1,10 @@
 package com.alveteg.simon.minutelauncher.home
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -30,32 +23,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.settings.PermissionCheckers
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
-import com.alveteg.simon.minutelauncher.utilities.GestureDirection
-import com.alveteg.simon.minutelauncher.utilities.GestureZone
 import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
-import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableColumn
 import timber.log.Timber
-import kotlin.math.abs
 
 @Suppress("NAME_SHADOWING")
 @Composable
@@ -71,13 +56,6 @@ fun FavoriteList(
   onAppClick: (AppInfo) -> Unit
 ) {
   val screenHeight by rememberUpdatedState(screenHeight)
-  var gesture by remember { mutableStateOf(Gesture.NONE) }
-  val coroutineScope = rememberCoroutineScope()
-  val onDragEnd = {
-    coroutineScope.launch {
-      offsetY.animateTo(0f, spring(0.44f, 300f))
-    }
-  }
   var activeGesture by remember { mutableStateOf(Gesture.NONE) }
   val slowFloatSpec: AnimationSpec<Float> = tween(durationMillis = 1000)
   val favoritesAlpha by animateFloatAsState(
@@ -116,27 +94,11 @@ fun FavoriteList(
           onIsTriggeredChange = { isTriggered = it },
           onEvent = { onEvent(it) }
         )
-        .pointerInput(Unit) {
-          detectVerticalDragGestures(
-            onDragCancel = { onDragEnd() },
-            onDragEnd = {
-              onDragEnd()
-              onEvent(HomeEvent.HandleGesture(gesture))
-            },
-          ) { _, dragAmount ->
-            val originalY = offsetY.value
-            val threshold = 100f
-            val weight = (abs(originalY) - threshold) / threshold
-            val easingFactor = (1 - weight * 0.85f) * 0.10f
-            val easedDragAmount = dragAmount * easingFactor
-            coroutineScope.launch {
-              offsetY.snapTo(originalY + easedDragAmount)
-            }
-            gesture = if (easingFactor < 0.14) {
-              if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
-            } else Gesture.NONE
-          }
-        },
+        .verticalGestureHandler(
+          offsetY = offsetY,
+          onActiveGestureChange = { activeGesture = it },
+          onEvent = { onEvent(it) }
+        ),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Bottom,
     ) {
