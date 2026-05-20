@@ -1,7 +1,6 @@
 package com.alveteg.simon.minutelauncher.home
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -55,23 +54,18 @@ fun FavoriteList(
   showPermissionPrompts: Boolean,
   onAppClick: (AppInfo) -> Unit
 ) {
+  val hapticFeedback = LocalHapticFeedback.current
+
   val screenHeight by rememberUpdatedState(screenHeight)
+  var dragProgress by remember { mutableStateOf(0f) }
   var activeGesture by remember { mutableStateOf(Gesture.NONE) }
-  val slowFloatSpec: AnimationSpec<Float> = tween(durationMillis = 1000)
+  var isTriggered by remember { mutableStateOf(false) }
+
   val favoritesAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
     label = "",
-    animationSpec = if (screenState.isFavorites()) slowFloatSpec else tween(300)
+    animationSpec = if (screenState.isFavorites()) tween(durationMillis = 1000) else tween(300)
   )
-
-  val hapticFeedback = LocalHapticFeedback.current
-
-
-  var dragProgress by remember { mutableStateOf(0f) }
-  var isTriggered by remember { mutableStateOf(false) }
-
-
-
   Box {
     GestureIndicator(
       dragProgress = dragProgress,
