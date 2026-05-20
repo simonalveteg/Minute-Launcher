@@ -90,58 +90,16 @@ fun FavoriteList(
 
 
   var dragProgress by remember { mutableStateOf(0f) }
-
   var isTriggered by remember { mutableStateOf(false) }
-  val popScale by animateFloatAsState(
-    targetValue = if (isTriggered) 1.5f else 0.8f,
-    animationSpec = spring(dampingRatio = 0.45f, stiffness = 500f),
-    label = "PopAnimation"
-  )
 
-  val indicatorColor by animateColorAsState(
-    targetValue = if (isTriggered) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), label = "IndicatorColor"
-  )
 
 
   Box {
-    val animatedWidth by animateFloatAsState(
-      targetValue = dragProgress, label = "GestureIndicator"
+    GestureIndicator(
+      dragProgress = dragProgress,
+      isTriggered = isTriggered,
+      activeGesture = activeGesture
     )
-
-    if (animatedWidth > 0.05f) {
-
-      val alignment = when (activeGesture) {
-        Gesture.TOP_LEFT -> Alignment.TopStart
-        Gesture.TOP_RIGHT -> Alignment.TopEnd
-        Gesture.BOTTOM_LEFT -> Alignment.BottomStart
-        Gesture.BOTTOM_RIGHT -> Alignment.BottomEnd
-        else -> Alignment.Center
-      }
-
-      val shape = if (activeGesture.isLeft()) {
-        RoundedCornerShape(topEndPercent = 50, bottomEndPercent = 50)
-      } else {
-        RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50)
-      }
-
-      Box(
-        modifier = Modifier
-          .fillMaxHeight(0.5f)
-          .width((24.dp * animatedWidth) * popScale)
-          .align(alignment)
-      ) {
-        Box(
-          modifier = Modifier
-            .fillMaxHeight(0.6f)
-            .fillMaxWidth()
-            .align(Alignment.Center)
-            .background(
-              color = indicatorColor, shape = shape
-            )
-        )
-      }
-    }
     Column(
       modifier = Modifier
         .fillMaxWidth()
