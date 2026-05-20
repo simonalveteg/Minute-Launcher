@@ -2,7 +2,6 @@ package com.alveteg.simon.minutelauncher.home
 
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -13,7 +12,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.GestureDirection
 import com.alveteg.simon.minutelauncher.utilities.GestureZone
-import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -22,7 +20,6 @@ fun Modifier.horizontalGestureHandler(
   screenWidth: Float,
   screenHeight: Float,
   activeGesture: Gesture,
-  dragProgress: Float,
   onDragProgressChange: (Float) -> Unit,
   onActiveGestureChange: (Gesture) -> Unit,
   onGestureTriggered: (Boolean) -> Unit,
@@ -30,7 +27,6 @@ fun Modifier.horizontalGestureHandler(
 ): Modifier {
   val hapticFeedback = LocalHapticFeedback.current
   val currentActiveGesture by rememberUpdatedState(activeGesture)
-  val currentDragProgress by rememberUpdatedState(dragProgress)
 
   return this.pointerInput(Unit) {
     var currentZone = GestureZone.NONE

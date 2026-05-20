@@ -1,6 +1,7 @@
 package com.alveteg.simon.minutelauncher.home
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -25,21 +26,30 @@ fun BoxScope.GestureIndicator(
   activeGesture: Gesture,
   modifier: Modifier = Modifier
 ) {
-  val animatedWidth by animateFloatAsState(
-    targetValue = dragProgress, label = "GestureIndicator"
-  )
-  val popScale by animateFloatAsState(
+  val popScaleHorizontal by animateFloatAsState(
     targetValue = if (isTriggered) 1.5f else 0.8f,
     animationSpec = spring(dampingRatio = 0.45f, stiffness = 500f),
     label = "PopAnimation"
   )
-
-  val indicatorColor by animateColorAsState(
-    targetValue = if (isTriggered) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), label = "IndicatorColor"
+  val popScaleVertical by animateFloatAsState(
+    targetValue = if (isTriggered) 1.2f else 0.8f,
+    animationSpec = spring(dampingRatio = 0.45f, stiffness = 500f),
+    label = "PopAnimation"
   )
 
-  if (animatedWidth > 0.05f) {
+  val baseWidth by animateDpAsState(
+    targetValue = 24.dp * dragProgress,
+    label = "BaseWidth"
+  )
+  val finalWidth = baseWidth * popScaleHorizontal
+
+
+  val indicatorColor by animateColorAsState(
+    targetValue = if (isTriggered) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+    else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f), label = "IndicatorColor"
+  )
+
+  if (finalWidth > 0.5.dp) {
 
     val alignment = when (activeGesture) {
       Gesture.TOP_LEFT -> Alignment.TopStart
@@ -58,12 +68,12 @@ fun BoxScope.GestureIndicator(
     Box(
       modifier = modifier
         .fillMaxHeight(0.5f)
-        .width((24.dp * animatedWidth) * popScale)
+        .width(finalWidth)
         .align(alignment)
     ) {
       Box(
         modifier = Modifier
-          .fillMaxHeight(0.6f)
+          .fillMaxHeight(dragProgress.times(0.3f).plus(0.3f * popScaleVertical))
           .fillMaxWidth()
           .align(Alignment.Center)
           .background(

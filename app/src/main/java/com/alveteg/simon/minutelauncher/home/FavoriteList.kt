@@ -41,7 +41,6 @@ import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import sh.calvin.reorderable.ReorderableColumn
 import timber.log.Timber
 
-@Suppress("NAME_SHADOWING")
 @Composable
 fun FavoriteList(
   screenState: ScreenState,
@@ -66,6 +65,7 @@ fun FavoriteList(
     label = "",
     animationSpec = if (screenState.isFavorites()) tween(durationMillis = 1000) else tween(300)
   )
+
   Box {
     GestureIndicator(
       dragProgress = dragProgress,
@@ -82,7 +82,6 @@ fun FavoriteList(
           screenWidth = screenWidth,
           screenHeight = screenHeight,
           activeGesture = activeGesture,
-          dragProgress = dragProgress,
           onDragProgressChange = { dragProgress = it },
           onActiveGestureChange = { activeGesture = it },
           onGestureTriggered = { isTriggered = it },
