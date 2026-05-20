@@ -43,13 +43,13 @@ class HomeViewModel @Inject constructor(
   val uiEvent = _uiEvent.asSharedFlow().onEach { Timber.d(it.toString()) }
 
   val transparencyAmount = preferenceRepository.transparencyAmount
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.5f)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT)
 
   val timerLength = preferenceRepository.timerLength
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TIMER_LENGTH)
 
   val showPermissionPrompts = preferenceRepository.showPermissionPrompts
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_PERMISSION_PROMPTS)
 
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
