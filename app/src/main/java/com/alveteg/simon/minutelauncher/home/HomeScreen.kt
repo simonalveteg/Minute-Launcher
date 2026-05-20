@@ -110,11 +110,13 @@ fun HomeScreen(
 
   CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
     var screenHeight by remember { mutableFloatStateOf(0f) }
+    var screenWidth by remember { mutableFloatStateOf(0f) }
     Surface(color = backgroundColor,
       modifier = Modifier
         .fillMaxSize()
         .onGloballyPositioned {
           screenHeight = it.size.height.toFloat()
+          screenWidth = it.size.width.toFloat()
         }) {
       Box(
         modifier = Modifier.fillMaxSize()
@@ -131,6 +133,7 @@ fun HomeScreen(
           favorites = favorites,
           onEvent = viewModel::onEvent,
           screenHeight = screenHeight,
+          screenWidth = screenWidth,
           totalUsage = totalUsage,
           offsetY = offsetY,
           showPermissionPrompts = showPermissionPrompts,
