@@ -85,7 +85,7 @@ fun FavoriteList(
           dragProgress = dragProgress,
           onDragProgressChange = { dragProgress = it },
           onActiveGestureChange = { activeGesture = it },
-          onIsTriggeredChange = { isTriggered = it },
+          onGestureTriggered = { isTriggered = it },
           onEvent = { onEvent(it) }
         )
         .verticalGestureHandler(

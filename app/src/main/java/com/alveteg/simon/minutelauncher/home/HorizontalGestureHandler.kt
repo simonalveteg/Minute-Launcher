@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.times
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -22,7 +23,7 @@ fun Modifier.horizontalGestureHandler(
   dragProgress: Float,
   onDragProgressChange: (Float) -> Unit,
   onActiveGestureChange: (Gesture) -> Unit,
-  onIsTriggeredChange: (Boolean) -> Unit,
+  onGestureTriggered: (Boolean) -> Unit,
   onEvent: (HomeEvent) -> Unit
 ): Modifier {
   val hapticFeedback = LocalHapticFeedback.current
@@ -34,27 +35,26 @@ fun Modifier.horizontalGestureHandler(
     var startPosition = Offset.Zero
     var hapticTriggered = false
     val triggerThreshold = screenWidth.div(3)
+    var maxDistance = 0f
+
+    val resetDrag = {
+      onDragProgressChange(0f)
+      maxDistance = 0f
+      onGestureTriggered(false)
+      hapticTriggered = false
+    }
 
     detectHorizontalDragGestures(
       onDragStart = { offset ->
         startPosition = offset
-        hapticTriggered = false
-        onDragProgressChange(0f)
         currentZone = if (offset.y < screenHeight / 2f) GestureZone.UPPER else GestureZone.LOWER
-      },
-      onDragCancel = {
-        onDragProgressChange(0f)
-        onIsTriggeredChange(false)
-        onActiveGestureChange(Gesture.NONE)
-        hapticTriggered = false
+        resetDrag()
       },
       onDragEnd = {
         if (currentDragProgress >= 1f) {
           onEvent(HomeEvent.HandleGesture(currentActiveGesture))
         }
-        onDragProgressChange(0f)
-        onIsTriggeredChange(false)
-        hapticTriggered = false
+        resetDrag()
       },
       onHorizontalDrag = { change, _ ->
         val direction =
@@ -80,7 +80,7 @@ fun Modifier.horizontalGestureHandler(
           hapticTriggered = false
         }
 
-        onIsTriggeredChange(reachedThreshold)
+        onGestureTriggered(reachedThreshold)
       }
     )
   }
