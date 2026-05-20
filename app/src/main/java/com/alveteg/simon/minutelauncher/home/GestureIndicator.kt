@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.utilities.Gesture
+import timber.log.Timber
 import kotlin.math.abs
 
 @Composable
@@ -69,21 +70,23 @@ fun BoxScope.GestureIndicator(
   )
 
   var startY by remember { mutableStateOf(0f) }
-  LaunchedEffect(dragProgress == 0f) {
-    if (dragProgress == 0f) startY = 0f
-  }
   if (startY == 0f && verticalPosition != 0f) {
     startY = verticalPosition
   }
 
   if (finalWidth > 0.1.dp && activeGesture != Gesture.NONE) {
+    val screenHeightPx = with(density) { screenHeightDp.toPx() }
+
+    val containerOffsetPx = if (activeGesture.isBottom()) screenHeightPx / 2f else 0f
+    val containerHeightPx = screenHeightPx / 2f
+
+    val startWithinContainer = (startY - containerOffsetPx) - (containerHeightPx / 2f)
+
     val rawOffset = (verticalPosition - startY)
+    val maxOffsetPx = screenHeightPx / 2f * 0.2f
 
-    val maxOffsetPx = with(density) {
-      (screenHeightDp.toPx() / 2f) * 0.2f
-    }
-
-    val normalizedOffset = if (maxOffsetPx != 0f) rawOffset / maxOffsetPx else 0f
+    val totalOffsetPx = startWithinContainer + rawOffset
+    val normalizedOffset = if (maxOffsetPx != 0f) totalOffsetPx / maxOffsetPx else 0f
     val resistedOffsetPx = (normalizedOffset / (1f + abs(normalizedOffset))) * maxOffsetPx
     val verticalOffsetDp = with(density) { resistedOffsetPx.toDp() }
 
