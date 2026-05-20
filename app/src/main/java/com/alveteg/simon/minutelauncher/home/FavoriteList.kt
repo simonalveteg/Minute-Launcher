@@ -29,9 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.settings.PermissionCheckers
@@ -46,8 +48,6 @@ fun FavoriteList(
   screenState: ScreenState,
   favorites: List<AppInfo>,
   onEvent: (Event) -> Unit,
-  screenHeight: Float,
-  screenWidth: Float,
   totalUsage: Long,
   offsetY: Animatable<Float, AnimationVector1D>,
   showPermissionPrompts: Boolean,
@@ -55,10 +55,10 @@ fun FavoriteList(
 ) {
   val hapticFeedback = LocalHapticFeedback.current
 
-  val screenHeight by rememberUpdatedState(screenHeight)
   var dragProgress by remember { mutableStateOf(0f) }
   var activeGesture by remember { mutableStateOf(Gesture.NONE) }
   var isTriggered by remember { mutableStateOf(false) }
+  var verticalTouchPosition by remember { mutableStateOf(0f) }
 
   val favoritesAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
@@ -66,11 +66,16 @@ fun FavoriteList(
     animationSpec = if (screenState.isFavorites()) tween(durationMillis = 1000) else tween(300)
   )
 
+  val configuration = LocalConfiguration.current
+  val bottomHeight = configuration.screenHeightDp.div(6)
+  val bottomHeightDp = bottomHeight.dp
+
   Box {
     GestureIndicator(
       dragProgress = dragProgress,
       isTriggered = isTriggered,
-      activeGesture = activeGesture
+      activeGesture = activeGesture,
+      verticalPosition = verticalTouchPosition
     )
     Column(
       modifier = Modifier
@@ -79,12 +84,11 @@ fun FavoriteList(
         .offset { IntOffset(x = 0, y = offsetY.value.toInt()) }
         .graphicsLayer(alpha = favoritesAlpha)
         .horizontalGestureHandler(
-          screenWidth = screenWidth,
-          screenHeight = screenHeight,
           activeGesture = activeGesture,
           onDragProgressChange = { dragProgress = it },
           onActiveGestureChange = { activeGesture = it },
           onGestureTriggered = { isTriggered = it },
+          onVerticalPositionChange = { verticalTouchPosition = it },
           onEvent = { onEvent(it) }
         )
         .verticalGestureHandler(
@@ -143,9 +147,6 @@ fun FavoriteList(
           }
         }
       }
-      val density = LocalDensity.current
-      val bottomHeight = screenHeight.div(6)
-      val bottomHeightDp = with(density) { bottomHeight.toDp() }
       Spacer(modifier = Modifier.height(bottomHeightDp))
     }
   }
