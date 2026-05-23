@@ -47,13 +47,13 @@ fun Modifier.horizontalGestureHandler(
     val resetDrag = {
       onDragProgressChange(0f)
       onGestureTriggered(false)
-      onActiveGestureChange(Gesture.NONE)
       hapticTriggered = false
       maxDistance = 0f
     }
 
     detectHorizontalDragGestures(
       onDragStart = { offset ->
+        onActiveGestureChange(Gesture.NONE)
         startPosition = offset
         currentZone = if (offset.y < screenHeightPx / 2f) GestureZone.UPPER else GestureZone.LOWER
         onVerticalPositionChange(offset.y)
