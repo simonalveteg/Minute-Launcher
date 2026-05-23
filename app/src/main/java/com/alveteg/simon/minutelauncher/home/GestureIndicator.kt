@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,7 +26,9 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import kotlin.math.abs
 
@@ -139,7 +142,14 @@ fun BoxScope.GestureIndicator(
               drawPath(path, color = indicatorColor)
             }
           }
-      )
+      ) {
+        Icon(
+          painter = painterResource(activeGesture.getIcon()),
+          contentDescription = null,
+          tint = MaterialTheme.colorScheme.onSurface,
+          modifier = Modifier.align(Alignment.Center)
+        )
+      }
     }
   }
 }

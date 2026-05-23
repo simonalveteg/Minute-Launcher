@@ -123,74 +123,18 @@ fun SettingsScreen(
       }
 
       settingsSection(title = "Preferences") {
-        item {
-          SliderInput(
-            label = "Background Transparency",
-            description = "Choose how transparent the color layer above your background picture should be. Default is 50%",
-            value = _transparencyAmount,
-            valueLabel = transparencyAmountLabel,
-            valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,
-            roundToInt = false,
-            onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
-            onValueChange = { _transparencyAmount = it }
-          )
-        }
-      }
 
-      settingsSection(title = "Theme and Colors") {
-        item {
-          SegmentedInput(
-            label = "App Theme",
-            description = "Choose whether the app should be in Light, Dark, or follow System settings.",
-            options = AppTheme.entries,
-            selectedOption = appTheme,
-            onOptionSelect = { viewModel.onThemeChange(it) },
-            labelProvider = { it.label }
-          )
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-          item {
-            SegmentedInput(
-              label = "Color Palette",
-              description = "Choose whether to use the default theme or colors generated from your wallpaper (Material You).",
-              options = listOf(false, true),
-              selectedOption = useDynamicColor,
-              onOptionSelect = { viewModel.onDynamicColorChange(it) },
-              labelProvider = {
-                if (it) "Dynamic" else "Default"
-              }
-            )
-          }
-        }
       }
 
       settingsSection(
         title = "Gestures",
         description = "Choose which apps to open when swiping on the home screen."
       ) {
-        item {
+        items(Gesture.getHorizontalGestures()) {
           GestureInput(
-            gesture = Gesture.TOP_LEFT,
-            app = gestureApps[Gesture.TOP_LEFT],
-            iconResource = R.drawable.gesture_top_left,
-            onEvent = viewModel::onEvent
-          )
-          GestureInput(
-            gesture = Gesture.TOP_RIGHT,
-            app = gestureApps[Gesture.TOP_RIGHT],
-            iconResource = R.drawable.gesture_top_right,
-            onEvent = viewModel::onEvent
-          )
-          GestureInput(
-            gesture = Gesture.BOTTOM_LEFT,
-            app = gestureApps[Gesture.BOTTOM_LEFT],
-            iconResource = R.drawable.gesture_bottom_left,
-            onEvent = viewModel::onEvent
-          )
-          GestureInput(
-            gesture = Gesture.BOTTOM_RIGHT,
-            app = gestureApps[Gesture.BOTTOM_RIGHT],
-            iconResource = R.drawable.gesture_bottom_right,
+            gesture = it,
+            app = gestureApps[it],
+            iconResource = it.getIcon(),
             onEvent = viewModel::onEvent
           )
         }
@@ -278,6 +222,45 @@ fun SettingsScreen(
                   )
                 }
               }
+            }
+          }
+        }
+
+        settingsSection(title = "Appearance") {
+          item {
+            SliderInput(
+              label = "Background Transparency",
+              description = "Choose how transparent the color layer above your background picture should be. Default is 50%",
+              value = _transparencyAmount,
+              valueLabel = transparencyAmountLabel,
+              valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,
+              roundToInt = false,
+              onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
+              onValueChange = { _transparencyAmount = it }
+            )
+          }
+          item {
+            SegmentedInput(
+              label = "App Theme",
+              description = "Choose whether the app should be in Light, Dark, or follow System settings.",
+              options = AppTheme.entries,
+              selectedOption = appTheme,
+              onOptionSelect = { viewModel.onThemeChange(it) },
+              labelProvider = { it.label }
+            )
+          }
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            item {
+              SegmentedInput(
+                label = "Color Palette",
+                description = "Choose whether to use the default theme or colors generated from your wallpaper (Material You).",
+                options = listOf(false, true),
+                selectedOption = useDynamicColor,
+                onOptionSelect = { viewModel.onDynamicColorChange(it) },
+                labelProvider = {
+                  if (it) "Dynamic" else "Default"
+                }
+              )
             }
           }
         }
