@@ -17,14 +17,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -34,7 +32,6 @@ import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
-import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.lang.reflect.Method
 import java.time.LocalDate
@@ -56,7 +53,11 @@ fun HomeScreen(
     }
   }
   val favorites by viewModel.favoriteApps.collectAsState()
-  val showPermissionPrompts by viewModel.showPermissionPrompts.collectAsState()
+
+  // Collect the three separate permission prompt states
+  val showDefaultHomePrompt by viewModel.showDefaultHomePrompt.collectAsState()
+  val showAdminAccessPrompt by viewModel.showAdminAccessPrompt.collectAsState()
+  val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsState()
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
@@ -128,7 +129,9 @@ fun HomeScreen(
           onEvent = viewModel::onEvent,
           totalUsage = totalUsage,
           offsetY = offsetY,
-          showPermissionPrompts = showPermissionPrompts,
+          showDefaultHomePrompt = showDefaultHomePrompt,
+          showAdminAccessPrompt = showAdminAccessPrompt,
+          showUsageAccessPrompt = showUsageAccessPrompt,
           onAppClick = appListSelectionAction
         )
 

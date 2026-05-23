@@ -25,7 +25,9 @@ class PreferenceRepository @Inject constructor(
     const val USE_DYNAMIC_COLOR = true
     const val TRANSPARENCY_AMOUNT = 0.5f
     const val TIMER_LENGTH = 5
-    const val SHOW_PERMISSION_PROMPTS = true
+    const val SHOW_DEFAULT_HOME_PROMPT = true
+    const val SHOW_ADMIN_ACCESS_PROMPT = true
+    const val SHOW_USAGE_ACCESS_PROMPT = true
     const val SKIP_APP_MODAL = false
 
     // Bounds for validation
@@ -40,7 +42,9 @@ class PreferenceRepository @Inject constructor(
     val USE_DYNAMIC_COLOR = booleanPreferencesKey("use_dynamic_color")
     val TRANSPARENCY_AMOUNT = floatPreferencesKey("transparency_amount")
     val TIMER_LENGTH = intPreferencesKey("timer_length")
-    val SHOW_PERMISSION_PROMPTS_ON_HOMESCREEN = booleanPreferencesKey("show_permission_prompts")
+    val SHOW_DEFAULT_HOME_PROMPT = booleanPreferencesKey("show_default_home_prompt")
+    val SHOW_ADMIN_ACCESS_PROMPT = booleanPreferencesKey("show_admin_access_prompt")
+    val SHOW_USAGE_ACCESS_PROMPT = booleanPreferencesKey("show_usage_access_prompt")
     val SKIP_APP_MODAL = booleanPreferencesKey("skip_app_modal")
   }
 
@@ -59,8 +63,14 @@ class PreferenceRepository @Inject constructor(
   val timerLength: Flow<Int> = context.dataStore.data
     .map { it[PreferencesKeys.TIMER_LENGTH] ?: Defaults.TIMER_LENGTH }
 
-  val showPermissionPrompts: Flow<Boolean> = context.dataStore.data
-    .map { it[PreferencesKeys.SHOW_PERMISSION_PROMPTS_ON_HOMESCREEN] ?: Defaults.SHOW_PERMISSION_PROMPTS }
+  val showDefaultHomePrompt: Flow<Boolean> = context.dataStore.data
+    .map { it[PreferencesKeys.SHOW_DEFAULT_HOME_PROMPT] ?: Defaults.SHOW_DEFAULT_HOME_PROMPT }
+
+  val showAdminAccessPrompt: Flow<Boolean> = context.dataStore.data
+    .map { it[PreferencesKeys.SHOW_ADMIN_ACCESS_PROMPT] ?: Defaults.SHOW_ADMIN_ACCESS_PROMPT }
+
+  val showUsageAccessPrompt: Flow<Boolean> = context.dataStore.data
+    .map { it[PreferencesKeys.SHOW_USAGE_ACCESS_PROMPT] ?: Defaults.SHOW_USAGE_ACCESS_PROMPT }
 
   val skipAppModal: Flow<Boolean> = context.dataStore.data
     .map { it[PreferencesKeys.SKIP_APP_MODAL] ?: Defaults.SKIP_APP_MODAL }
@@ -89,7 +99,15 @@ class PreferenceRepository @Inject constructor(
     context.dataStore.edit { it[PreferencesKeys.SKIP_APP_MODAL] = skip }
   }
 
-  suspend fun hidePermissionPrompts() {
-    context.dataStore.edit { it[PreferencesKeys.SHOW_PERMISSION_PROMPTS_ON_HOMESCREEN] = false }
+  suspend fun setShowDefaultHomePrompt(show: Boolean) {
+    context.dataStore.edit { it[PreferencesKeys.SHOW_DEFAULT_HOME_PROMPT] = show }
+  }
+
+  suspend fun setShowAdminAccessPrompt(show: Boolean) {
+    context.dataStore.edit { it[PreferencesKeys.SHOW_ADMIN_ACCESS_PROMPT] = show }
+  }
+
+  suspend fun setShowUsageAccessPrompt(show: Boolean) {
+    context.dataStore.edit { it[PreferencesKeys.SHOW_USAGE_ACCESS_PROMPT] = show }
   }
 }

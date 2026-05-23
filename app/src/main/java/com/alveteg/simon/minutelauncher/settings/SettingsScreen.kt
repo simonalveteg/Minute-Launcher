@@ -119,7 +119,10 @@ fun SettingsScreen(
     ) {
 
       item {
-        PermissionCheckers()
+        PermissionCheckers(
+          onEvent = viewModel::onEvent,
+          showDismissButton = false,
+        )
       }
 
       settingsSection(title = "Preferences") {
@@ -228,18 +231,6 @@ fun SettingsScreen(
 
         settingsSection(title = "Appearance") {
           item {
-            SliderInput(
-              label = "Background Transparency",
-              description = "Choose how transparent the color layer above your background picture should be. Default is 50%",
-              value = _transparencyAmount,
-              valueLabel = transparencyAmountLabel,
-              valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,
-              roundToInt = false,
-              onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
-              onValueChange = { _transparencyAmount = it }
-            )
-          }
-          item {
             SegmentedInput(
               label = "App Theme",
               description = "Choose whether the app should be in Light, Dark, or follow System settings.",
@@ -262,6 +253,18 @@ fun SettingsScreen(
                 }
               )
             }
+          }
+          item {
+            SliderInput(
+              label = "Background Transparency",
+              description = "Choose how transparent the color layer above your background picture should be. Default is 50%",
+              value = _transparencyAmount,
+              valueLabel = transparencyAmountLabel,
+              valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,
+              roundToInt = false,
+              onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
+              onValueChange = { _transparencyAmount = it }
+            )
           }
         }
       }

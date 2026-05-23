@@ -20,5 +20,7 @@ sealed class HomeEvent : Event {
   data class ResetDisplayName(val app: App) : HomeEvent()
   data object OpenTimerSettings : HomeEvent()
   data object OpenSettings : HomeEvent()
-  data object HidePermissionPrompts : HomeEvent()
+  data object HideDefaultAppPrompt : HomeEvent()
+  data object HideUsageAccessPrompt : HomeEvent()
+  data object HideAdminAccessPrompt : HomeEvent()
 }

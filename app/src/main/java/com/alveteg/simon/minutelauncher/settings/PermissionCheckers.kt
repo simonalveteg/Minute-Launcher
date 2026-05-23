@@ -11,10 +11,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +25,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.home.isDefaultLauncher
 import com.alveteg.simon.minutelauncher.home.isDeviceAdmin
 import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
@@ -35,101 +35,95 @@ import com.alveteg.simon.minutelauncher.settings.components.ButtonInput
 @Composable
 fun PermissionCheckers(
   modifier: Modifier = Modifier,
-  enabled: Boolean = true,
-  showDismissButton: Boolean = false,
+  showDefaultHomePrompt: Boolean = true,
+  showAdminAccessPrompt: Boolean = true,
+  showUsageAccessPrompt: Boolean = true,
+  showDismissButton: Boolean = true,
   buttonColors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
-  onDismiss: () -> Unit = {}
+  onEvent: (HomeEvent) -> Unit,
 ) {
 
-  if (enabled) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val roleRequestLauncher = rememberLauncherForActivityResult(
-      ActivityResultContracts.StartActivityForResult()
-    ) { }
-    var isAdminActive by remember { mutableStateOf(isDeviceAdmin(context)) }
-    var hasUsageAccess by remember { mutableStateOf(isUsageAccessGranted(context)) }
-    var isDefaultLauncher by remember { mutableStateOf(isDefaultLauncher(context)) }
+  val context = LocalContext.current
+  val lifecycleOwner = LocalLifecycleOwner.current
+  val roleRequestLauncher = rememberLauncherForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { }
+  var isAdminActive by remember { mutableStateOf(isDeviceAdmin(context)) }
+  var hasUsageAccess by remember { mutableStateOf(isUsageAccessGranted(context)) }
+  var isDefaultLauncher by remember { mutableStateOf(isDefaultLauncher(context)) }
 
-    LaunchedEffect(lifecycleOwner.lifecycle) {
-      lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-        isDefaultLauncher = isDefaultLauncher(context)
-        isAdminActive = isDeviceAdmin(context)
-        hasUsageAccess = isUsageAccessGranted(context)
-      }
+  LaunchedEffect(lifecycleOwner.lifecycle) {
+    lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+      isDefaultLauncher = isDefaultLauncher(context)
+      isAdminActive = isDeviceAdmin(context)
+      hasUsageAccess = isUsageAccessGranted(context)
     }
+  }
 
-    Column(
-      modifier = modifier.fillMaxWidth(),
-      horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-      if (!isDefaultLauncher) {
-        ButtonInput(
-          label = "Set as Default Launcher",
-          colors = buttonColors,
-          onClick = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-              val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
+  Column(
+    modifier = modifier.fillMaxWidth(),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    if (!isDefaultLauncher && showDefaultHomePrompt) {
+      ButtonInput(
+        label = "Set as Default Launcher",
+        colors = buttonColors,
+        onClick = {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
 
-              if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME) &&
-                !roleManager.isRoleHeld(RoleManager.ROLE_HOME)
-              ) {
-                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
-                roleRequestLauncher.launch(intent)
-              } else {
-                // Already default, or role not available - open settings as fallback
-                val intent = Intent(Settings.ACTION_HOME_SETTINGS)
-                context.startActivity(intent)
-              }
+            if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME) &&
+              !roleManager.isRoleHeld(RoleManager.ROLE_HOME)
+            ) {
+              val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
+              roleRequestLauncher.launch(intent)
             } else {
-              // Fallback for older Android versions
+              // Already default, or role not available - open settings as fallback
               val intent = Intent(Settings.ACTION_HOME_SETTINGS)
               context.startActivity(intent)
             }
-          }
-        )
-      }
-      if (!isAdminActive) {
-        ButtonInput(
-          label = "Grant Admin Access",
-          description = "Admin access is needed to be able to lock the screen with a button press.",
-          colors = buttonColors,
-          onClick = {
-            val componentName =
-              ComponentName(
-                context,
-                "com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver"
-              )
-            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-              putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
-              putExtra(
-                DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                "Minute Launcher requests admin access in order to give you the ability to lock the screen from the launcher with the press of a button."
-              )
-            }
+          } else {
+            // Fallback for older Android versions
+            val intent = Intent(Settings.ACTION_HOME_SETTINGS)
             context.startActivity(intent)
           }
-        )
-      }
-      if (!hasUsageAccess) {
-        ButtonInput(
-          label = "Grant Usage Access",
-          description = "Usage access is needed to display usage statistics.",
-          colors = buttonColors,
-          onClick = {
-            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-            context.startActivity(intent)
+        },
+        showDismiss = showDismissButton,
+        onDismiss = { onEvent(HomeEvent.HideDefaultAppPrompt) }
+      )
+    }
+    if (!isAdminActive && showAdminAccessPrompt) {
+      ButtonInput(
+        label = "Grant Admin Access",
+        description = "Admin access is needed to be able to lock the screen with a button press.",
+        colors = buttonColors,
+        onClick = {
+          val componentName = ComponentName(context, MinuteDeviceAdminReceiver::class.java)
+          val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+            putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
+            putExtra(
+              DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+              "Minute Launcher requests admin access in order to give you the ability to lock the screen from the launcher with the press of a button."
+            )
           }
-        )
-      }
-      if (showDismissButton && !(isAdminActive && hasUsageAccess && isDefaultLauncher)) {
-        Button(
-          colors = buttonColors,
-          onClick = onDismiss
-        ) {
-          Text(text = "Dismiss")
-        }
-      }
+          context.startActivity(intent)
+        },
+        showDismiss = showDismissButton,
+        onDismiss = { onEvent(HomeEvent.HideAdminAccessPrompt) }
+      )
+    }
+    if (!hasUsageAccess && showUsageAccessPrompt) {
+      ButtonInput(
+        label = "Grant Usage Access",
+        description = "Usage access is needed to display usage statistics.",
+        colors = buttonColors,
+        onClick = {
+          val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+          context.startActivity(intent)
+        },
+        showDismiss = showDismissButton,
+        onDismiss = { onEvent(HomeEvent.HideUsageAccessPrompt) }
+      )
     }
   }
 }

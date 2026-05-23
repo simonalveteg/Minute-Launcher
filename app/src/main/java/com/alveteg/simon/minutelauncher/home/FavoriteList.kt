@@ -50,7 +50,9 @@ fun FavoriteList(
   onEvent: (Event) -> Unit,
   totalUsage: Long,
   offsetY: Animatable<Float, AnimationVector1D>,
-  showPermissionPrompts: Boolean,
+  showDefaultHomePrompt: Boolean,
+  showAdminAccessPrompt: Boolean,
+  showUsageAccessPrompt: Boolean,
   onAppClick: (AppInfo) -> Unit
 ) {
   val hapticFeedback = LocalHapticFeedback.current
@@ -100,13 +102,15 @@ fun FavoriteList(
       verticalArrangement = Arrangement.Bottom,
     ) {
       PermissionCheckers(
-        enabled = showPermissionPrompts,
         showDismissButton = true,
-        onDismiss = { onEvent(HomeEvent.HidePermissionPrompts) },
+        showAdminAccessPrompt = showAdminAccessPrompt,
+        showUsageAccessPrompt = showUsageAccessPrompt,
+        showDefaultHomePrompt = showDefaultHomePrompt,
         modifier = Modifier.fillMaxWidth(0.8f),
         buttonColors = ButtonDefaults.outlinedButtonColors(
           containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        onEvent = onEvent
       )
       Text(
         text = totalUsage.toTimeUsed(),

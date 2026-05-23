@@ -48,8 +48,14 @@ class HomeViewModel @Inject constructor(
   val timerLength = preferenceRepository.timerLength
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TIMER_LENGTH)
 
-  val showPermissionPrompts = preferenceRepository.showPermissionPrompts
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_PERMISSION_PROMPTS)
+  val showDefaultHomePrompt = preferenceRepository.showDefaultHomePrompt
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_DEFAULT_HOME_PROMPT)
+
+  val showAdminAccessPrompt = preferenceRepository.showAdminAccessPrompt
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_ADMIN_ACCESS_PROMPT)
+
+  val showUsageAccessPrompt = preferenceRepository.showUsageAccessPrompt
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_USAGE_ACCESS_PROMPT)
 
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
@@ -281,10 +287,26 @@ class HomeViewModel @Inject constructor(
         }
       }
 
-      is HomeEvent.HidePermissionPrompts -> {
+      is HomeEvent.HideDefaultAppPrompt -> {
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            preferenceRepository.hidePermissionPrompts()
+            preferenceRepository.setShowDefaultHomePrompt(false)
+          }
+        }
+      }
+
+      is HomeEvent.HideUsageAccessPrompt -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            preferenceRepository.setShowUsageAccessPrompt(false)
+          }
+        }
+      }
+
+      is HomeEvent.HideAdminAccessPrompt -> {
+        viewModelScope.launch {
+          withContext(Dispatchers.IO) {
+            preferenceRepository.setShowAdminAccessPrompt(false)
           }
         }
       }
