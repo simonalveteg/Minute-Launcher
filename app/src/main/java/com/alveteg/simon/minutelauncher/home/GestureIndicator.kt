@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -44,6 +46,7 @@ fun BoxScope.GestureIndicator(
   val configuration = LocalConfiguration.current
   val screenHeightDp = configuration.screenHeightDp.dp
   val verticalPadding = screenHeightDp.div(12)
+  val defaultWidth = 30.dp
 
   val popScaleHorizontal by animateFloatAsState(
     targetValue = if (isTriggered) 1.5f else 0.8f,
@@ -56,7 +59,7 @@ fun BoxScope.GestureIndicator(
     label = "PopAnimation"
   )
   val baseWidth by animateDpAsState(
-    targetValue = 24.dp * dragProgress,
+    targetValue = defaultWidth * dragProgress,
     animationSpec = if (dragProgress == 0f) tween(durationMillis = 300) else snap(),
     label = "BaseWidth"
   )
@@ -68,6 +71,15 @@ fun BoxScope.GestureIndicator(
     targetValue = if (isTriggered) MaterialTheme.colorScheme.primary.copy(alpha = 1f)
     else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 1f),
     label = "IndicatorColor"
+  )
+  val contentColor by animateColorAsState(
+    targetValue = if (isTriggered) {
+      MaterialTheme.colorScheme.onPrimary
+    } else {
+      Color.Transparent
+    },
+    animationSpec = tween(150),
+    label = "IndicatorContentColor"
   )
 
   var startY by remember { mutableStateOf(0f) }
@@ -143,11 +155,14 @@ fun BoxScope.GestureIndicator(
             }
           }
       ) {
+        val iconVerticalShift = verticalOffsetDp * 0.45f
         Icon(
           painter = painterResource(activeGesture.getIcon()),
           contentDescription = null,
-          tint = MaterialTheme.colorScheme.onSurface,
-          modifier = Modifier.align(Alignment.Center)
+          tint = contentColor,
+          modifier = Modifier
+            .align(Alignment.Center)
+            .offset(y = iconVerticalShift)
         )
       }
     }
