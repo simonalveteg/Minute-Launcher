@@ -115,21 +115,24 @@ fun BoxScope.GestureIndicator(
           .drawWithCache {
             val isLeft = activeGesture.isLeft()
             val offsetPx = verticalOffsetDp.toPx()
-            val bulgeX = size.width * (if (isLeft) 1f else -1f)
+            val bulgeX = if (isLeft) size.width else 0f
+            val startX = if (isLeft) 0f else size.width
+            val tipY = size.height * 0.5f + offsetPx * 0.5f
+
             onDrawBehind {
               val path = Path().apply {
-                val tipY = size.height * 0.5f + offsetPx * 0.35f
+                val midX = (startX + bulgeX) / 2f
 
-                moveTo(0f, 0f)
+                moveTo(startX, 0f)
                 cubicTo(
-                  bulgeX * 0.5f, 0f,
+                  midX, 0f,
                   bulgeX, tipY - size.height * 0.3f,
                   bulgeX, tipY
                 )
                 cubicTo(
                   bulgeX, tipY + size.height * 0.3f,
-                  bulgeX * 0.5f, size.height,
-                  0f, size.height
+                  midX, size.height,
+                  startX, size.height
                 )
                 close()
               }
