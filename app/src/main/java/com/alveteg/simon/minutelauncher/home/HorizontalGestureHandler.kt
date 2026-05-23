@@ -41,15 +41,15 @@ fun Modifier.horizontalGestureHandler(
     var hapticTriggered = false
     var maxDistance = 0f
 
-    val baseThreshold = screenWidthPx.div(4)
-    val hysteresisBuffer = baseThreshold.div(4)
-
+    val baseThreshold = screenWidthPx / 4f
+    val hysteresisBuffer = baseThreshold / 4f
 
     val resetDrag = {
       onDragProgressChange(0f)
-      maxDistance = 0f
       onGestureTriggered(false)
+      onActiveGestureChange(Gesture.NONE)
       hapticTriggered = false
+      maxDistance = 0f
     }
 
     detectHorizontalDragGestures(
@@ -67,18 +67,20 @@ fun Modifier.horizontalGestureHandler(
       },
       onHorizontalDrag = { change, _ ->
         onVerticalPositionChange(change.position.y)
+        val horizontalOffset = change.position.x - startPosition.x
 
-        val direction =
-          if (change.position.x > startPosition.x) GestureDirection.RIGHT else GestureDirection.LEFT
-
-        val newGesture = when (currentZone) {
-          GestureZone.UPPER -> if (direction == GestureDirection.RIGHT) Gesture.TOP_LEFT else Gesture.TOP_RIGHT
-          GestureZone.LOWER -> if (direction == GestureDirection.RIGHT) Gesture.BOTTOM_LEFT else Gesture.BOTTOM_RIGHT
-          else -> Gesture.NONE
+        if (currentActiveGesture == Gesture.NONE && abs(horizontalOffset) > 10f) {
+          val direction =
+            if (horizontalOffset > 0) GestureDirection.RIGHT else GestureDirection.LEFT
+          val newGesture = when (currentZone) {
+            GestureZone.UPPER -> if (direction == GestureDirection.RIGHT) Gesture.TOP_LEFT else Gesture.TOP_RIGHT
+            GestureZone.LOWER -> if (direction == GestureDirection.RIGHT) Gesture.BOTTOM_LEFT else Gesture.BOTTOM_RIGHT
+            else -> Gesture.NONE
+          }
+          onActiveGestureChange(newGesture)
         }
-        onActiveGestureChange(newGesture)
 
-        val distance = abs(change.position.x - startPosition.x)
+        val distance =  if (currentActiveGesture.isLeft()) horizontalOffset else -horizontalOffset
         val newProgress = (distance / baseThreshold).coerceIn(0f, 1f)
         onDragProgressChange(newProgress)
 
