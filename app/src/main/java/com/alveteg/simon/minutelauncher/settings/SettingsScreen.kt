@@ -40,14 +40,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.settings.components.GenericInput
+import com.alveteg.simon.minutelauncher.settings.components.GenericColumnInput
 import com.alveteg.simon.minutelauncher.settings.components.GestureInput
 import com.alveteg.simon.minutelauncher.settings.components.SegmentedInput
 import com.alveteg.simon.minutelauncher.settings.components.SliderInput
+import com.alveteg.simon.minutelauncher.settings.components.ToggleInput
 import com.alveteg.simon.minutelauncher.settings.components.settingsSection
 import com.alveteg.simon.minutelauncher.theme.AppTheme
 import com.alveteg.simon.minutelauncher.utilities.Gesture
@@ -63,6 +63,7 @@ fun SettingsScreen(
   val appTheme by viewModel.appTheme.collectAsStateWithLifecycle()
   val useDynamicColor by viewModel.useDynamicColor.collectAsStateWithLifecycle()
   val transparencyAmount by viewModel.transparencyAmount.collectAsStateWithLifecycle()
+  val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
   val timerLength by viewModel.timerLength.collectAsStateWithLifecycle()
   val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
   val appsWithTimers by viewModel.appsWithTimers.map { it.sortedBy { it.app.appTitle.lowercase() } }
@@ -160,10 +161,18 @@ fun SettingsScreen(
             onValueChange = { _timerLength = it.roundToInt() }
           )
         }
+        item {
+          ToggleInput(
+            label = "Auto-Open",
+            description = "Automatically open apps with a Mindful Delay of zero seconds, without showing the bottomsheet first.",
+            checked = skipAppModal,
+            onCheckedChange = { viewModel.onSkipAppModalChange(it) },
+          )
+        }
 
         item {
           if (appsWithTimers.isNotEmpty()) {
-            GenericInput(
+            GenericColumnInput(
               label = "Apps with custom timers set",
               description = "View and reset the timers for apps that have one set."
             )

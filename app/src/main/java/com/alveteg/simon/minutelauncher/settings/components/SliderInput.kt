@@ -32,7 +32,7 @@ fun SliderInput(
   val numberText =
     valueLabel ?: if (roundToInt) value.roundToInt().toString() else "%.1f".format(value)
 
-  GenericInput(
+  GenericColumnInput(
     label = label,
     description = description,
     modifier = Modifier.fillMaxWidth()

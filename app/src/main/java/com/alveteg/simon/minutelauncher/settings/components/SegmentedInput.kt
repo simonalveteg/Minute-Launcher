@@ -21,7 +21,7 @@ fun <T> SegmentedInput(
   labelProvider: (T) -> String,
   modifier: Modifier = Modifier,
 ) {
-  GenericInput(
+  GenericColumnInput(
     label = label,
     description = description,
     modifier = modifier

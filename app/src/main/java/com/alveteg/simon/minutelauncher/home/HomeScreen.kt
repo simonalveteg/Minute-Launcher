@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
@@ -54,10 +55,10 @@ fun HomeScreen(
   }
   val favorites by viewModel.favoriteApps.collectAsState()
 
-  // Collect the three separate permission prompt states
-  val showDefaultHomePrompt by viewModel.showDefaultHomePrompt.collectAsState()
-  val showAdminAccessPrompt by viewModel.showAdminAccessPrompt.collectAsState()
-  val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsState()
+  val showDefaultHomePrompt by viewModel.showDefaultHomePrompt.collectAsStateWithLifecycle()
+  val showAdminAccessPrompt by viewModel.showAdminAccessPrompt.collectAsStateWithLifecycle()
+  val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsStateWithLifecycle()
+  val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
@@ -92,7 +93,14 @@ fun HomeScreen(
         is UiEvent.VibrateLongPress -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)
-        is UiEvent.ShowModal -> currentAppPackage = event.appInfo.app.packageName
+        is UiEvent.ShowModal -> {
+          if (skipAppModal && event.appInfo.timer == 0) {
+            viewModel.onEvent(HomeEvent.LaunchActivity(event.appInfo))
+          } else {
+            currentAppPackage = event.appInfo.app.packageName
+          }
+        }
+
         is UiEvent.ShowDashboard -> screenState = ScreenState.DASHBOARD
         is UiEvent.Navigate -> onNavigate(event)
       }
@@ -110,15 +118,18 @@ fun HomeScreen(
   )
 
   CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-    Surface(color = backgroundColor,
+    Surface(
+      color = backgroundColor,
       modifier = Modifier
-        .fillMaxSize()) {
+        .fillMaxSize()
+    ) {
       Box(
         modifier = Modifier.fillMaxSize()
       ) {
         val offsetY = remember { Animatable(0f) }
         val keyboardController = LocalSoftwareKeyboardController.current
         val appListSelectionAction: (AppInfo) -> Unit = {
+          Timber.d("App selected: $it")
           viewModel.onEvent(HomeEvent.OpenApplication(it))
           keyboardController?.hide()
         }
@@ -139,7 +150,7 @@ fun HomeScreen(
           screenState = screenState,
           onEvent = viewModel::onEvent,
           searchText = searchText,
-          onAppClick = { appListSelectionAction(it) },
+          onAppClick = appListSelectionAction,
           apps = apps,
           offsetY = offsetY,
           usageStatistics = installedApps.flatMap { it.usage },

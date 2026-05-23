@@ -57,6 +57,9 @@ class HomeViewModel @Inject constructor(
   val showUsageAccessPrompt = preferenceRepository.showUsageAccessPrompt
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_USAGE_ACCESS_PROMPT)
 
+  val skipAppModal = preferenceRepository.skipAppModal
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SKIP_APP_MODAL)
+
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
@@ -123,13 +126,12 @@ class HomeViewModel @Inject constructor(
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         combine(
-          roomRepository.favoriteApps(), applicationRepository.usageStats, roomRepository.timerApps()
-        ) { favorites, usageStats, timerApps ->
-          favorites.sortedBy { it.favoriteApp.order }.map { favorite ->
-            val usage = usageStats.filter { favorite.app.packageName == it.packageName }
-            val timer = timerApps.find { it.app.packageName == favorite.app.packageName }?.appTimer?.timer
-              ?: timerLength.value
-            AppInfo(favorite.app, true, timer, usage)
+          roomRepository.favoriteApps(), installedApps
+        ) { favorites, apps ->
+          favorites.sortedBy { it.favoriteApp.order }.mapNotNull { favorite ->
+            apps.find { it.app.packageName == favorite.app.packageName }?.let { app ->
+              AppInfo(favorite.app, true, app.timer, app.usage)
+            }
           }
         }.collect { favorites ->
           Timber.d("Favorite apps updated: ${favorites.size}")

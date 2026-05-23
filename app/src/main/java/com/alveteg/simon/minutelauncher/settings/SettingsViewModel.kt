@@ -48,6 +48,8 @@ class SettingsViewModel @Inject constructor(
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT)
   val timerLength = preferenceRepository.timerLength
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TIMER_LENGTH)
+  val skipAppModal = preferenceRepository.skipAppModal
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SKIP_APP_MODAL)
 
   val installedApps = combine(
     roomRepository.appList(),
@@ -87,6 +89,12 @@ class SettingsViewModel @Inject constructor(
   fun onDynamicColorChange(enabled: Boolean) {
     viewModelScope.launch {
       preferenceRepository.updateUseDynamicColor(enabled)
+    }
+  }
+
+  fun onSkipAppModalChange(enabled: Boolean) {
+    viewModelScope.launch {
+      preferenceRepository.updateSkipAppModal(enabled)
     }
   }
 
