@@ -67,7 +67,17 @@ fun Modifier.horizontalGestureHandler(
       },
       onHorizontalDrag = { change, _ ->
         onVerticalPositionChange(change.position.y)
-        val horizontalOffset = change.position.x - startPosition.x
+        var horizontalOffset = change.position.x - startPosition.x
+
+        if (currentActiveGesture != Gesture.NONE) {
+          if (currentActiveGesture.isLeft() && horizontalOffset < 0) {
+            startPosition = Offset(change.position.x, startPosition.y)
+            horizontalOffset = 0f
+          } else if (currentActiveGesture.isRight() && horizontalOffset > 0) {
+            startPosition = Offset(change.position.x, startPosition.y)
+            horizontalOffset = 0f
+          }
+        }
 
         if (currentActiveGesture == Gesture.NONE && abs(horizontalOffset) > 10f) {
           val direction =
@@ -80,7 +90,7 @@ fun Modifier.horizontalGestureHandler(
           onActiveGestureChange(newGesture)
         }
 
-        val distance =  if (currentActiveGesture.isLeft()) horizontalOffset else -horizontalOffset
+        val distance = if (currentActiveGesture.isLeft()) horizontalOffset else -horizontalOffset
         val newProgress = (distance / baseThreshold).coerceIn(0f, 1f)
         onDragProgressChange(newProgress)
 
