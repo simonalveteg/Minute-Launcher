@@ -18,6 +18,7 @@ sealed class HomeEvent : Event {
   data class ResetAppTimerToDefault(val app: App) : HomeEvent()
   data class SetDisplayName(val app: App, val displayName: String) : HomeEvent()
   data class ResetDisplayName(val app: App) : HomeEvent()
+  data class ShowToast(val text: String) : HomeEvent()
   data object OpenTimerSettings : HomeEvent()
   data object OpenSettings : HomeEvent()
   data object HideDefaultAppPrompt : HomeEvent()

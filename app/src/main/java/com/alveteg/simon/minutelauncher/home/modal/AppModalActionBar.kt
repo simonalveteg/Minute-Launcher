@@ -21,6 +21,7 @@ import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
+import timber.log.Timber
 
 
 @Composable
@@ -44,7 +45,7 @@ fun AppModalActionBar(
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
           data = Uri.fromParts("package", appInfo.app.packageName, null)
         }
-        ContextCompat.startActivity(mContext, intent, null)
+        mContext.startActivity(intent, null)
       }
     ),
     ActionBarAction(
@@ -62,7 +63,11 @@ fun AppModalActionBar(
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
           putExtra(Intent.EXTRA_PACKAGE_NAME, appInfo.app.packageName)
         }
-        ContextCompat.startActivity(mContext, intent, null)
+        try {
+          mContext.startActivity(intent, null)
+        } catch (e: Exception) {
+          onEvent(HomeEvent.ShowToast("Could not open app usage settings. Digital Wellbeing might not be present on your device."))
+        }
       }
     ),
     ActionBarAction(
@@ -79,7 +84,7 @@ fun AppModalActionBar(
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
           data = Uri.fromParts("package", appInfo.app.packageName, null)
         }
-        ContextCompat.startActivity(mContext, intent, null)
+        mContext.startActivity(intent, null)
       },
       enabled = enabled
     ),
