@@ -11,6 +11,7 @@ import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.ApplicationRepository
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
+import com.alveteg.simon.minutelauncher.settings.SettingsEvent
 import com.alveteg.simon.minutelauncher.settings.SettingsScreen
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
@@ -43,22 +44,46 @@ class HomeViewModel @Inject constructor(
   val uiEvent = _uiEvent.asSharedFlow().onEach { Timber.d(it.toString()) }
 
   val transparencyAmount = preferenceRepository.transparencyAmount
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT
+    )
 
   val timerLength = preferenceRepository.timerLength
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TIMER_LENGTH)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.TIMER_LENGTH
+    )
 
   val showDefaultHomePrompt = preferenceRepository.showDefaultHomePrompt
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_DEFAULT_HOME_PROMPT)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.SHOW_DEFAULT_HOME_PROMPT
+    )
 
   val showAdminAccessPrompt = preferenceRepository.showAdminAccessPrompt
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_ADMIN_ACCESS_PROMPT)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.SHOW_ADMIN_ACCESS_PROMPT
+    )
 
   val showUsageAccessPrompt = preferenceRepository.showUsageAccessPrompt
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SHOW_USAGE_ACCESS_PROMPT)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.SHOW_USAGE_ACCESS_PROMPT
+    )
 
   val skipAppModal = preferenceRepository.skipAppModal
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SKIP_APP_MODAL)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.SKIP_APP_MODAL
+    )
 
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
@@ -227,12 +252,11 @@ class HomeViewModel @Inject constructor(
           else -> {
             viewModelScope.launch {
               withContext(Dispatchers.IO) {
-                roomRepository.getAppInfoForGesture(gesture)?.let {
-                  getAppInfoForApp(it.app)?.let { app ->
-                    sendUiEvent(UiEvent.ShowModal(app))
-                    sendUiEvent(UiEvent.VibrateLongPress)
-                  }
+                val appInfo = roomRepository.getAppInfoForGesture(gesture)?.let {
+                  getAppInfoForApp(it.app)
                 }
+                sendUiEvent(UiEvent.TriggerGesture(gesture, appInfo))
+                sendUiEvent(UiEvent.VibrateLongPress)
               }
             }
           }
@@ -252,7 +276,7 @@ class HomeViewModel @Inject constructor(
         Timber.d("Favorite order updated: $favorites")
         viewModelScope.launch {
           withContext(Dispatchers.IO) {
-            roomRepository.updateFavoritesOrder(favorites.map { it.app } )
+            roomRepository.updateFavoritesOrder(favorites.map { it.app })
           }
         }
       }
@@ -312,6 +336,8 @@ class HomeViewModel @Inject constructor(
           }
         }
       }
+
+      is SettingsEvent.OpenGestureList -> sendUiEvent(UiEvent.Navigate(SettingsScreen.GESTURE_SETTINGS_LIST + "/${event.gesture}"))
     }
   }
 

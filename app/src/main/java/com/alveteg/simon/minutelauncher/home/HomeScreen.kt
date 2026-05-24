@@ -7,10 +7,16 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -26,17 +32,23 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
+import com.alveteg.simon.minutelauncher.settings.components.GestureInput
+import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
+import com.alveteg.simon.minutelauncher.utilities.Gesture
 import timber.log.Timber
 import java.lang.reflect.Method
 import java.time.LocalDate
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
   onNavigate: (UiEvent.Navigate) -> Unit,
@@ -46,7 +58,7 @@ fun HomeScreen(
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState()
   val installedApps by viewModel.installedApps.collectAsState()
-  val totalUsage by remember {
+  val totalUsage by remember(installedApps) {
     derivedStateOf {
       installedApps.sumOf {
         it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration ?: 0L
@@ -59,16 +71,17 @@ fun HomeScreen(
   val showAdminAccessPrompt by viewModel.showAdminAccessPrompt.collectAsStateWithLifecycle()
   val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsStateWithLifecycle()
   val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
+  val backgroundTransparency by viewModel.transparencyAmount.collectAsState()
+  val backgroundAlpha by derivedStateOf { (1f - backgroundTransparency) }
+  val altBackgroundAlpha by derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
   var currentAppPackage by remember { mutableStateOf<String?>(null) }
-  val currentAppModal by remember {
+  val currentAppModal by remember(currentAppPackage) {
     derivedStateOf { apps.firstOrNull { it.app.packageName == currentAppPackage } }
   }
-  val backgroundTransparency by viewModel.transparencyAmount.collectAsState()
-  val backgroundAlpha by derivedStateOf { (1f - backgroundTransparency) }
-  val altBackgroundAlpha by derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
+  var showGestureModal by remember { mutableStateOf(Gesture.NONE) }
 
   LaunchedEffect(altBackgroundAlpha) {
     Timber.d("Background transparency: $backgroundTransparency")
@@ -101,6 +114,15 @@ fun HomeScreen(
           }
         }
 
+        is UiEvent.TriggerGesture -> {
+          if (event.appInfo != null) {
+            viewModel.onEvent(HomeEvent.OpenApplication(event.appInfo))
+          } else {
+            showGestureModal = event.gesture
+            Timber.d("Gesture triggered: $showGestureModal")
+          }
+        }
+
         is UiEvent.ShowDashboard -> screenState = ScreenState.DASHBOARD
         is UiEvent.Navigate -> onNavigate(event)
       }
@@ -116,6 +138,27 @@ fun HomeScreen(
     onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent
   )
+
+  if (showGestureModal != Gesture.NONE) {
+    MinuteBottomSheet(
+      onDismissRequest = { showGestureModal = Gesture.NONE },
+      dragHandle = {
+        Text(
+          text = "Unset Gesture",
+          style = MaterialTheme.typography.headlineSmall,
+          fontFamily = archivoBlackFamily,
+          modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+        )
+      },
+    ) {
+      GestureInput(
+        gesture = showGestureModal,
+        iconResource = showGestureModal.getIcon(),
+        onEvent = viewModel::onEvent,
+        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 24.dp, bottom = 46.dp)
+      )
+    }
+  }
 
   CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
     Surface(

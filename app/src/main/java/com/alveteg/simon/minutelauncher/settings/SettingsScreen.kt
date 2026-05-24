@@ -164,7 +164,7 @@ fun SettingsScreen(
         item {
           ToggleInput(
             label = "Auto-Open",
-            description = "Automatically open apps with a Mindful Delay of zero seconds, without showing the bottomsheet first.",
+            description = "Automatically open apps with a Mindful Delay of zero seconds, without showing the confirmation dialog first.",
             checked = skipAppModal,
             onCheckedChange = { viewModel.onSkipAppModalChange(it) },
           )

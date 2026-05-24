@@ -24,14 +24,16 @@ import com.alveteg.simon.minutelauncher.utilities.Gesture
 @Composable
 fun GestureInput(
   gesture: Gesture,
-  app: App?,
+  app: App? = null,
   iconResource: Int,
+  modifier: Modifier = Modifier,
   onEvent: (SettingsEvent) -> Unit
 ) {
   val appTitle = app?.appTitle ?: "No app selected"
   Row(
     verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.SpaceBetween
+    horizontalArrangement = Arrangement.SpaceBetween,
+    modifier = modifier
   ) {
     Icon(
       painter = painterResource(iconResource),

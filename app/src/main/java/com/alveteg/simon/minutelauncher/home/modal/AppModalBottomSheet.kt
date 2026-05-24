@@ -23,6 +23,7 @@ import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
+import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,10 +43,9 @@ fun AppModalBottomSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val timerSheetState = rememberModalBottomSheetState()
     val nameChangeSheetState = rememberModalBottomSheetState()
-    ModalBottomSheet(
+    MinuteBottomSheet(
       onDismissRequest = onDismiss,
       sheetState = sheetState,
-      dragHandle = {},
     ) {
       Spacer(modifier = Modifier.height(4.dp))
       BackHandler(true) { onDismiss() }
