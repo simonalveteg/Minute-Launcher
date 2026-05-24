@@ -7,14 +7,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +29,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,6 +37,7 @@ import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
+import com.alveteg.simon.minutelauncher.home.modal.MinuteBottomSheet
 import com.alveteg.simon.minutelauncher.settings.components.GestureInput
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
@@ -71,7 +68,8 @@ fun HomeScreen(
   val showAdminAccessPrompt by viewModel.showAdminAccessPrompt.collectAsStateWithLifecycle()
   val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsStateWithLifecycle()
   val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
-  val backgroundTransparency by viewModel.transparencyAmount.collectAsState()
+  val backgroundTransparency by viewModel.transparencyAmount.collectAsStateWithLifecycle()
+  val defaultTimerLength by viewModel.timerLength.collectAsStateWithLifecycle()
   val backgroundAlpha by derivedStateOf { (1f - backgroundTransparency) }
   val altBackgroundAlpha by derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
 
@@ -135,6 +133,7 @@ fun HomeScreen(
 
   AppModalBottomSheet(
     appInfo = currentAppModal,
+    defaultTimerLength = defaultTimerLength,
     onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent
   )
@@ -142,14 +141,8 @@ fun HomeScreen(
   if (showGestureModal != Gesture.NONE) {
     MinuteBottomSheet(
       onDismissRequest = { showGestureModal = Gesture.NONE },
-      dragHandle = {
-        Text(
-          text = "Unset Gesture",
-          style = MaterialTheme.typography.headlineSmall,
-          fontFamily = archivoBlackFamily,
-          modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
-        )
-      },
+      title = "Unset Gesture",
+      description = "Select an app to open when performing this gesture."
     ) {
       GestureInput(
         gesture = showGestureModal,

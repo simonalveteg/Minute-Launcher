@@ -8,7 +8,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,13 +22,13 @@ import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppModalBottomSheet(
   appInfo: AppInfo?,
+  defaultTimerLength: Int,
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
@@ -46,8 +45,8 @@ fun AppModalBottomSheet(
     MinuteBottomSheet(
       onDismissRequest = onDismiss,
       sheetState = sheetState,
+      title = appInfo.app.displayTitle ?: appInfo.app.appTitle
     ) {
-      Spacer(modifier = Modifier.height(4.dp))
       BackHandler(true) { onDismiss() }
       AppModal(
         appInfo = appInfo,
@@ -84,11 +83,11 @@ fun AppModalBottomSheet(
           }
         }
       )
-      Spacer(modifier = Modifier.height(4.dp))
     }
     if (timerVisible) {
       TimerBottomSheet(
         appInfo = appInfo,
+        defaultTimerLength = defaultTimerLength,
         sheetState = timerSheetState,
         onDismissRequest = {
           timerVisible = false

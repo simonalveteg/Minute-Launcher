@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import kotlinx.coroutines.launch
@@ -69,51 +68,36 @@ fun NameBottomSheet(
   }
 
   MinuteBottomSheet(
-    onDismissRequest = onDismissRequest, sheetState = sheetState
+    onDismissRequest = onDismissRequest, sheetState = sheetState,
+    title = "Set display name",
   ) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .navigationBarsPadding()
-        .padding(horizontal = 24.dp),
-      horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-      Text(
-        text = "Set app display name",
-        style = MaterialTheme.typography.headlineSmall,
-        fontFamily = archivoBlackFamily,
-        modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
-      )
-      OutlinedTextField(
-        value = displayName,
-        onValueChange = { displayName = it },
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(top = 12.dp, bottom = 32.dp),
-        label = { Text(appInfo.app.appTitle, fontFamily = archivoFamily) },
-        singleLine = true,
-        shape = MaterialTheme.shapes.medium,
-        trailingIcon = {
-          IconButton(
-            enabled = displayName.isNotEmpty(),
-            onClick = {
-              displayName = ""
-              onEvent(HomeEvent.ResetDisplayName(appInfo.app))
-            }
-          ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.Undo,
-              contentDescription = "Reset to default",
-            )
+    OutlinedTextField(
+      value = displayName,
+      onValueChange = { displayName = it },
+      modifier = Modifier.fillMaxWidth(),
+      label = { Text(appInfo.app.appTitle, fontFamily = archivoFamily) },
+      singleLine = true,
+      shape = MaterialTheme.shapes.medium,
+      trailingIcon = {
+        IconButton(
+          enabled = displayName.isNotEmpty(),
+          onClick = {
+            displayName = ""
+            onEvent(HomeEvent.ResetDisplayName(appInfo.app))
           }
-        },
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(
-          onDone = {
-            defaultKeyboardAction(ImeAction.Done)
-            confirmAction()
-          })
-      )
-    }
+        ) {
+          Icon(
+            imageVector = Icons.AutoMirrored.Filled.Undo,
+            contentDescription = "Reset to default",
+          )
+        }
+      },
+      keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+      keyboardActions = KeyboardActions(
+        onDone = {
+          defaultKeyboardAction(ImeAction.Done)
+          confirmAction()
+        })
+    )
   }
 }

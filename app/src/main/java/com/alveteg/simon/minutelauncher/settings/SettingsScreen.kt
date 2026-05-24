@@ -155,7 +155,7 @@ fun SettingsScreen(
             value = _timerLength.toFloat(),
             valueLabel = timerLengthLabel,
             valueRange = PreferenceRepository.Defaults.MIN_TIMER.toFloat() .. PreferenceRepository.Defaults.MAX_TIMER.toFloat(),
-            steps = 15,
+            steps = PreferenceRepository.Defaults.MAX_TIMER,
             roundToInt = true,
             onValueChangeFinished = { viewModel.onTimerLengthChange(_timerLength) },
             onValueChange = { _timerLength = it.roundToInt() }

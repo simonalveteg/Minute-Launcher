@@ -23,8 +23,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.home.MinuteBottomSheet
 import com.alveteg.simon.minutelauncher.settings.components.SliderInput
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
@@ -35,6 +35,7 @@ import kotlin.math.roundToInt
 fun TimerBottomSheet(
   sheetState: SheetState,
   appInfo: AppInfo,
+  defaultTimerLength: Int,
   onDismissRequest: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
@@ -44,52 +45,34 @@ fun TimerBottomSheet(
   }
 
   MinuteBottomSheet(
-    onDismissRequest = onDismissRequest, sheetState = sheetState
+    onDismissRequest = onDismissRequest, sheetState = sheetState,
+    title = "Mindful Delay",
+    description = "Set how long you want to wait before being able to open this app. A longer delay helps you pause and break the habit of mindless clicking."
   ) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .navigationBarsPadding()
-        .padding(horizontal = 24.dp),
-      horizontalAlignment = Alignment.CenterHorizontally
+    SliderInput(
+      value = _timerLength,
+      valueLabel = timerLengthLabel,
+      valueRange = PreferenceRepository.Defaults.MIN_TIMER.toFloat()..PreferenceRepository.Defaults.MAX_TIMER.toFloat(),
+      steps = PreferenceRepository.Defaults.MAX_TIMER,
+      roundToInt = true,
+      onValueChangeFinished = {
+        onEvent(HomeEvent.UpdateAppTimer(appInfo.app, _timerLength.roundToInt()))
+      },
+      onValueChange = { _timerLength = it }
+    )
+    TextButton(
+      onClick = {
+        onEvent(HomeEvent.ResetAppTimerToDefault(appInfo.app))
+      },
+      enabled = appInfo.timer != defaultTimerLength,
     ) {
+      val resetText = "Reset to default"
       Text(
-        text = "Mindful Delay",
-        style = MaterialTheme.typography.headlineSmall,
-        fontFamily = archivoBlackFamily,
-        modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
-      )
-      Text(
-        text = "Set how long you want to wait before being able to open this app. A longer delay helps you pause and break the habit of mindless clicking.",
-        style = MaterialTheme.typography.bodyMedium,
-        textAlign = TextAlign.Center,
+        text = resetText.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
         fontFamily = archivoFamily,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp)
       )
-      SliderInput(
-        value = _timerLength,
-        valueLabel = timerLengthLabel,
-        valueRange = 0f..16f,
-        steps = 15,
-        roundToInt = true,
-        onValueChangeFinished = {
-          onEvent(HomeEvent.UpdateAppTimer(appInfo.app, _timerLength.roundToInt()))
-        },
-        onValueChange = { _timerLength = it }
-      )
-      TextButton(
-        onClick = {
-          onEvent(HomeEvent.ResetAppTimerToDefault(appInfo.app))
-        }
-      ) {
-        val resetText = "Reset to default"
-        Text(
-          text = resetText.uppercase(),
-          style = MaterialTheme.typography.labelMedium,
-          fontFamily = archivoFamily,
-        )
-      }
-      Spacer(modifier = Modifier.height(12.dp))
     }
+    Spacer(modifier = Modifier.height(12.dp))
   }
 }
