@@ -132,7 +132,7 @@ fun BoxScope.GestureIndicator(
             val offsetPx = verticalOffsetDp.toPx()
             val bulgeX = if (isLeft) size.width else 0f
             val startX = if (isLeft) 0f else size.width
-            val tipY = size.height * 0.5f + offsetPx * 0.5f
+            val tipY = size.height * 0.5f + offsetPx * 0.2f
 
             onDrawBehind {
               val path = Path().apply {
