@@ -47,9 +47,8 @@ fun ActionBar(
     modifier = Modifier
       .fillMaxWidth()
       .padding(vertical = 8.dp),
-    color = MaterialTheme.colorScheme.background,
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
     shape = MaterialTheme.shapes.large,
-    tonalElevation = 8.dp
   ) {
     Column(
       modifier = Modifier

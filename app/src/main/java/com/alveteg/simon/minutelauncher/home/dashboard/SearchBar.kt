@@ -46,8 +46,9 @@ fun SearchBar(
 ) {
   val focusRequester = remember { FocusRequester() }
 
-  Surface(shape = MaterialTheme.shapes.large,
-    tonalElevation = 8.dp,
+  Surface(
+    shape = MaterialTheme.shapes.large,
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
     modifier = Modifier
       .navigationBarsPadding()
       .onGloballyPositioned {
@@ -57,8 +58,10 @@ fun SearchBar(
             .plus(topPadding.value)
             .toInt()
         )
-      }) {
-    TextField(value = searchText,
+      }
+  ) {
+    TextField(
+      value = searchText,
       onValueChange = { onEvent(HomeEvent.UpdateSearch(it)) },
       modifier = Modifier
         .fillMaxWidth()
