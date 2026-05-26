@@ -11,11 +11,11 @@ import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.ApplicationRepository
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
+import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.settings.SettingsEvent
 import com.alveteg.simon.minutelauncher.settings.SettingsScreen
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
-import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

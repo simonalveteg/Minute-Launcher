@@ -1,13 +1,10 @@
 package com.alveteg.simon.minutelauncher.home.dashboard
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.verticalScroll
@@ -15,15 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.home.HomeEvent
+import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
-import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
-import com.alveteg.simon.minutelauncher.home.stats.UsageCard
-import java.time.LocalDate
+import com.alveteg.simon.minutelauncher.home.stats.UsageSheet
 
 @Composable
 fun DashboardBottomSheet(
   searchText: String,
+  apps: List<AppInfo>,
   onSearch: KeyboardActionScope.() -> Unit,
   onEvent: (Event) -> Unit,
   onGloballyPositioned: (Int) -> Unit = {},
@@ -54,28 +50,7 @@ fun DashboardBottomSheet(
       onEvent = onEvent
     )
     Spacer(Modifier.height(8.dp))
-    Row(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 8.dp)
-    ) {
-      UsageCard(
-        label = "7 day average",
-        usage = usageStats.sumOf { it.usageDuration }.div(7),
-        modifier = Modifier
-          .fillMaxWidth()
-          .weight(1f)
-      )
-      Spacer(modifier = Modifier.width(16.dp))
-      UsageCard(
-        label = "Today",
-        usage = usageStats.filter { it.usageDate == LocalDate.now() }.sumOf { it.usageDuration },
-        modifier = Modifier
-          .fillMaxWidth()
-          .weight(1f)
-      )
-    }
-    UsageBarGraph(usageStatistics = usageStats)
+    UsageSheet(usageStatistics = usageStats, apps = apps)
     DashboardActionBar(onEvent = onEvent)
   }
 }

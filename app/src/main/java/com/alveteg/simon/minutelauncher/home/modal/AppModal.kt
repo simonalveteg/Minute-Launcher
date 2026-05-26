@@ -95,7 +95,7 @@ fun AppModal(
     onEditName = onEditName,
     onEvent = onEvent
   )
-  UsageBarGraph(usage)
+  UsageBarGraph(usageStatistics = usage)
   Row(
     modifier = Modifier
       .fillMaxWidth()

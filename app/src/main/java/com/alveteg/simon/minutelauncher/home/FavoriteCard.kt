@@ -24,10 +24,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.theme.ScaleIndicationNodeFactory
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
-import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import java.time.LocalDate
 
 @OptIn(ExperimentalFoundationApi::class)

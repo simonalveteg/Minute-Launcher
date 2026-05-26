@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,16 +29,15 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.settings.PermissionCheckers
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
-import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import sh.calvin.reorderable.ReorderableColumn
 import timber.log.Timber
 

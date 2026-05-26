@@ -5,7 +5,6 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
-import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -162,6 +161,3 @@ class ApplicationRepository @Inject constructor(
     return stats
   }
 }
-
-// Helper class to keep track of all of the stats
-data class Stat(val packageName: String, val totalTime: Long)

@@ -68,6 +68,7 @@ fun Dashboard(
           onSearch = onSearch,
           onEvent = onEvent,
           usageStatistics = usageStatistics,
+          apps = apps,
           onGloballyPositioned = {
             searchHeight = with(density) { it.toDp() }
           },
