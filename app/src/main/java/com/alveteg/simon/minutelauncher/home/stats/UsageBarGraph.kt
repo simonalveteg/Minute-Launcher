@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,7 +49,6 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer.ColumnProvider.Companion.series
-import com.patrykandpatrick.vico.core.common.Defaults
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.Position
@@ -143,7 +141,7 @@ fun UsageBarGraph(
         }
         HorizontalDivider()
         CartesianChartHost(
-          modifier = Modifier.padding(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 12.dp),
+          modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
           chart = rememberCartesianChart(
             rememberColumnCartesianLayer(
               columnProvider = series(
