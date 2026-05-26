@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
@@ -71,13 +72,16 @@ fun UsageSheet(
             text = "MOST USED APPS THIS WEEK",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = archivoFamily
+            fontFamily = archivoFamily,
+            modifier = Modifier.weight(1f)
           )
           Text(
             text = "DURATION (AVG)",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = archivoFamily
+            fontFamily = archivoFamily,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
           )
         }
         HorizontalDivider(modifier = Modifier.padding(bottom = 4.dp))
