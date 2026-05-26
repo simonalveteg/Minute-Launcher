@@ -37,7 +37,6 @@ import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
-import kotlinx.coroutines.NonCancellable.key
 import kotlinx.coroutines.delay
 import timber.log.Timber
 
@@ -95,7 +94,7 @@ fun AppModal(
     onEditName = onEditName,
     onEvent = onEvent
   )
-  UsageBarGraph(usageStatistics = usage)
+  UsageBarGraph(usageStatistics = usage, modifier = Modifier.padding(vertical = 8.dp))
   Row(
     modifier = Modifier
       .fillMaxWidth()

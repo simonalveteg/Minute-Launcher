@@ -14,7 +14,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     AppTimer::class
   ],
   version = 4,
-  exportSchema = true
+  exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class LauncherDatabase : RoomDatabase() {

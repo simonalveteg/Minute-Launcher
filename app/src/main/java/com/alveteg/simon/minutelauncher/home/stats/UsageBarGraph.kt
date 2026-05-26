@@ -2,14 +2,14 @@ package com.alveteg.simon.minutelauncher.home.stats
 
 import android.graphics.Typeface
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,35 +17,41 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMaxOfOrNull
+import androidx.compose.ui.util.fastSumBy
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEndAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEnd
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
+import com.patrykandpatrick.vico.compose.common.shape.toVicoShape
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
-import com.patrykandpatrick.vico.core.common.Dimensions
-import com.patrykandpatrick.vico.core.common.VerticalPosition
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer.ColumnProvider.Companion.series
+import com.patrykandpatrick.vico.core.common.Fill
+import com.patrykandpatrick.vico.core.common.Insets
+import com.patrykandpatrick.vico.core.common.Position
 import com.patrykandpatrick.vico.core.common.shape.Shape
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -56,17 +62,22 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun UsageBarGraph(
-  usageStatistics: List<UsageStatistics>
+  usageStatistics: List<UsageStatistics>,
+  modifier: Modifier = Modifier
 ) {
   val modelProducer = remember { CartesianChartModelProducer() }
-  val maxDuration = usageStatistics.maxOfOrNull { it.usageDuration } ?: 0L
-  val dailyAverage = usageStatistics.sumOf { it.usageDuration }.div(7)
+  val maxDuration = remember(usageStatistics) {
+    usageStatistics.fastMaxOfOrNull { it.usageDuration } ?: 0L
+  }
+  val dailyAverage = remember(usageStatistics) {
+    usageStatistics.fastSumBy { it.usageDuration.toInt() }.div(7).toLong()
+  }
 
-  val dateValueFormatter = CartesianValueFormatter { value, _, _ ->
+  val dateValueFormatter = CartesianValueFormatter { _, value, _ ->
     val date = LocalDate.now().minusDays(7.minus(value).toLong())
     date.format(DateTimeFormatter.ofPattern("EEE"))
   }
-  val usageValueFormatter = CartesianValueFormatter { value, _, _ ->
+  val usageValueFormatter = CartesianValueFormatter { _, value, _ ->
     value.toLong().toTimeUsed()
   }
 
@@ -96,9 +107,11 @@ fun UsageBarGraph(
       }
     }
   }
+
+
   Surface(
-    modifier = Modifier
-      .heightIn(min = 220.dp, max = 600.dp)
+    modifier = modifier
+      .height(240.dp)
       .fillMaxWidth(),
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
     shape = MaterialTheme.shapes.large,
@@ -107,7 +120,6 @@ fun UsageBarGraph(
       Column {
         Row(
           horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically,
           modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -116,68 +128,70 @@ fun UsageBarGraph(
           Text(
             text = "Daily usage",
             style = MaterialTheme.typography.titleMedium,
-            fontFamily = archivoBlackFamily
+            fontFamily = archivoBlackFamily,
+            modifier = Modifier.alignByBaseline()
           )
           Text(
             text = "~${dailyAverage.toTimeUsed(expanded = true)}/day",
             style = MaterialTheme.typography.titleSmall,
-            fontFamily = archivoFamily
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = archivoFamily,
+            modifier = Modifier.alignByBaseline()
           )
         }
         HorizontalDivider()
         CartesianChartHost(
           modifier = Modifier.padding(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 12.dp),
-          getXStep = { 1f },
           chart = rememberCartesianChart(
             rememberColumnCartesianLayer(
-              columnProvider = ColumnCartesianLayer.ColumnProvider.series(
+              columnProvider = series(
                 rememberLineComponent(
-                  color = MaterialTheme.colorScheme.primary,
+                  fill = Fill(MaterialTheme.colorScheme.primary.toArgb()),
                   thickness = 40.dp,
-                  shape = remember { Shape.rounded(8f) }
+                  shape = RoundedCornerShape(8.dp).toVicoShape()
                 )
               ),
-              spacing = 4.dp,
-              axisValueOverrider = AxisValueOverrider.fixed(
-                minY = 0f,
-                maxY = maxDuration * 1.15f,
-                minX = 1f,
-                maxX = 7f
+              columnCollectionSpacing = 4.dp,
+              rangeProvider = CartesianLayerRangeProvider.fixed(
+                minY = 0.0,
+                maxY = maxDuration * 1.15,
+                minX = 1.0,
+                maxX = 7.0
               ),
               dataLabel = rememberTextComponent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                padding = Dimensions(horizontalDp = 0f, verticalDp = 1f),
+                padding = Insets(horizontalDp = 0f, verticalDp = 1f),
               ),
-              dataLabelVerticalPosition = VerticalPosition.Top,
+              dataLabelPosition = Position.Vertical.Top,
               dataLabelValueFormatter = usageValueFormatter
             ),
-            bottomAxis = rememberBottomAxis(
+            bottomAxis = HorizontalAxis.rememberBottom(
               valueFormatter = dateValueFormatter,
               guideline = null,
-              tick = rememberLineComponent(color = MaterialTheme.colorScheme.outlineVariant),
-              axis = rememberLineComponent(color = MaterialTheme.colorScheme.outlineVariant),
+              tick = rememberLineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.toArgb())),
+              line = rememberLineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.toArgb())),
               label = rememberTextComponent(
                 typeface = typeface,
                 color = MaterialTheme.colorScheme.onSurface
               )
             ),
-            endAxis = rememberEndAxis(
-              valueFormatter = { value, _, _ ->
+            endAxis = VerticalAxis.rememberEnd(
+              valueFormatter = { _, value, _ ->
                 value.toLong().toTimeUsed()
               },
               guideline = rememberAxisGuidelineComponent(
-                color = MaterialTheme.colorScheme.background,
+                fill = Fill(MaterialTheme.colorScheme.background.toArgb()),
                 shape = Shape.Rectangle,
-                margins = Dimensions(topDp = 8f, bottomDp = 8f, startDp = 0f, endDp = 0f)
+                margins = Insets(topDp = 8f, bottomDp = 8f, startDp = 0f, endDp = 0f)
               ),
-              axis = rememberLineComponent(thickness = 0.dp),
+              line = rememberLineComponent(thickness = 0.dp),
               tick = rememberLineComponent(thickness = 0.dp),
               label = null
             )
           ),
           modelProducer = modelProducer,
           zoomState = rememberVicoZoomState(zoomEnabled = false),
-          scrollState = rememberVicoScrollState(scrollEnabled = false)
+          scrollState = rememberVicoScrollState(scrollEnabled = false),
         )
       }
     } else {

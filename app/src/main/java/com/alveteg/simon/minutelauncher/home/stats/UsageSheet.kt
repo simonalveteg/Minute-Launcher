@@ -16,13 +16,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
-import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import java.time.LocalDate
 
@@ -72,11 +70,13 @@ fun UsageSheet(
           Text(
             text = "MOST USED APPS THIS WEEK",
             style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = archivoFamily
           )
           Text(
-            text = "DURATION",
+            text = "DURATION (AVG)",
             style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = archivoFamily
           )
         }
@@ -100,10 +100,17 @@ fun UsageSheet(
               text = appInfo.app.displayTitle ?: appInfo.app.appTitle,
               fontFamily = archivoFamily
             )
-            Text(
-              text = usageDuration.toTimeUsed(),
-              fontFamily = archivoFamily
-            )
+            Row {
+              Text(
+                text = usageDuration.toTimeUsed(),
+                fontFamily = archivoFamily
+              )
+              Text(
+                text = " (${(usageDuration / 7).toTimeUsed()})",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontFamily = archivoFamily
+              )
+            }
           }
         }
       }
