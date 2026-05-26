@@ -42,6 +42,7 @@ import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.shape.toVicoShape
+import com.patrykandpatrick.vico.core.cartesian.Scroll
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -49,6 +50,7 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer.ColumnProvider.Companion.series
+import com.patrykandpatrick.vico.core.common.Defaults
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.Position
@@ -191,7 +193,10 @@ fun UsageBarGraph(
           ),
           modelProducer = modelProducer,
           zoomState = rememberVicoZoomState(zoomEnabled = false),
-          scrollState = rememberVicoScrollState(scrollEnabled = false),
+          scrollState = rememberVicoScrollState(
+            scrollEnabled = true,
+            initialScroll = Scroll.Absolute.End
+          ),
         )
       }
     } else {
