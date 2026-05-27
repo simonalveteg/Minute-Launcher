@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
+import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.home.stats.UsageSheet
 
 @Composable
@@ -23,15 +24,11 @@ fun DashboardBottomSheet(
   onSearch: KeyboardActionScope.() -> Unit,
   onEvent: (Event) -> Unit,
   onGloballyPositioned: (Int) -> Unit = {},
-  usageStatistics: List<UsageStatistics>,
   onSearchFocused: () -> Unit
 ) {
   val bottomPadding = 8
   val topPadding = 16
   val scrollState = rememberScrollState()
-  val usageStats = usageStatistics.groupBy { it.usageDate }.mapValues { entry ->
-    entry.value.sumOf { it.usageDuration }
-  }.map { UsageStatistics("", it.key, it.value) }
 
   Column(
     modifier = Modifier
@@ -50,7 +47,7 @@ fun DashboardBottomSheet(
       onEvent = onEvent
     )
     Spacer(Modifier.height(8.dp))
-    UsageSheet(usageStatistics = usageStats, apps = apps)
+    UsageSheet(apps = apps)
     DashboardActionBar(onEvent = onEvent)
   }
 }

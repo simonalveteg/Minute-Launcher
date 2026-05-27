@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -210,7 +211,7 @@ class HomeViewModel @Inject constructor(
           sendUiEvent(
             UiEvent.ShowToast(
               "${appInfo.app.appTitle} used for ${
-                (appInfo.usage.firstOrNull()?.usageDuration ?: 0L).toTimeUsed(false)
+                appInfo.usage.firstOrNull()?.usageDuration.toTimeUsed(false)
               }"
             )
           )

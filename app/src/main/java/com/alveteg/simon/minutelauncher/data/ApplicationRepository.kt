@@ -16,6 +16,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 class ApplicationRepository @Inject constructor(
   @ApplicationContext private val context: Context
@@ -86,12 +88,9 @@ class ApplicationRepository @Inject constructor(
       getDailyStats(date)
         .filter { !launcherApps.contains(it.packageName) }
         .filter { context.packageName != it.packageName }
-        .also {
-          Timber.d(
-            "$date: ${it.size} packages, ${
-              it.sumOf { it.usageDuration }.toTimeUsed()
-            }"
-          )
+        .also { statsList ->
+          val totalDuration = statsList.sumOf { it.usageDuration }
+          Timber.d("$date: ${statsList.size} packages, ${totalDuration.toTimeUsed()}")
         }
     }
   }
@@ -154,7 +153,7 @@ class ApplicationRepository @Inject constructor(
         UsageStatistics(
           packageName = packageName,
           usageDate = date,
-          usageDuration = totalTime
+          usageDuration = totalTime.milliseconds
         )
       )
     }

@@ -26,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxOfOrNull
-import androidx.compose.ui.util.fastSumBy
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
+import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
@@ -64,9 +64,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun UsageBarGraph(
@@ -76,10 +77,10 @@ fun UsageBarGraph(
 ) {
   val modelProducer = remember { CartesianChartModelProducer() }
   val maxDuration = remember(usageStatistics) {
-    usageStatistics.fastMaxOfOrNull { it.usageDuration } ?: 0L
+    usageStatistics.fastMaxOfOrNull { it.usageDuration } ?: 0.milliseconds
   }
   val dailyAverage = remember(usageStatistics) {
-    usageStatistics.fastSumBy { it.usageDuration.toInt() }.div(7).toLong()
+    usageStatistics.sumOf { it.usageDuration }.div(7)
   }
 
   val dateValueFormatter = CartesianValueFormatter { _, value, _ ->
@@ -87,7 +88,7 @@ fun UsageBarGraph(
     date.format(DateTimeFormatter.ofPattern("EEE"))
   }
   val usageValueFormatter = CartesianValueFormatter { _, value, _ ->
-    value.toLong().toTimeUsed()
+    value.milliseconds.toTimeUsed()
   }
 
   val style = MaterialTheme.typography.bodySmall
@@ -108,7 +109,7 @@ fun UsageBarGraph(
           columnSeries {
             val dates =
               usageStatistics.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7 }
-            val durations = usageStatistics.map { it.usageDuration }
+            val durations = usageStatistics.map { it.usageDuration.inWholeMilliseconds }
             series(y = durations, x = dates)
           }
         }
@@ -125,7 +126,7 @@ fun UsageBarGraph(
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
     shape = MaterialTheme.shapes.large,
   ) {
-    if (maxDuration > 0L) {
+    if (maxDuration > 1.seconds) {
       Column {
         Row(
           horizontalArrangement = Arrangement.SpaceBetween,
@@ -163,7 +164,7 @@ fun UsageBarGraph(
               columnCollectionSpacing = 4.dp,
               rangeProvider = CartesianLayerRangeProvider.fixed(
                 minY = 0.0,
-                maxY = maxDuration * 1.15,
+                maxY = maxDuration.inWholeMilliseconds * 1.15,
                 minX = 1.0,
                 maxX = 7.0
               ),
@@ -186,7 +187,7 @@ fun UsageBarGraph(
             ),
             endAxis = VerticalAxis.rememberEnd(
               valueFormatter = { _, value, _ ->
-                value.toLong().toTimeUsed()
+                value.milliseconds.toTimeUsed()
               },
               guideline = rememberAxisGuidelineComponent(
                 fill = Fill(MaterialTheme.colorScheme.background.toArgb()),

@@ -40,13 +40,14 @@ import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import sh.calvin.reorderable.ReorderableColumn
 import timber.log.Timber
+import kotlin.time.Duration
 
 @Composable
 fun FavoriteList(
   screenState: ScreenState,
   favorites: List<AppInfo>,
   onEvent: (Event) -> Unit,
-  totalUsage: Long,
+  totalUsage: Duration?,
   offsetY: Animatable<Float, AnimationVector1D>,
   showDefaultHomePrompt: Boolean,
   showAdminAccessPrompt: Boolean,

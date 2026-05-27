@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
 import com.alveteg.simon.minutelauncher.home.modal.MinuteBottomSheet
@@ -44,6 +45,7 @@ import com.alveteg.simon.minutelauncher.utilities.Gesture
 import timber.log.Timber
 import java.lang.reflect.Method
 import java.time.LocalDate
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +60,7 @@ fun HomeScreen(
   val totalUsage by remember(installedApps) {
     derivedStateOf {
       installedApps.sumOf {
-        it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration ?: 0L
+        it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration
       }
     }
   }

@@ -19,35 +19,59 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastSumBy
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
+import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
-import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun UsageSheet(
-  usageStatistics: List<UsageStatistics>,
   apps: List<AppInfo>,
 ) {
-  val sortedStats = usageStatistics.sortedBy { it.usageDate }
 
   var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
-  val appStatistics = apps
-    .filter { app ->
-      app.usage
-        .filter {
-          if (selectedDate != null) it.usageDate == selectedDate
-          else it.usageDate >= LocalDate.now().minusDays(7)
-        }
-        .sumOf { it.usageDuration } > 0
+  val sortedStats: List<UsageStatistics> = remember(apps) {
+    (6 downTo 0).map { daysAgo ->
+      val date = LocalDate.now().minusDays(daysAgo.toLong())
+      UsageStatistics(
+        packageName = "",
+        usageDate = date,
+        usageDuration = apps.flatMap { it.usage }
+          .filter { it.usageDate == date }
+          .sumOf { it.usageDuration }
+      )
     }
-    .sortedByDescending { app -> app.usage.sumOf { it.usageDuration } }
+  }
 
+  val appStatistics = remember(apps) {
+    apps
+      .map { app ->
+        app.copy(
+          usage = app.usage.filter { it.usageDate >= LocalDate.now().minusDays(7) }
+        )
+      }
+      .filter { it.usage.sumOf { usage -> usage.usageDuration } > 1.seconds }
+      .sortedByDescending { it.usage.sumOf { usage -> usage.usageDuration } }
+  }
+
+  val filteredAppStatistics = remember(appStatistics, selectedDate) {
+    appStatistics
+      .map { app ->
+        app.copy(
+          usage = app.usage.filter { if (selectedDate != null) it.usageDate == selectedDate else true }
+        )
+      }
+      .filter { it.usage.sumOf { usage -> usage.usageDuration } > 1.seconds }
+      .sortedByDescending { it.usage.sumOf { usage -> usage.usageDuration } }
+  }
 
 
   Surface(
@@ -75,7 +99,8 @@ fun UsageSheet(
             .fillMaxWidth()
             .padding(horizontal = 4.dp)
         ) {
-          val date = selectedDate?.dayOfWeek?.getDisplayName(TextStyle.FULL, Locale.getDefault())?.uppercase() ?: "WEEK"
+          val date = selectedDate?.dayOfWeek?.getDisplayName(TextStyle.FULL, Locale.getDefault())
+            ?.uppercase() ?: "WEEK"
           Text(
             text = "MOST USED APPS ($date)",
             style = MaterialTheme.typography.labelSmall,
@@ -93,14 +118,7 @@ fun UsageSheet(
           )
         }
         HorizontalDivider(modifier = Modifier.padding(bottom = 4.dp))
-        appStatistics.take(5).forEach { appInfo ->
-          val usageDuration = appInfo.usage
-            .filter {
-              if (selectedDate != null) it.usageDate == selectedDate
-              else it.usageDate >= LocalDate.now().minusDays(7)
-            }
-            .sumOf { it.usageDuration }
-
+        filteredAppStatistics.take(5).forEach { appInfo ->
           Row(
             modifier = Modifier
               .fillMaxWidth()
@@ -114,11 +132,11 @@ fun UsageSheet(
             )
             Row {
               Text(
-                text = usageDuration.toTimeUsed(),
+                text = appInfo.usage.toTimeUsed(),
                 fontFamily = archivoFamily
               )
               Text(
-                text = " (${(usageDuration / 7).toTimeUsed()})",
+                text = " (${(appInfo.usage.sumOf { it.usageDuration } / 7).toTimeUsed()})",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontFamily = archivoFamily
               )
