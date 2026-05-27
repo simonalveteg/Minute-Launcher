@@ -1,6 +1,9 @@
 package com.alveteg.simon.minutelauncher.home.stats
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -120,28 +125,47 @@ fun UsageSheet(
           )
         }
         HorizontalDivider(modifier = Modifier.padding(bottom = 4.dp))
-        filteredAppStatistics.take(5).forEach { appInfo ->
-          Row(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(horizontal = 4.dp)
-              .height(32.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-          ) {
-            Text(
-              text = appInfo.app.displayTitle ?: appInfo.app.appTitle,
-              fontFamily = archivoFamily
-            )
-            Row {
+        LazyColumn(
+          modifier = Modifier.fillMaxWidth(),
+          userScrollEnabled = false
+        ) {
+          items(
+            items = filteredAppStatistics.take(5),
+            key = { it.app.packageName }
+          ) { appInfo ->
+            Row(
+              modifier = Modifier
+                .animateItem(
+                  fadeInSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                  ),
+                  fadeOutSpec = spring(stiffness = Spring.StiffnessHigh),
+                  placementSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMedium
+                  )
+                )
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp)
+                .height(32.dp),
+              horizontalArrangement = Arrangement.SpaceBetween
+            ) {
               Text(
-                text = appInfo.usage.toTimeUsed(),
+                text = appInfo.app.displayTitle ?: appInfo.app.appTitle,
                 fontFamily = archivoFamily
               )
-              Text(
-                text = " (${(appInfo.usage.sumOf { it.usageDuration } / 7).toTimeUsed()})",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontFamily = archivoFamily
-              )
+              Row {
+                Text(
+                  text = appInfo.usage.toTimeUsed(),
+                  fontFamily = archivoFamily
+                )
+                Text(
+                  text = " (${(appInfo.usage.sumOf { it.usageDuration } / 7).toTimeUsed()})",
+                  color = MaterialTheme.colorScheme.onSurfaceVariant,
+                  fontFamily = archivoFamily
+                )
+              }
             }
           }
         }
