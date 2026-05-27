@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.font.FontStyle
@@ -35,6 +36,8 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineCom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEnd
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberToggleOnTap
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
@@ -49,6 +52,10 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer.ColumnProvider.Companion.series
+import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
+import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerController
+import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.Position
@@ -57,13 +64,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun UsageBarGraph(
   usageStatistics: List<UsageStatistics>,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
+  onIndexSelected: (Int?) -> Unit = {}
 ) {
   val modelProducer = remember { CartesianChartModelProducer() }
   val maxDuration = remember(usageStatistics) {
@@ -187,7 +196,31 @@ fun UsageBarGraph(
               line = rememberLineComponent(thickness = 0.dp),
               tick = rememberLineComponent(thickness = 0.dp),
               label = null
-            )
+            ),
+            markerController = CartesianMarkerController.rememberToggleOnTap(),
+            marker = rememberDefaultCartesianMarker(
+              label = rememberTextComponent(color = Color.Transparent),
+              labelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint
+            ),
+            markerVisibilityListener = object: CartesianMarkerVisibilityListener {
+              override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
+                onIndexSelected(targets.first().x.toInt())
+                super.onShown(marker, targets)
+              }
+
+              override fun onUpdated(
+                marker: CartesianMarker,
+                targets: List<CartesianMarker.Target>
+              ) {
+                onIndexSelected(targets.first().x.toInt())
+                super.onUpdated(marker, targets)
+              }
+
+              override fun onHidden(marker: CartesianMarker) {
+                onIndexSelected(null)
+                super.onHidden(marker)
+              }
+            }
           ),
           modelProducer = modelProducer,
           zoomState = rememberVicoZoomState(zoomEnabled = false),

@@ -23,7 +23,10 @@ import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
+import timber.log.Timber
 import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun UsageSheet(
@@ -56,7 +59,11 @@ fun UsageSheet(
     shape = MaterialTheme.shapes.large,
   ) {
     Column {
-      UsageBarGraph(usageStatistics = sortedStats)
+      UsageBarGraph(usageStatistics = sortedStats) { index ->
+        selectedDate = index?.let {
+          LocalDate.now().minusDays(7 - it.toLong())
+        }
+      }
       Column(
         modifier = Modifier
           .fillMaxWidth()
@@ -68,8 +75,9 @@ fun UsageSheet(
             .fillMaxWidth()
             .padding(horizontal = 4.dp)
         ) {
+          val date = selectedDate?.dayOfWeek?.getDisplayName(TextStyle.FULL, Locale.getDefault())?.uppercase() ?: "WEEK"
           Text(
-            text = "MOST USED APPS THIS WEEK",
+            text = "MOST USED APPS ($date)",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = archivoFamily,
