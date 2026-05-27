@@ -1,5 +1,6 @@
 package com.alveteg.simon.minutelauncher.home.stats
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -92,6 +93,7 @@ fun UsageSheet(
         modifier = Modifier
           .fillMaxWidth()
           .padding(horizontal = 8.dp, vertical = 4.dp)
+          .animateContentSize()
       ) {
         Row(
           horizontalArrangement = Arrangement.SpaceBetween,
