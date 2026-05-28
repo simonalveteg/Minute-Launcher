@@ -3,7 +3,6 @@ package com.alveteg.simon.minutelauncher.home.stats
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,16 +24,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastSumBy
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
+import timber.log.Timber
 import java.time.LocalDate
-import java.time.format.TextStyle
-import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -42,7 +38,7 @@ fun UsageSheet(
   apps: List<AppInfo>,
 ) {
 
-  var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+  var selectedDates by remember { mutableStateOf<List<LocalDate>>(emptyList()) }
 
   val sortedStats: List<UsageStatistics> = remember(apps) {
     (6 downTo 0).map { daysAgo ->
@@ -68,11 +64,12 @@ fun UsageSheet(
       .sortedByDescending { it.usage.sumOf { usage -> usage.usageDuration } }
   }
 
-  val filteredAppStatistics = remember(appStatistics, selectedDate) {
+  val filteredAppStatistics = remember(appStatistics, selectedDates) {
     appStatistics
       .map { app ->
         app.copy(
-          usage = app.usage.filter { if (selectedDate != null) it.usageDate == selectedDate else true }
+          usage = app.usage.filter { it.usageDate in selectedDates }
+            .takeIf { selectedDates.isNotEmpty() } ?: app.usage
         )
       }
       .filter { it.usage.sumOf { usage -> usage.usageDuration } > 1.seconds }
@@ -89,11 +86,14 @@ fun UsageSheet(
     shape = MaterialTheme.shapes.large,
   ) {
     Column {
-      UsageBarGraph(usageStatistics = sortedStats) { index ->
-        selectedDate = index?.let {
-          LocalDate.now().minusDays(7 - it.toLong())
+      UsageBarGraph(
+        usageStatistics = sortedStats,
+        selectedDates = selectedDates,
+        onDateSelectionChange = {
+          selectedDates = it
+          Timber.d("Selected dates: $selectedDates")
         }
-      }
+      )
       Column(
         modifier = Modifier
           .fillMaxWidth()
@@ -106,10 +106,8 @@ fun UsageSheet(
             .fillMaxWidth()
             .padding(horizontal = 4.dp)
         ) {
-          val date = selectedDate?.dayOfWeek?.getDisplayName(TextStyle.FULL, Locale.getDefault())
-            ?.uppercase() ?: "WEEK"
           Text(
-            text = "MOST USED APPS ($date)",
+            text = "MOST USED APPS",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = archivoFamily,
@@ -161,7 +159,10 @@ fun UsageSheet(
                   fontFamily = archivoFamily
                 )
                 Text(
-                  text = " (${(appInfo.usage.sumOf { it.usageDuration } / 7).toTimeUsed()})",
+                  text = " (${
+                    (appStatistics.filter { it.app.packageName == appInfo.app.packageName }
+                      .sumOf { it.usage.sumOf { it.usageDuration } } / 7).toTimeUsed()
+                  })",
                   color = MaterialTheme.colorScheme.onSurfaceVariant,
                   fontFamily = archivoFamily
                 )

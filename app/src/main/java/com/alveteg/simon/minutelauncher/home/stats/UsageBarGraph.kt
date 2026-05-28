@@ -17,13 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxOfOrNull
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
@@ -37,7 +37,6 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEnd
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.marker.rememberToggleOnTap
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
@@ -50,18 +49,19 @@ import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer.ColumnProvider.Companion.series
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
-import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerController
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.Position
+import com.patrykandpatrick.vico.core.common.component.LineComponent
+import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import com.patrykandpatrick.vico.core.common.shape.Shape
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -72,8 +72,9 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun UsageBarGraph(
   usageStatistics: List<UsageStatistics>,
+  selectedDates: List<LocalDate> = emptyList(),
+  onDateSelectionChange: (List<LocalDate>) -> Unit = {},
   modifier: Modifier = Modifier,
-  onIndexSelected: (Int?) -> Unit = {}
 ) {
   val modelProducer = remember { CartesianChartModelProducer() }
   val maxDuration = remember(usageStatistics) {
@@ -87,9 +88,6 @@ fun UsageBarGraph(
     val date = LocalDate.now().minusDays(7.minus(value).toLong())
     date.format(DateTimeFormatter.ofPattern("EEE"))
   }
-  val usageValueFormatter = CartesianValueFormatter { _, value, _ ->
-    value.milliseconds.toTimeUsed()
-  }
 
   val style = MaterialTheme.typography.bodySmall
   val resolver = LocalFontFamilyResolver.current
@@ -102,22 +100,27 @@ fun UsageBarGraph(
     )
   }.value as Typeface
 
-  LaunchedEffect(Unit) {
+  val labelTextComponent = rememberTextComponent(
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    padding = Insets(horizontalDp = 0f, verticalDp = 1f),
+  )
+
+  LaunchedEffect(usageStatistics) {
     withContext(Dispatchers.Default) {
       while (isActive) {
         modelProducer.runTransaction {
           columnSeries {
-            val dates =
-              usageStatistics.map { it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7 }
-            val durations = usageStatistics.map { it.usageDuration.inWholeMilliseconds }
-            series(y = durations, x = dates)
+            series(
+              x = usageStatistics.map {
+                it.usageDate.toEpochDay() - LocalDate.now().toEpochDay() + 7
+              },
+              y = usageStatistics.map { it.usageDuration.inWholeMilliseconds }
+            )
           }
         }
-        delay(60000L)
       }
     }
   }
-
 
   Surface(
     modifier = modifier
@@ -154,13 +157,7 @@ fun UsageBarGraph(
           modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
           chart = rememberCartesianChart(
             rememberColumnCartesianLayer(
-              columnProvider = series(
-                rememberLineComponent(
-                  fill = Fill(MaterialTheme.colorScheme.primary.toArgb()),
-                  thickness = 40.dp,
-                  shape = RoundedCornerShape(8.dp).toVicoShape()
-                )
-              ),
+              columnProvider = rememberSelectionColumnProvider(selectedDates = selectedDates),
               columnCollectionSpacing = 4.dp,
               rangeProvider = CartesianLayerRangeProvider.fixed(
                 minY = 0.0,
@@ -168,13 +165,13 @@ fun UsageBarGraph(
                 minX = 1.0,
                 maxX = 7.0
               ),
-              dataLabel = rememberTextComponent(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                padding = Insets(horizontalDp = 0f, verticalDp = 1f),
-              ),
+              dataLabel = labelTextComponent,
               dataLabelPosition = Position.Vertical.Top,
-              dataLabelValueFormatter = usageValueFormatter
+              dataLabelValueFormatter = CartesianValueFormatter { _, value, _ ->
+                value.milliseconds.toTimeUsed()
+              }
             ),
+            getXStep = { 1.0 },
             bottomAxis = HorizontalAxis.rememberBottom(
               valueFormatter = dateValueFormatter,
               guideline = null,
@@ -182,7 +179,7 @@ fun UsageBarGraph(
               line = rememberLineComponent(fill = Fill(MaterialTheme.colorScheme.outlineVariant.toArgb())),
               label = rememberTextComponent(
                 typeface = typeface,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
               )
             ),
             endAxis = VerticalAxis.rememberEnd(
@@ -198,29 +195,27 @@ fun UsageBarGraph(
               tick = rememberLineComponent(thickness = 0.dp),
               label = null
             ),
-            markerController = CartesianMarkerController.rememberToggleOnTap(),
             marker = rememberDefaultCartesianMarker(
-              label = rememberTextComponent(color = Color.Transparent),
-              labelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint
+              label = labelTextComponent,
+              labelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint,
+              valueFormatter = DefaultCartesianMarker.ValueFormatter { _, _ -> "" }
             ),
-            markerVisibilityListener = object: CartesianMarkerVisibilityListener {
+            markerVisibilityListener = object : CartesianMarkerVisibilityListener {
               override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-                onIndexSelected(targets.first().x.toInt())
-                super.onShown(marker, targets)
+                val x = targets.firstOrNull()?.x ?: return
+                val date = LocalDate.now().minusDays(7 - x.toLong())
+                val current = selectedDates.toMutableList()
+                if (date in current) current.remove(date) else current.add(date)
+                onDateSelectionChange(if (current.size == usageStatistics.size) emptyList() else current)
               }
 
               override fun onUpdated(
                 marker: CartesianMarker,
                 targets: List<CartesianMarker.Target>
               ) {
-                onIndexSelected(targets.first().x.toInt())
-                super.onUpdated(marker, targets)
               }
 
-              override fun onHidden(marker: CartesianMarker) {
-                onIndexSelected(null)
-                super.onHidden(marker)
-              }
+              override fun onHidden(marker: CartesianMarker) {}
             }
           ),
           modelProducer = modelProducer,
@@ -240,6 +235,44 @@ fun UsageBarGraph(
           .padding(bottom = 8.dp),
         textAlign = TextAlign.Center,
       )
+    }
+  }
+}
+
+@Composable
+fun rememberSelectionColumnProvider(
+  selectedDates: List<LocalDate>,
+  thickness: Dp = 16.dp,
+  shape: Shape = RoundedCornerShape(8.dp).toVicoShape(),
+): ColumnCartesianLayer.ColumnProvider {
+  val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+  val fadedColor = MaterialTheme.colorScheme.outlineVariant.toArgb()
+
+  val selectedColumn = rememberLineComponent(
+    fill = Fill(primaryColor),
+    thickness = thickness,
+    shape = shape,
+  )
+  val unselectedColumn = rememberLineComponent(
+    fill = Fill(fadedColor),
+    thickness = thickness,
+    shape = shape,
+  )
+
+  return remember(selectedDates) {
+    object : ColumnCartesianLayer.ColumnProvider {
+      override fun getColumn(
+        entry: ColumnCartesianLayerModel.Entry,
+        seriesIndex: Int,
+        extraStore: ExtraStore,
+      ): LineComponent {
+        val date = LocalDate.now().minusDays(7 - entry.x.toLong())
+        return if (selectedDates.isEmpty() || date in selectedDates) selectedColumn
+        else unselectedColumn
+      }
+
+      override fun getWidestSeriesColumn(seriesIndex: Int, extraStore: ExtraStore): LineComponent =
+        selectedColumn
     }
   }
 }
