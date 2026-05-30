@@ -46,9 +46,6 @@ fun ActionBar(
   var actionBarState by remember { mutableStateOf(ActionBarState.COLLAPSED) }
   val priorityActions = actions.take(numberOfPriorityActions)
 
-  val showMoreIcon =
-    if (actionBarState == ActionBarState.COLLAPSED) Icons.Default.ExpandMore else Icons.Default.ExpandLess
-
   Surface(
     modifier = Modifier
       .fillMaxWidth()
@@ -93,7 +90,7 @@ fun ActionBar(
               }
             }
             IconButton(onClick = { actionBarState = actionBarState.toggle() }) {
-              Icon(imageVector = showMoreIcon, contentDescription = "Show more actions")
+              Icon(imageVector = Icons.Default.ExpandMore, contentDescription = "Show more actions")
             }
           }
         } else {
@@ -122,7 +119,7 @@ fun ActionBar(
             modifier = Modifier.fillMaxWidth(),
             onClick = { actionBarState = ActionBarState.COLLAPSED }
           ) {
-            Icon(imageVector = showMoreIcon, contentDescription = "Show less actions")
+            Icon(imageVector = Icons.Default.ExpandLess, contentDescription = "Show less actions")
           }
         }
       }
