@@ -29,7 +29,6 @@ import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
-import timber.log.Timber
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 
@@ -38,7 +37,7 @@ fun UsageSheet(
   apps: List<AppInfo>,
 ) {
 
-  var selectedDates by remember { mutableStateOf<List<LocalDate>>(emptyList()) }
+  var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
   val sortedStats: List<UsageStatistics> = remember(apps) {
     (6 downTo 0).map { daysAgo ->
@@ -64,12 +63,12 @@ fun UsageSheet(
       .sortedByDescending { it.usage.sumOf { usage -> usage.usageDuration } }
   }
 
-  val filteredAppStatistics = remember(appStatistics, selectedDates) {
+  val filteredAppStatistics = remember(appStatistics, selectedDate) {
     appStatistics
       .map { app ->
         app.copy(
-          usage = app.usage.filter { it.usageDate in selectedDates }
-            .takeIf { selectedDates.isNotEmpty() } ?: app.usage
+          usage = app.usage.filter { it.usageDate == selectedDate }
+            .takeIf { selectedDate != null } ?: app.usage
         )
       }
       .filter { it.usage.sumOf { usage -> usage.usageDuration } > 1.seconds }
@@ -88,10 +87,9 @@ fun UsageSheet(
     Column {
       UsageBarGraph(
         usageStatistics = sortedStats,
-        selectedDates = selectedDates,
+        selectedDate = selectedDate,
         onDateSelectionChange = {
-          selectedDates = it
-          Timber.d("Selected dates: $selectedDates")
+          selectedDate = it
         }
       )
       Column(

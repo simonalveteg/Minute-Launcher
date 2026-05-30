@@ -1,7 +1,6 @@
 package com.alveteg.simon.minutelauncher.home.stats
 
 import android.graphics.Typeface
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,13 +15,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
@@ -42,6 +37,8 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEnd
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberShowOnHover
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberShowOnPress
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
@@ -62,7 +59,6 @@ import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerController
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
-import com.patrykandpatrick.vico.core.cartesian.marker.Interaction
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.Position
@@ -80,8 +76,8 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun UsageBarGraph(
   usageStatistics: List<UsageStatistics>,
-  selectedDates: List<LocalDate> = emptyList(),
-  onDateSelectionChange: (List<LocalDate>) -> Unit = {},
+  selectedDate: LocalDate? = null,
+  onDateSelectionChange: (LocalDate?) -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val modelProducer = remember { CartesianChartModelProducer() }
@@ -112,43 +108,6 @@ fun UsageBarGraph(
     color = MaterialTheme.colorScheme.onSurfaceVariant,
     padding = Insets(horizontalDp = 0f, verticalDp = 1f),
   )
-
-  var isScrolling by remember { mutableStateOf(false) }
-  val markerController = remember {
-    object : CartesianMarkerController {
-      private var isPressed = false
-
-      override val acceptsLongPress = false
-
-      override fun shouldAcceptInteraction(
-        interaction: Interaction,
-        targets: List<CartesianMarker.Target>,
-      ) =
-        if (isScrolling) false else
-          when (interaction) {
-            is Interaction.Press -> {
-              isPressed = true
-              true
-            }
-
-            is Interaction.Move -> isPressed
-            is Interaction.Release -> {
-              isPressed = false
-              true
-            }
-
-            else -> false
-          }
-
-      override fun shouldShowMarker(
-        interaction: Interaction,
-        targets: List<CartesianMarker.Target>
-      ) = interaction !is Interaction.Release && !isScrolling
-
-      override fun hashCode() = 31
-      override fun equals(other: Any?) = other === this
-    }
-  }
 
   LaunchedEffect(usageStatistics) {
     withContext(Dispatchers.Default) {
@@ -200,18 +159,10 @@ fun UsageBarGraph(
         HorizontalDivider()
         CartesianChartHost(
           modifier = Modifier
-            .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp)
-            .pointerInput(Unit) {
-              detectDragGestures(
-                onDragStart = { isScrolling = true },
-                onDragEnd = { isScrolling = false },
-                onDragCancel = { isScrolling = false },
-                onDrag = { _, _ ->  }
-              )
-            },
+            .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
           chart = rememberCartesianChart(
             rememberColumnCartesianLayer(
-              columnProvider = rememberSelectionColumnProvider(selectedDates = selectedDates),
+              columnProvider = rememberSelectionColumnProvider(selectedDate = selectedDate),
               columnCollectionSpacing = 4.dp,
               rangeProvider = CartesianLayerRangeProvider.fixed(
                 minY = 0.0,
@@ -259,9 +210,7 @@ fun UsageBarGraph(
               override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
                 val x = targets.firstOrNull()?.x ?: return
                 val date = LocalDate.now().minusDays(7 - x.toLong())
-                val current = selectedDates.toMutableList()
-                if (date in current) current.remove(date) else current.add(date)
-                onDateSelectionChange(if (current.size == usageStatistics.size) emptyList() else current)
+                onDateSelectionChange(date)
               }
 
               override fun onUpdated(
@@ -269,9 +218,11 @@ fun UsageBarGraph(
                 targets: List<CartesianMarker.Target>
               ) {}
 
-              override fun onHidden(marker: CartesianMarker) {}
+              override fun onHidden(marker: CartesianMarker) {
+                onDateSelectionChange(null)
+              }
             },
-            markerController = markerController
+            markerController = CartesianMarkerController.rememberShowOnPress()
           ),
           modelProducer = modelProducer,
           zoomState = rememberVicoZoomState(zoomEnabled = false),
@@ -296,7 +247,7 @@ fun UsageBarGraph(
 
 @Composable
 private fun rememberSelectionColumnProvider(
-  selectedDates: List<LocalDate>,
+  selectedDate: LocalDate?,
   thickness: Dp = 16.dp,
   shape: Shape = RoundedCornerShape(8.dp).toVicoShape(),
 ): ColumnCartesianLayer.ColumnProvider {
@@ -314,7 +265,7 @@ private fun rememberSelectionColumnProvider(
     shape = shape,
   )
 
-  return remember(selectedDates) {
+  return remember(selectedDate) {
     object : ColumnCartesianLayer.ColumnProvider {
       override fun getColumn(
         entry: ColumnCartesianLayerModel.Entry,
@@ -322,7 +273,7 @@ private fun rememberSelectionColumnProvider(
         extraStore: ExtraStore,
       ): LineComponent {
         val date = LocalDate.now().minusDays(7 - entry.x.toLong())
-        return if (selectedDates.isEmpty() || date in selectedDates) selectedColumn
+        return if (selectedDate == null || date == selectedDate) selectedColumn
         else unselectedColumn
       }
 
