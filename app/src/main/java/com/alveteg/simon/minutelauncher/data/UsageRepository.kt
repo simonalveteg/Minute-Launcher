@@ -9,7 +9,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import timber.log.Timber
 import java.time.LocalDate
@@ -33,8 +35,8 @@ class UsageRepository @Inject constructor(
   private val usageStatsManager =
     context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
-  private val _usageStats = MutableSharedFlow<List<UsageStatistics>>(replay = 1)
-  val usageStats = _usageStats.asSharedFlow()
+  private val _usageStats = MutableStateFlow<List<UsageStatistics>>(emptyList())
+  val usageStats = _usageStats.asStateFlow()
 
 
   fun registerCallback(callback: LauncherApps.Callback) {
@@ -71,8 +73,8 @@ class UsageRepository @Inject constructor(
   suspend fun startUsageUpdater() {
     Timber.d("Starting usage updater.")
     while (currentCoroutineContext().isActive) {
-      Timber.d("Emitting usage stats.")
-      _usageStats.emit(getDailyStatsForWeek())
+      val stats = getDailyStatsForWeek()
+      _usageStats.value = stats
       delay(TimeUnit.MINUTES.toMillis(1))
     }
   }

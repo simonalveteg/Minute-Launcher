@@ -5,10 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.UsageRepository
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.data.SwipeApp
+import com.alveteg.simon.minutelauncher.data.UsageRepository
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.theme.AppTheme
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -41,15 +40,35 @@ class SettingsViewModel @Inject constructor(
   val appsWithTimers = roomRepository.timerApps()
 
   val appTheme = preferenceRepository.appTheme
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.APP_THEME)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.APP_THEME
+    )
   val useDynamicColor = preferenceRepository.useDynamicColor
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.USE_DYNAMIC_COLOR)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.USE_DYNAMIC_COLOR
+    )
   val transparencyAmount = preferenceRepository.transparencyAmount
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT
+    )
   val timerLength = preferenceRepository.timerLength
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.TIMER_LENGTH)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.TIMER_LENGTH
+    )
   val skipAppModal = preferenceRepository.skipAppModal
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PreferenceRepository.Defaults.SKIP_APP_MODAL)
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.SKIP_APP_MODAL
+    )
 
   val installedApps = combine(
     roomRepository.appList(),
@@ -111,18 +130,14 @@ class SettingsViewModel @Inject constructor(
     Timber.d(event.toString())
     when (event) {
       is HomeEvent.UpdateAppTimer -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.updateAppTimer(event.app, event.timerValue)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.updateAppTimer(event.app, event.timerValue)
         }
       }
 
       is HomeEvent.ResetAppTimerToDefault -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.removeAppTimer(event.app)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.removeAppTimer(event.app)
         }
       }
 
@@ -132,18 +147,14 @@ class SettingsViewModel @Inject constructor(
       }
 
       is SettingsEvent.ClearAppGesture -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.removeAppForGesture(event.gesture)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.removeAppForGesture(event.gesture)
         }
       }
 
       is SettingsEvent.SetAppGesture -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.insertGestureApp(SwipeApp(event.gesture, event.app))
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.insertGestureApp(SwipeApp(event.gesture, event.app))
         }
         sendUiEvent(UiEvent.Navigate(route = SettingsScreen.HOME, popBackStack = true))
       }

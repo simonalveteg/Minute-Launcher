@@ -17,7 +17,11 @@ data class App(
   @PrimaryKey val packageName: String,
   val appTitle: String,
   val displayTitle: String? = null
-)
+) {
+  companion object {
+    val EMPTY = App("", "")
+  }
+}
 
 fun LauncherActivityInfo.toApp() =
   App(

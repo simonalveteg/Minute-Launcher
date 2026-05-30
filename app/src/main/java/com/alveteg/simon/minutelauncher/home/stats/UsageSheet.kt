@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.data.App
@@ -29,6 +30,7 @@ import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
+import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
@@ -93,82 +95,84 @@ fun UsageSheet(
           selectedDate = it
         }
       )
-      Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 8.dp, vertical = 4.dp)
-      ) {
-        Row(
-          horizontalArrangement = Arrangement.SpaceBetween,
+      if (isUsageAccessGranted(LocalContext.current)) {
+        Column(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .animateContentSize()
         ) {
-          Text(
-            text = "MOST USED APPS",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = archivoFamily,
-            modifier = Modifier.weight(1f)
-          )
-          Text(
-            text = "DURATION (AVG)",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = archivoFamily,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f)
-          )
-        }
-        HorizontalDivider(modifier = Modifier.padding(bottom = 4.dp))
-        LazyColumn(
-          modifier = Modifier.fillMaxWidth(),
-          userScrollEnabled = false
-        ) {
-          items(
-            items = filteredAppStatistics.take(5).let { list ->
-              val padding = (5 - list.size).coerceAtLeast(0)
-              list + List(padding) { AppInfo(App(it.toString(), ""), false, 0, emptyList()) }
-
-            },
-            key = { it.app.packageName }
-          ) { appInfo ->
-            val averageUsage =
-              appStatistics.find { it.app.packageName == appInfo.app.packageName }?.let {
-                it.usage.sumOf { it.usageDuration }.div(7).toTimeUsed()
-              }.let { if (it != null) " ($it)" else "" }
-            Row(
-              modifier = Modifier
-                .animateItem(
-                  fadeInSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                  ),
-                  fadeOutSpec = spring(stiffness = Spring.StiffnessHigh),
-                  placementSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessMedium
+          Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(horizontal = 4.dp)
+          ) {
+            Text(
+              text = "MOST USED APPS",
+              style = MaterialTheme.typography.labelSmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              fontFamily = archivoFamily,
+              modifier = Modifier.weight(1f)
+            )
+            Text(
+              text = "DURATION (AVG)",
+              style = MaterialTheme.typography.labelSmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              fontFamily = archivoFamily,
+              textAlign = TextAlign.End,
+              modifier = Modifier.weight(1f)
+            )
+          }
+          HorizontalDivider(modifier = Modifier.padding(bottom = 4.dp))
+          LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            userScrollEnabled = false
+          ) {
+            items(
+              items = filteredAppStatistics.take(5).let { list ->
+                val padding = (5 - list.size).coerceAtLeast(0)
+                list + List(padding) { AppInfo.EMPTY }
+              },
+              key = { it.app.packageName }
+            ) { appInfo ->
+              val averageUsage =
+                appStatistics.find { it.app.packageName == appInfo.app.packageName }?.let {
+                  it.usage.sumOf { it.usageDuration }.div(7).toTimeUsed()
+                }.let { if (it != null) " ($it)" else "" }
+              Row(
+                modifier = Modifier
+                  .animateItem(
+                    fadeInSpec = spring(
+                      dampingRatio = Spring.DampingRatioMediumBouncy,
+                      stiffness = Spring.StiffnessLow
+                    ),
+                    fadeOutSpec = spring(stiffness = Spring.StiffnessHigh),
+                    placementSpec = spring(
+                      dampingRatio = Spring.DampingRatioLowBouncy,
+                      stiffness = Spring.StiffnessMedium
+                    )
                   )
-                )
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp)
-                .height(32.dp),
-              horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-              Text(
-                text = appInfo.app.displayTitle ?: appInfo.app.appTitle,
-                fontFamily = archivoFamily
-              )
-              Row {
+                  .fillMaxWidth()
+                  .padding(horizontal = 4.dp)
+                  .height(32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+              ) {
                 Text(
-                  text = appInfo.usage.toTimeUsed(),
+                  text = appInfo.app.displayTitle ?: appInfo.app.appTitle,
                   fontFamily = archivoFamily
                 )
-                Text(
-                  text = averageUsage,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant,
-                  fontFamily = archivoFamily
-                )
+                Row {
+                  Text(
+                    text = appInfo.usage.toTimeUsed(),
+                    fontFamily = archivoFamily
+                  )
+                  Text(
+                    text = averageUsage,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = archivoFamily
+                  )
+                }
               }
             }
           }

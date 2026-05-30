@@ -1,5 +1,7 @@
 package com.alveteg.simon.minutelauncher.home
 
+import android.app.AppOpsManager
+import android.content.Context
 import android.content.pm.LauncherApps
 import android.os.UserHandle
 import androidx.lifecycle.ViewModel
@@ -8,15 +10,16 @@ import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.UsageRepository
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
+import com.alveteg.simon.minutelauncher.data.UsageRepository
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.settings.SettingsEvent
 import com.alveteg.simon.minutelauncher.settings.SettingsScreen
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,7 +32,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -38,6 +40,7 @@ class HomeViewModel @Inject constructor(
   private val roomRepository: LauncherRepository,
   private val usageRepository: UsageRepository,
   private val preferenceRepository: PreferenceRepository,
+  @ApplicationContext private val context: Context
 ) : ViewModel() {
 
   private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -91,7 +94,6 @@ class HomeViewModel @Inject constructor(
   private val _favoriteApps = MutableStateFlow<List<AppInfo>>(emptyList())
   val favoriteApps = _favoriteApps.asStateFlow()
 
-
   val installedApps = combine(
     roomRepository.appList(),
     roomRepository.timerApps(),
@@ -114,6 +116,12 @@ class HomeViewModel @Inject constructor(
     apps.filterBySearchTerm(searchTerm)
   }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+  private val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+  private val usageAccessCallback = AppOpsManager.OnOpChangedListener { _, _ ->
+    if (isUsageAccessGranted(context)) {
+      monitorUsage()
+    }
+  }
 
   private val packageCallback = object : LauncherApps.Callback() {
     override fun onPackageRemoved(packageName: String?, user: UserHandle?) {
@@ -143,54 +151,52 @@ class HomeViewModel @Inject constructor(
   }
 
   init {
-    Timber.d("ViewModel initialized!")
     usageRepository.registerCallback(packageCallback)
     updateDatabase()
-    monitorUsage()
 
-    viewModelScope.launch {
-      withContext(Dispatchers.IO) {
-        combine(
-          roomRepository.favoriteApps(), installedApps
-        ) { favorites, apps ->
-          favorites.sortedBy { it.favoriteApp.order }.mapNotNull { favorite ->
-            apps.find { it.app.packageName == favorite.app.packageName }?.let { app ->
-              AppInfo(favorite.app, true, app.timer, app.usage)
-            }
+    val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+    appOps.startWatchingMode(
+      AppOpsManager.OPSTR_GET_USAGE_STATS,
+      context.packageName,
+      usageAccessCallback
+    )
+
+    viewModelScope.launch(Dispatchers.IO) {
+      combine(
+        roomRepository.favoriteApps(), installedApps
+      ) { favorites, apps ->
+        favorites.sortedBy { it.favoriteApp.order }.mapNotNull { favorite ->
+          apps.find { it.app.packageName == favorite.app.packageName }?.let { app ->
+            AppInfo(favorite.app, true, app.timer, app.usage)
           }
-        }.collect { favorites ->
-          Timber.d("Favorite apps updated: ${favorites.size}")
-          _favoriteApps.value = favorites
         }
-
+      }.collect { favorites ->
+        Timber.d("Favorite apps updated: ${favorites.size}")
+        _favoriteApps.value = favorites
       }
     }
   }
 
   private fun monitorUsage() {
-    viewModelScope.launch {
-      withContext(Dispatchers.IO) {
-        usageRepository.startUsageUpdater()
-      }
+    viewModelScope.launch(Dispatchers.IO) {
+      usageRepository.startUsageUpdater()
     }
   }
 
   private fun updateDatabase() {
     Timber.d("Update Database Called")
-    viewModelScope.launch {
-      withContext(Dispatchers.IO) {
-        val currentApps = roomRepository.appList().first()
-        val installedApps = usageRepository.getApps()
-        val currentAppPackageNames = currentApps.map { it.packageName }.toSet()
-        val installedAppPackageNames = installedApps.map { it.packageName }.toSet()
-        val newApps = installedApps.filter { !currentAppPackageNames.contains(it.packageName) }
-        val removedApps = currentApps.filter { !installedAppPackageNames.contains(it.packageName) }
+    viewModelScope.launch(Dispatchers.IO) {
+      val currentApps = roomRepository.appList().first()
+      val installedApps = usageRepository.getApps()
+      val currentAppPackageNames = currentApps.map { it.packageName }.toSet()
+      val installedAppPackageNames = installedApps.map { it.packageName }.toSet()
+      val newApps = installedApps.filter { !currentAppPackageNames.contains(it.packageName) }
+      val removedApps = currentApps.filter { !installedAppPackageNames.contains(it.packageName) }
 
-        Timber.d("${newApps.size} new apps and ${removedApps.size} removed apps found.")
+      Timber.d("${newApps.size} new apps and ${removedApps.size} removed apps found.")
 
-        newApps.forEach { roomRepository.insertApp(it) }
-        removedApps.forEach { roomRepository.removeApp(it) }
-      }
+      newApps.forEach { roomRepository.insertApp(it) }
+      removedApps.forEach { roomRepository.removeApp(it) }
     }
   }
 
@@ -227,11 +233,9 @@ class HomeViewModel @Inject constructor(
       }
 
       is HomeEvent.ToggleFavorite -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            Timber.d("Toggle favorite app ${event.app.appTitle}")
-            roomRepository.toggleFavorite(event.app)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          Timber.d("Toggle favorite app ${event.app.appTitle}")
+          roomRepository.toggleFavorite(event.app)
         }
       }
 
@@ -250,14 +254,12 @@ class HomeViewModel @Inject constructor(
           }
 
           else -> {
-            viewModelScope.launch {
-              withContext(Dispatchers.IO) {
-                val appInfo = roomRepository.getAppInfoForGesture(gesture)?.let {
-                  getAppInfoForApp(it.app)
-                }
-                sendUiEvent(UiEvent.TriggerGesture(gesture, appInfo))
-                sendUiEvent(UiEvent.VibrateLongPress)
+            viewModelScope.launch(Dispatchers.IO) {
+              val appInfo = roomRepository.getAppInfoForGesture(gesture)?.let {
+                getAppInfoForApp(it.app)
               }
+              sendUiEvent(UiEvent.TriggerGesture(gesture, appInfo))
+              sendUiEvent(UiEvent.VibrateLongPress)
             }
           }
         }
@@ -274,66 +276,50 @@ class HomeViewModel @Inject constructor(
         _favoriteApps.value = favorites.toList()
 
         Timber.d("Favorite order updated: $favorites")
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.updateFavoritesOrder(favorites.map { it.app })
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.updateFavoritesOrder(favorites.map { it.app })
         }
       }
 
       is HomeEvent.UpdateAppTimer -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.updateAppTimer(event.app, event.timerValue)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.updateAppTimer(event.app, event.timerValue)
         }
       }
 
       is HomeEvent.ResetAppTimerToDefault -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.removeAppTimer(event.app)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.removeAppTimer(event.app)
         }
       }
 
       is HomeEvent.SetDisplayName -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.updateApp(event.app.copy(displayTitle = event.displayName))
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.updateApp(event.app.copy(displayTitle = event.displayName))
         }
       }
 
       is HomeEvent.ResetDisplayName -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            roomRepository.updateApp(event.app.copy(displayTitle = null))
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          roomRepository.updateApp(event.app.copy(displayTitle = null))
         }
       }
 
       is HomeEvent.HideDefaultAppPrompt -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            preferenceRepository.setShowDefaultHomePrompt(false)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          preferenceRepository.setShowDefaultHomePrompt(false)
         }
       }
 
       is HomeEvent.HideUsageAccessPrompt -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            preferenceRepository.setShowUsageAccessPrompt(false)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          preferenceRepository.setShowUsageAccessPrompt(false)
         }
       }
 
       is HomeEvent.HideAdminAccessPrompt -> {
-        viewModelScope.launch {
-          withContext(Dispatchers.IO) {
-            preferenceRepository.setShowAdminAccessPrompt(false)
-          }
+        viewModelScope.launch(Dispatchers.IO) {
+          preferenceRepository.setShowAdminAccessPrompt(false)
         }
       }
 
@@ -354,7 +340,7 @@ class HomeViewModel @Inject constructor(
   }
 
   override fun onCleared() {
-    Timber.d("HomeViewModel Cleared.")
+    appOps.stopWatchingMode(usageAccessCallback)
     usageRepository.unregisterCallback()
     super.onCleared()
   }

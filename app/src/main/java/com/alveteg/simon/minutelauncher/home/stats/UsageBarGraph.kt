@@ -3,7 +3,6 @@ package com.alveteg.simon.minutelauncher.home.stats
 import android.graphics.Typeface
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
@@ -32,6 +32,7 @@ import androidx.compose.ui.util.fastMaxOfOrNull
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
+import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -40,7 +41,6 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEnd
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
-import com.patrykandpatrick.vico.compose.cartesian.marker.rememberShowOnHover
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberShowOnPress
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
@@ -107,6 +107,8 @@ fun UsageBarGraph(
       fontSynthesis = style.fontSynthesis ?: FontSynthesis.All,
     )
   }.value as Typeface
+
+  val context = LocalContext.current
 
   val labelTextComponent = rememberTextComponent(
     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -244,8 +246,9 @@ fun UsageBarGraph(
         )
       }
     } else {
+      val usageAccess = isUsageAccessGranted(context)
       Text(
-        text = "No recent usage found.",
+        text = if (usageAccess) "No recent usage found." else "Usage access is not granted.",
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()
