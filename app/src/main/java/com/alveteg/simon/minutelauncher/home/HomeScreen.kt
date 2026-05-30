@@ -191,7 +191,6 @@ fun HomeScreen(
           onAppClick = appListSelectionAction,
           apps = apps,
           offsetY = offsetY,
-          usageStatistics = installedApps.flatMap { it.usage },
           onSearch = {
             apps.firstOrNull()?.let {
               appListSelectionAction(it)

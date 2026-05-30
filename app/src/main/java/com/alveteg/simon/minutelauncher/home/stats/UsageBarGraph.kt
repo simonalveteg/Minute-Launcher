@@ -1,6 +1,9 @@
 package com.alveteg.simon.minutelauncher.home.stats
 
 import android.graphics.Typeface
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,6 +73,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -244,7 +248,6 @@ fun UsageBarGraph(
     }
   }
 }
-
 @Composable
 private fun rememberSelectionColumnProvider(
   selectedDate: LocalDate?,
@@ -254,31 +257,53 @@ private fun rememberSelectionColumnProvider(
   val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
   val fadedColor = MaterialTheme.colorScheme.outlineVariant.toArgb()
 
-  val selectedColumn = rememberLineComponent(
-    fill = Fill(primaryColor),
-    thickness = thickness,
-    shape = shape,
-  )
-  val unselectedColumn = rememberLineComponent(
-    fill = Fill(fadedColor),
-    thickness = thickness,
-    shape = shape,
-  )
+  val animatables = remember { List(7) { Animatable(1f) } }
 
-  return remember(selectedDate) {
+  animatables.forEachIndexed { index, animatable ->
+    val date = LocalDate.now().minusDays(7 - (index + 1).toLong())
+    val target = if (selectedDate == null || date == selectedDate) 1f else 0f
+    LaunchedEffect(target) {
+      animatable.animateTo(target, animationSpec = spring())
+    }
+  }
+
+  // Rebuild provider every frame by keying on current animated values
+  val fractions = animatables.map { it.value }
+
+  return remember(fractions) {
     object : ColumnCartesianLayer.ColumnProvider {
       override fun getColumn(
         entry: ColumnCartesianLayerModel.Entry,
         seriesIndex: Int,
         extraStore: ExtraStore,
       ): LineComponent {
-        val date = LocalDate.now().minusDays(7 - entry.x.toLong())
-        return if (selectedDate == null || date == selectedDate) selectedColumn
-        else unselectedColumn
+        val index = entry.x.toInt() - 1  // x is 1..7
+        val fraction = fractions.getOrElse(index) { 1f }
+        val color = lerpArgb(fadedColor, primaryColor, fraction)
+        return LineComponent(
+          fill = Fill(color),
+          thicknessDp = thickness.value,
+          shape = shape,
+        )
       }
 
-      override fun getWidestSeriesColumn(seriesIndex: Int, extraStore: ExtraStore): LineComponent =
-        selectedColumn
+      override fun getWidestSeriesColumn(
+        seriesIndex: Int,
+        extraStore: ExtraStore,
+      ): LineComponent = LineComponent(
+        fill = Fill(primaryColor),
+        thicknessDp = thickness.value,
+        shape = shape,
+      )
     }
   }
+}
+
+private fun lerpArgb(from: Int, to: Int, fraction: Float): Int {
+  fun channel(f: Int, t: Int) =
+    ((f + (t - f) * fraction).roundToInt()).coerceIn(0, 255)
+  return (channel((from ushr 24) and 0xFF, (to ushr 24) and 0xFF) shl 24) or
+      (channel((from ushr 16) and 0xFF, (to ushr 16) and 0xFF) shl 16) or
+      (channel((from ushr 8)  and 0xFF, (to ushr 8)  and 0xFF) shl 8)  or
+      channel( from          and 0xFF,  to           and 0xFF)
 }

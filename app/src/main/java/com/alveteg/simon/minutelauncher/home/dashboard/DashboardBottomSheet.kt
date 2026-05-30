@@ -13,8 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.UsageStatistics
-import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.home.stats.UsageSheet
 
 @Composable

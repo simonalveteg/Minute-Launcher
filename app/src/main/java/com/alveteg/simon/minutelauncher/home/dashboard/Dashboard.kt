@@ -37,7 +37,6 @@ fun Dashboard(
   apps: List<AppInfo>,
   offsetY: Animatable<Float, AnimationVector1D>,
   onAppClick: (AppInfo) -> Unit,
-  usageStatistics: List<UsageStatistics>,
   onSearch: KeyboardActionScope.() -> Unit
 ) {
   AnimatedVisibility(

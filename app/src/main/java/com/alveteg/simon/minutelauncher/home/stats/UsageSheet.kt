@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.sumOf
@@ -96,7 +97,6 @@ fun UsageSheet(
         modifier = Modifier
           .fillMaxWidth()
           .padding(horizontal = 8.dp, vertical = 4.dp)
-          .animateContentSize()
       ) {
         Row(
           horizontalArrangement = Arrangement.SpaceBetween,
@@ -126,9 +126,17 @@ fun UsageSheet(
           userScrollEnabled = false
         ) {
           items(
-            items = filteredAppStatistics.take(5),
+            items = filteredAppStatistics.take(5).let { list ->
+              val padding = (5 - list.size).coerceAtLeast(0)
+              list + List(padding) { AppInfo(App(it.toString(), ""), false, 0, emptyList()) }
+
+            },
             key = { it.app.packageName }
           ) { appInfo ->
+            val averageUsage =
+              appStatistics.find { it.app.packageName == appInfo.app.packageName }?.let {
+                it.usage.sumOf { it.usageDuration }.div(7).toTimeUsed()
+              }.let { if (it != null) " ($it)" else "" }
             Row(
               modifier = Modifier
                 .animateItem(
@@ -157,10 +165,7 @@ fun UsageSheet(
                   fontFamily = archivoFamily
                 )
                 Text(
-                  text = " (${
-                    (appStatistics.filter { it.app.packageName == appInfo.app.packageName }
-                      .sumOf { it.usage.sumOf { it.usageDuration } } / 7).toTimeUsed()
-                  })",
+                  text = averageUsage,
                   color = MaterialTheme.colorScheme.onSurfaceVariant,
                   fontFamily = archivoFamily
                 )
