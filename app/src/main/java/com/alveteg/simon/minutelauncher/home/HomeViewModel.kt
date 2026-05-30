@@ -8,7 +8,7 @@ import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.ApplicationRepository
+import com.alveteg.simon.minutelauncher.data.UsageRepository
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
@@ -32,12 +32,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
   private val roomRepository: LauncherRepository,
-  private val applicationRepository: ApplicationRepository,
+  private val usageRepository: UsageRepository,
   private val preferenceRepository: PreferenceRepository,
 ) : ViewModel() {
 
@@ -97,7 +96,7 @@ class HomeViewModel @Inject constructor(
     roomRepository.appList(),
     roomRepository.timerApps(),
     roomRepository.favoriteApps(),
-    applicationRepository.usageStats,
+    usageRepository.usageStats,
     timerLength
   ) { apps, timerApps, favorites, usageStats, defaultTimerLength ->
     apps.map { app ->
@@ -145,7 +144,7 @@ class HomeViewModel @Inject constructor(
 
   init {
     Timber.d("ViewModel initialized!")
-    applicationRepository.registerCallback(packageCallback)
+    usageRepository.registerCallback(packageCallback)
     updateDatabase()
     monitorUsage()
 
@@ -171,7 +170,7 @@ class HomeViewModel @Inject constructor(
   private fun monitorUsage() {
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
-        applicationRepository.startUsageUpdater()
+        usageRepository.startUsageUpdater()
       }
     }
   }
@@ -181,7 +180,7 @@ class HomeViewModel @Inject constructor(
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         val currentApps = roomRepository.appList().first()
-        val installedApps = applicationRepository.getApps()
+        val installedApps = usageRepository.getApps()
         val currentAppPackageNames = currentApps.map { it.packageName }.toSet()
         val installedAppPackageNames = installedApps.map { it.packageName }.toSet()
         val newApps = installedApps.filter { !currentAppPackageNames.contains(it.packageName) }
@@ -206,7 +205,7 @@ class HomeViewModel @Inject constructor(
       is HomeEvent.LaunchActivity -> {
         val appInfo = event.appInfo
         Timber.d("Launch Activity ${appInfo.app.appTitle}")
-        applicationRepository.getLaunchIntentForPackage(appInfo.app.packageName)?.let { intent ->
+        usageRepository.getLaunchIntentForPackage(appInfo.app.packageName)?.let { intent ->
           sendUiEvent(UiEvent.LaunchActivity(intent))
           sendUiEvent(
             UiEvent.ShowToast(
@@ -356,7 +355,7 @@ class HomeViewModel @Inject constructor(
 
   override fun onCleared() {
     Timber.d("HomeViewModel Cleared.")
-    applicationRepository.unregisterCallback()
+    usageRepository.unregisterCallback()
     super.onCleared()
   }
 }

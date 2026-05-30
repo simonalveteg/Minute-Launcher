@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.ApplicationRepository
+import com.alveteg.simon.minutelauncher.data.UsageRepository
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.data.SwipeApp
@@ -31,7 +31,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
   private val roomRepository: LauncherRepository,
   private val preferenceRepository: PreferenceRepository,
-  private val applicationRepository: ApplicationRepository
+  private val usageRepository: UsageRepository
 ) : ViewModel() {
 
   private val _searchTerm = MutableStateFlow("")
@@ -55,7 +55,7 @@ class SettingsViewModel @Inject constructor(
     roomRepository.appList(),
     roomRepository.timerApps(),
     roomRepository.favoriteApps(),
-    applicationRepository.usageStats,
+    usageRepository.usageStats,
     timerLength
   ) { apps, timerApps, favorites, usageStats, defaultTimerLength ->
     apps.map { app ->

@@ -2,7 +2,7 @@ package com.alveteg.simon.minutelauncher
 
 import android.content.Context
 import androidx.room.Room
-import com.alveteg.simon.minutelauncher.data.ApplicationRepository
+import com.alveteg.simon.minutelauncher.data.UsageRepository
 import com.alveteg.simon.minutelauncher.data.LauncherDao
 import com.alveteg.simon.minutelauncher.data.LauncherDatabase
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
@@ -52,8 +52,8 @@ object AppModule {
 
   @Provides
   @Singleton
-  fun provideApplicationRepository(context: Context): ApplicationRepository {
-    return ApplicationRepository(context)
+  fun provideApplicationRepository(context: Context): UsageRepository {
+    return UsageRepository(context)
   }
 
   @Provides

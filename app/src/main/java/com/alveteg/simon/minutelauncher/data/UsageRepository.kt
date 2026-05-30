@@ -16,10 +16,9 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
-class ApplicationRepository @Inject constructor(
+class UsageRepository @Inject constructor(
   @ApplicationContext private val context: Context
 ) {
 
