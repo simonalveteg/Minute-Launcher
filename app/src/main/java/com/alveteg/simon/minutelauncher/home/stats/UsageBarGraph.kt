@@ -1,6 +1,7 @@
 package com.alveteg.simon.minutelauncher.home.stats
 
 import android.graphics.Typeface
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,9 +16,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
@@ -52,9 +57,12 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer.MergeMode
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
+import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerController
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.core.cartesian.marker.Interaction
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.Position
@@ -105,6 +113,43 @@ fun UsageBarGraph(
     padding = Insets(horizontalDp = 0f, verticalDp = 1f),
   )
 
+  var isScrolling by remember { mutableStateOf(false) }
+  val markerController = remember {
+    object : CartesianMarkerController {
+      private var isPressed = false
+
+      override val acceptsLongPress = false
+
+      override fun shouldAcceptInteraction(
+        interaction: Interaction,
+        targets: List<CartesianMarker.Target>,
+      ) =
+        if (isScrolling) false else
+          when (interaction) {
+            is Interaction.Press -> {
+              isPressed = true
+              true
+            }
+
+            is Interaction.Move -> isPressed
+            is Interaction.Release -> {
+              isPressed = false
+              true
+            }
+
+            else -> false
+          }
+
+      override fun shouldShowMarker(
+        interaction: Interaction,
+        targets: List<CartesianMarker.Target>
+      ) = interaction !is Interaction.Release && !isScrolling
+
+      override fun hashCode() = 31
+      override fun equals(other: Any?) = other === this
+    }
+  }
+
   LaunchedEffect(usageStatistics) {
     withContext(Dispatchers.Default) {
       while (isActive) {
@@ -154,7 +199,16 @@ fun UsageBarGraph(
         }
         HorizontalDivider()
         CartesianChartHost(
-          modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
+          modifier = Modifier
+            .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 12.dp)
+            .pointerInput(Unit) {
+              detectDragGestures(
+                onDragStart = { isScrolling = true },
+                onDragEnd = { isScrolling = false },
+                onDragCancel = { isScrolling = false },
+                onDrag = { _, _ ->  }
+              )
+            },
           chart = rememberCartesianChart(
             rememberColumnCartesianLayer(
               columnProvider = rememberSelectionColumnProvider(selectedDates = selectedDates),
@@ -165,6 +219,7 @@ fun UsageBarGraph(
                 minX = 1.0,
                 maxX = 7.0
               ),
+              mergeMode = { MergeMode.Stacked },
               dataLabel = labelTextComponent,
               dataLabelPosition = Position.Vertical.Top,
               dataLabelValueFormatter = CartesianValueFormatter { _, value, _ ->
@@ -212,11 +267,11 @@ fun UsageBarGraph(
               override fun onUpdated(
                 marker: CartesianMarker,
                 targets: List<CartesianMarker.Target>
-              ) {
-              }
+              ) {}
 
               override fun onHidden(marker: CartesianMarker) {}
-            }
+            },
+            markerController = markerController
           ),
           modelProducer = modelProducer,
           zoomState = rememberVicoZoomState(zoomEnabled = false),
@@ -240,7 +295,7 @@ fun UsageBarGraph(
 }
 
 @Composable
-fun rememberSelectionColumnProvider(
+private fun rememberSelectionColumnProvider(
   selectedDates: List<LocalDate>,
   thickness: Dp = 16.dp,
   shape: Shape = RoundedCornerShape(8.dp).toVicoShape(),
