@@ -118,9 +118,7 @@ class HomeViewModel @Inject constructor(
 
   private val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
   private val usageAccessCallback = AppOpsManager.OnOpChangedListener { _, _ ->
-    if (isUsageAccessGranted(context)) {
-      monitorUsage()
-    }
+    monitorUsage()
   }
 
   private val packageCallback = object : LauncherApps.Callback() {
@@ -153,6 +151,7 @@ class HomeViewModel @Inject constructor(
   init {
     usageRepository.registerCallback(packageCallback)
     updateDatabase()
+    monitorUsage()
 
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
     appOps.startWatchingMode(
@@ -178,8 +177,10 @@ class HomeViewModel @Inject constructor(
   }
 
   private fun monitorUsage() {
-    viewModelScope.launch(Dispatchers.IO) {
-      usageRepository.startUsageUpdater()
+    if (isUsageAccessGranted(context)) {
+      viewModelScope.launch(Dispatchers.IO) {
+        usageRepository.startUsageUpdater()
+      }
     }
   }
 

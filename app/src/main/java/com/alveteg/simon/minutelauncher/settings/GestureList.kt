@@ -67,8 +67,6 @@ fun GestureList(
             viewModel.onEvent(SettingsEvent.SetAppGesture(it.app, gesture))
           }
         },
-        topPadding = 0.dp,
-        bottomPadding = 16.dp,
         onGloballyPositioned = {
           with(density) {
             searchHeight = it.toDp()

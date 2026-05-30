@@ -38,8 +38,6 @@ fun DashboardBottomSheet(
     SearchBar(
       searchText = searchText,
       onSearch = onSearch,
-      topPadding = topPadding.dp,
-      bottomPadding = bottomPadding.dp,
       onGloballyPositioned = onGloballyPositioned,
       onSearchFocused = onSearchFocused,
       onEvent = onEvent

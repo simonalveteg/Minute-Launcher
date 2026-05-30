@@ -132,7 +132,7 @@ fun UsageSheet(
             items(
               items = filteredAppStatistics.take(5).let { list ->
                 val padding = (5 - list.size).coerceAtLeast(0)
-                list + List(padding) { AppInfo.EMPTY }
+                list + List(padding) { AppInfo.placeholder(it) }
               },
               key = { it.app.packageName }
             ) { appInfo ->

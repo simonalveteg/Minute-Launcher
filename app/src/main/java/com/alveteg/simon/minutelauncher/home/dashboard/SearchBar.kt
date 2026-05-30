@@ -38,8 +38,6 @@ import com.alveteg.simon.minutelauncher.utilities.clearFocusOnKeyboardDismiss
 fun SearchBar(
   searchText: String,
   onSearch: KeyboardActionScope.() -> Unit,
-  topPadding: Dp,
-  bottomPadding: Dp,
   onGloballyPositioned: (Int) -> Unit = {},
   onSearchFocused: () -> Unit = {},
   onEvent: (Event) -> Unit
@@ -54,9 +52,6 @@ fun SearchBar(
       .onGloballyPositioned {
         onGloballyPositioned(
           it.size.height
-            .plus(bottomPadding.value)
-            .plus(topPadding.value)
-            .toInt()
         )
       }
   ) {

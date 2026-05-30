@@ -8,6 +8,10 @@ data class AppInfo(
 ) {
   companion object {
     val EMPTY = AppInfo(App.EMPTY, false, 0, emptyList())
+
+    fun placeholder(id: Int) = EMPTY.copy(
+      app = App(packageName = "placeholder_$id", appTitle = "")
+    )
   }
 }
 
