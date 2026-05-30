@@ -58,7 +58,6 @@ fun MinuteBottomSheet(
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .animateContentSize()
         .padding(horizontal = 24.dp)
         .padding(top = 12.dp),
       horizontalAlignment = Alignment.CenterHorizontally
