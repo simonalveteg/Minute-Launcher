@@ -211,19 +211,26 @@ fun UsageBarGraph(
               valueFormatter = DefaultCartesianMarker.ValueFormatter { _, _ -> "" }
             ),
             markerVisibilityListener = object : CartesianMarkerVisibilityListener {
-              override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-                val x = targets.firstOrNull()?.x ?: return
-                val date = LocalDate.now().minusDays(7 - x.toLong())
+              fun updateSelection(targets: List<CartesianMarker.Target>?) {
+                val date = targets?.firstOrNull()?.x?.let { x ->
+                  LocalDate.now().minusDays(7 - x.toLong())
+                }
                 onDateSelectionChange(date)
+              }
+
+              override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
+                updateSelection(targets)
               }
 
               override fun onUpdated(
                 marker: CartesianMarker,
                 targets: List<CartesianMarker.Target>
-              ) {}
+              ) {
+                updateSelection(targets)
+              }
 
               override fun onHidden(marker: CartesianMarker) {
-                onDateSelectionChange(null)
+                updateSelection(null)
               }
             },
             markerController = CartesianMarkerController.rememberShowOnPress()
@@ -267,7 +274,6 @@ private fun rememberSelectionColumnProvider(
     }
   }
 
-  // Rebuild provider every frame by keying on current animated values
   val fractions = animatables.map { it.value }
 
   return remember(fractions) {
