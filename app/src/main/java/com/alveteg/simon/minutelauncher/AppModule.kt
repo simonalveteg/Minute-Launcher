@@ -30,7 +30,8 @@ object AppModule {
       .addMigrations(
         LauncherDatabase.MIGRATION_1_2,
         LauncherDatabase.MIGRATION_2_3,
-        LauncherDatabase.MIGRATION_3_4
+        LauncherDatabase.MIGRATION_3_4,
+        LauncherDatabase.MIGRATION_4_5
       )
       .build()
   }
@@ -52,7 +53,7 @@ object AppModule {
 
   @Provides
   @Singleton
-  fun provideApplicationRepository(context: Context): UsageRepository {
+  fun provideUsageRepository(context: Context): UsageRepository {
     return UsageRepository(context)
   }
 

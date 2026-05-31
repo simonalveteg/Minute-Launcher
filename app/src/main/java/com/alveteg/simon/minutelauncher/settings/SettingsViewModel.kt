@@ -37,7 +37,7 @@ class SettingsViewModel @Inject constructor(
   val searchTerm = _searchTerm.asStateFlow()
 
   val gestureApps = roomRepository.gestureApps()
-  val appsWithTimers = roomRepository.timerApps()
+  val appsWithMindfulDelay = roomRepository.mindfulDelayApps()
 
   val appTheme = preferenceRepository.appTheme
     .stateIn(
@@ -57,11 +57,11 @@ class SettingsViewModel @Inject constructor(
       SharingStarted.WhileSubscribed(5000),
       PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT
     )
-  val timerLength = preferenceRepository.timerLength
+  val mindfulDelayLength = preferenceRepository.mindfulDelayLength
     .stateIn(
       viewModelScope,
       SharingStarted.WhileSubscribed(5000),
-      PreferenceRepository.Defaults.TIMER_LENGTH
+      PreferenceRepository.Defaults.MINDFUL_DELAY_LENGTH
     )
   val skipAppModal = preferenceRepository.skipAppModal
     .stateIn(
@@ -72,17 +72,17 @@ class SettingsViewModel @Inject constructor(
 
   val installedApps = combine(
     roomRepository.appList(),
-    roomRepository.timerApps(),
+    roomRepository.mindfulDelayApps(),
     roomRepository.favoriteApps(),
     usageRepository.usageStats,
-    timerLength
-  ) { apps, timerApps, favorites, usageStats, defaultTimerLength ->
+    mindfulDelayLength
+  ) { apps, delayApps, favorites, usageStats, defaultDelayLength ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
       val usage = usageStats.filter { app.packageName == it.packageName }
-      val timer = timerApps.find { it.app.packageName == app.packageName }?.appTimer?.timer
-        ?: defaultTimerLength
-      AppInfo(app, favorite, timer, usage)
+      val delay = delayApps.find { it.app.packageName == app.packageName }?.mindfulDelay?.delay
+        ?: defaultDelayLength
+      AppInfo(app, favorite, delay, usage)
     }
   }
   val filteredApps = combine(
@@ -91,8 +91,8 @@ class SettingsViewModel @Inject constructor(
     apps.filterBySearchTerm(searchTerm)
   }
 
-  fun onTimerLengthChange(value: Int) {
-    viewModelScope.launch { preferenceRepository.updateTimerLength(value) }
+  fun onMindfulDelayLengthChange(value: Int) {
+    viewModelScope.launch { preferenceRepository.updateMindfulDelayLength(value) }
   }
 
   fun onTransparencyAmountChange(value: Float) {
@@ -129,15 +129,15 @@ class SettingsViewModel @Inject constructor(
   fun onEvent(event: Event) {
     Timber.d(event.toString())
     when (event) {
-      is HomeEvent.UpdateAppTimer -> {
+      is HomeEvent.UpdateMindfulDelay -> {
         viewModelScope.launch(Dispatchers.IO) {
-          roomRepository.updateAppTimer(event.app, event.timerValue)
+          roomRepository.updateMindfulDelay(event.app, event.delayValue)
         }
       }
 
-      is HomeEvent.ResetAppTimerToDefault -> {
+      is HomeEvent.ResetMindfulDelayToDefault -> {
         viewModelScope.launch(Dispatchers.IO) {
-          roomRepository.removeAppTimer(event.app)
+          roomRepository.removeMindfulDelay(event.app)
         }
       }
 

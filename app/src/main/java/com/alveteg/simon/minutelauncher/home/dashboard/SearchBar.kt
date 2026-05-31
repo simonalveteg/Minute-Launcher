@@ -83,7 +83,7 @@ fun SearchBar(
       leadingIcon = {
         Icon(
           imageVector = Icons.Default.Search,
-          contentDescription = stringResource(R.string.description_search_icon),
+          contentDescription = null,
           tint = LocalContentColor.current
         )
       },
@@ -95,7 +95,7 @@ fun SearchBar(
           val tint = if (searchText.isNotBlank()) LocalContentColor.current else Color.Transparent
           Icon(
             imageVector = Icons.Default.Clear,
-            contentDescription = stringResource(R.string.description_clear_search),
+            contentDescription = null,
             tint = tint
           )
         }

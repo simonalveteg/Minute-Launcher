@@ -66,9 +66,9 @@ fun SettingsScreen(
   val useDynamicColor by viewModel.useDynamicColor.collectAsStateWithLifecycle()
   val transparencyAmount by viewModel.transparencyAmount.collectAsStateWithLifecycle()
   val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
-  val timerLength by viewModel.timerLength.collectAsStateWithLifecycle()
+  val mindfulDelayLength by viewModel.mindfulDelayLength.collectAsStateWithLifecycle()
   val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
-  val appsWithTimers by viewModel.appsWithTimers.map { it.sortedBy { it.app.appTitle.lowercase() } }
+  val appsWithMindfulDelay by viewModel.appsWithMindfulDelay.map { it.sortedBy { it.app.appTitle.lowercase() } }
     .collectAsState(initial = emptyList())
 
   var _transparencyAmount by remember(transparencyAmount) { mutableFloatStateOf(transparencyAmount) }
@@ -76,9 +76,9 @@ fun SettingsScreen(
     derivedStateOf { (_transparencyAmount * 100).roundToInt().toString() + "%" }
   }
 
-  var _timerLength by remember(timerLength) { mutableIntStateOf(timerLength) }
-  val timerLengthLabel by remember(_timerLength) {
-    derivedStateOf { "${_timerLength}s" }
+  var _mindfulDelayLength by remember(mindfulDelayLength) { mutableIntStateOf(mindfulDelayLength) }
+  val mindfulDelayLengthLabel by remember(_mindfulDelayLength) {
+    derivedStateOf { "${_mindfulDelayLength}s" }
   }
 
   LaunchedEffect(key1 = true) {
@@ -105,7 +105,7 @@ fun SettingsScreen(
           ) {
             Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = stringResource(R.string.description_navigate_back)
+              contentDescription = null
             )
           }
         },
@@ -143,20 +143,20 @@ fun SettingsScreen(
       }
 
       settingsSection(
-        title = R.string.section_title_mindful_delay,
-        description = R.string.section_description_mindful_delay
+        title = R.string.title_mindful_delay,
+        description = R.string.description_mindful_delay
       ) {
         item {
           SliderInput(
             label = stringResource(R.string.label_default_delay_length),
             description = stringResource(R.string.description_default_delay_length),
-            value = _timerLength.toFloat(),
-            valueLabel = timerLengthLabel,
-            valueRange = PreferenceRepository.Defaults.MIN_TIMER.toFloat() .. PreferenceRepository.Defaults.MAX_TIMER.toFloat(),
-            steps = PreferenceRepository.Defaults.MAX_TIMER,
+            value = _mindfulDelayLength.toFloat(),
+            valueLabel = mindfulDelayLengthLabel,
+            valueRange = PreferenceRepository.Defaults.MIN_MINDFUL_DELAY.toFloat() .. PreferenceRepository.Defaults.MAX_MINDFUL_DELAY.toFloat(),
+            steps = PreferenceRepository.Defaults.MAX_MINDFUL_DELAY,
             roundToInt = true,
-            onValueChangeFinished = { viewModel.onTimerLengthChange(_timerLength) },
-            onValueChange = { _timerLength = it.roundToInt() }
+            onValueChangeFinished = { viewModel.onMindfulDelayLengthChange(_mindfulDelayLength) },
+            onValueChange = { _mindfulDelayLength = it.roundToInt() }
           )
         }
         item {
@@ -169,21 +169,21 @@ fun SettingsScreen(
         }
 
         item {
-          if (appsWithTimers.isNotEmpty()) {
+          if (appsWithMindfulDelay.isNotEmpty()) {
             GenericColumnInput(
-              label = stringResource(R.string.label_apps_with_custom_timers),
-              description = stringResource(R.string.description_apps_with_custom_timers),
+              label = stringResource(R.string.label_apps_with_custom_delays),
+              description = stringResource(R.string.description_apps_with_custom_delays),
               modifier = Modifier.padding(top = 16.dp)
             )
           }
         }
         items(
-          items = appsWithTimers,
+          items = appsWithMindfulDelay,
           key = { it.app.packageName }
         ) { item ->
-          val index = appsWithTimers.indexOf(item)
+          val index = appsWithMindfulDelay.indexOf(item)
           val isFirst = index == 0
-          val isLast = index == appsWithTimers.lastIndex
+          val isLast = index == appsWithMindfulDelay.lastIndex
 
           val shape = when {
             isFirst && isLast -> MaterialTheme.shapes.medium
@@ -220,61 +220,61 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically
               )
               {
-                Text(text = "${item.appTimer.timer}s")
+                Text(text = "${item.mindfulDelay.delay}s")
                 VerticalDivider(
                   modifier = Modifier.padding(start = 16.dp, end = 8.dp)
                 )
                 IconButton(
-                  onClick = { viewModel.onEvent(HomeEvent.ResetAppTimerToDefault(item.app)) }
+                  onClick = { viewModel.onEvent(HomeEvent.ResetMindfulDelayToDefault(item.app)) }
                 ) {
                   Icon(
                     imageVector = Icons.AutoMirrored.Filled.Undo,
-                    contentDescription = stringResource(R.string.description_reset_timer),
+                    contentDescription = stringResource(R.string.label_reset_to_default),
                   )
                 }
               }
             }
           }
         }
+      }
 
-        settingsSection(title = R.string.section_title_appearance) {
+      settingsSection(title = R.string.section_title_appearance) {
+        item {
+          SegmentedInput(
+            label = stringResource(R.string.label_app_theme),
+            description = stringResource(R.string.description_app_theme),
+            options = AppTheme.entries,
+            selectedOption = appTheme,
+            onOptionSelect = { viewModel.onThemeChange(it) },
+            labelProvider = { stringResource(it.labelRes) }
+          )
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
           item {
             SegmentedInput(
-              label = stringResource(R.string.label_app_theme),
-              description = stringResource(R.string.description_app_theme),
-              options = AppTheme.entries,
-              selectedOption = appTheme,
-              onOptionSelect = { viewModel.onThemeChange(it) },
-              labelProvider = { stringResource(it.labelRes) }
+              label = stringResource(R.string.label_color_palette),
+              description = stringResource(R.string.description_color_palette),
+              options = listOf(false, true),
+              selectedOption = useDynamicColor,
+              onOptionSelect = { viewModel.onDynamicColorChange(it) },
+              labelProvider = {
+                if (it) stringResource(R.string.color_palette_dynamic) else stringResource(R.string.color_palette_default)
+              }
             )
           }
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            item {
-              SegmentedInput(
-                label = stringResource(R.string.label_color_palette),
-                description = stringResource(R.string.description_color_palette),
-                options = listOf(false, true),
-                selectedOption = useDynamicColor,
-                onOptionSelect = { viewModel.onDynamicColorChange(it) },
-                labelProvider = {
-                  if (it) stringResource(R.string.color_palette_dynamic) else stringResource(R.string.color_palette_default)
-                }
-              )
-            }
-          }
-          item {
-            SliderInput(
-              label = stringResource(R.string.label_background_transparency),
-              description = stringResource(R.string.description_background_transparency),
-              value = _transparencyAmount,
-              valueLabel = transparencyAmountLabel,
-              valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,
-              roundToInt = true,
-              steps = 19,
-              onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
-              onValueChange = { _transparencyAmount = it }
-            )
-          }
+        }
+        item {
+          SliderInput(
+            label = stringResource(R.string.label_background_transparency),
+            description = stringResource(R.string.description_background_transparency),
+            value = _transparencyAmount,
+            valueLabel = transparencyAmountLabel,
+            valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,
+            roundToInt = true,
+            steps = 19,
+            onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
+            onValueChange = { _transparencyAmount = it }
+          )
         }
       }
     }

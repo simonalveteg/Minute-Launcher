@@ -32,7 +32,7 @@ fun DashboardActionBar(
   val actions = listOf(
     ActionBarAction(
       imageVector = Icons.Default.Settings,
-      description = stringResource(R.string.description_open_system_settings),
+      description = stringResource(R.string.action_open_system_settings),
       action = {
         val intent = Intent(Settings.ACTION_SETTINGS)
         mContext.startActivity(intent, null)
@@ -40,13 +40,13 @@ fun DashboardActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Default.Wallpaper,
-      description = stringResource(R.string.description_change_wallpaper),
+      description = stringResource(R.string.action_change_wallpaper),
       action = {
         val intent = Intent(Intent.ACTION_SET_WALLPAPER).apply {
           flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         try {
-          mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.chooser_title_select_wallpaper)))
+          mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.action_change_wallpaper)))
         } catch (e: Exception) {
           Timber.e(e, mContext.getString(R.string.no_wallpaper_app_found))
         }
@@ -54,7 +54,7 @@ fun DashboardActionBar(
     ),
     ActionBarAction(
       imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
-      description = stringResource(R.string.description_open_digital_wellbeing),
+      description = stringResource(R.string.action_open_digital_wellbeing),
       action = {
         val intent = Intent().apply {
           setClassName(
@@ -68,12 +68,12 @@ fun DashboardActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Default.Tune,
-      description = stringResource(R.string.description_open_launcher_settings),
+      description = stringResource(R.string.action_open_launcher_settings),
       action = { onEvent(HomeEvent.OpenSettings) }
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,
-      description = stringResource(R.string.description_open_app_info),
+      description = stringResource(R.string.action_open_app_info),
       action = {
         val intent = Intent().apply {
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
@@ -85,7 +85,7 @@ fun DashboardActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Default.Feedback,
-      description = stringResource(R.string.description_send_feedback),
+      description = stringResource(R.string.action_send_feedback),
       action = {
         val body = """
         |
@@ -104,7 +104,7 @@ fun DashboardActionBar(
           flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         try {
-          mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.chooser_title_send_feedback)))
+          mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.action_send_feedback)))
         } catch (e: Exception) {
           Timber.e(e, mContext.getString(R.string.no_email_app_found))
         }

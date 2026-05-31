@@ -54,11 +54,11 @@ class HomeViewModel @Inject constructor(
       PreferenceRepository.Defaults.TRANSPARENCY_AMOUNT
     )
 
-  val timerLength = preferenceRepository.timerLength
+  val mindfulDelayLength = preferenceRepository.mindfulDelayLength
     .stateIn(
       viewModelScope,
       SharingStarted.WhileSubscribed(5000),
-      PreferenceRepository.Defaults.TIMER_LENGTH
+      PreferenceRepository.Defaults.MINDFUL_DELAY_LENGTH
     )
 
   val showDefaultHomePrompt = preferenceRepository.showDefaultHomePrompt
@@ -97,17 +97,17 @@ class HomeViewModel @Inject constructor(
 
   val installedApps = combine(
     roomRepository.appList(),
-    roomRepository.timerApps(),
+    roomRepository.mindfulDelayApps(),
     roomRepository.favoriteApps(),
     usageRepository.usageStats,
-    timerLength
-  ) { apps, timerApps, favorites, usageStats, defaultTimerLength ->
+    mindfulDelayLength
+  ) { apps, delayApps, favorites, usageStats, defaultDelayLength ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
       val usage = usageStats.filter { app.packageName == it.packageName }
-      val timer = timerApps.find { it.app.packageName == app.packageName }?.appTimer?.timer
-        ?: defaultTimerLength
-      AppInfo(app, favorite, timer, usage)
+      val delay = delayApps.find { it.app.packageName == app.packageName }?.mindfulDelay?.delay
+        ?: defaultDelayLength
+      AppInfo(app, favorite, delay, usage)
     }
   }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -167,7 +167,7 @@ class HomeViewModel @Inject constructor(
       ) { favorites, apps ->
         favorites.sortedBy { it.favoriteApp.order }.mapNotNull { favorite ->
           apps.find { it.app.packageName == favorite.app.packageName }?.let { app ->
-            AppInfo(favorite.app, true, app.timer, app.usage)
+            AppInfo(favorite.app, true, app.mindfulDelay, app.usage)
           }
         }
       }.collect { favorites ->
@@ -269,8 +269,6 @@ class HomeViewModel @Inject constructor(
         }
       }
 
-
-      is HomeEvent.OpenTimerSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.TIMER_SETTINGS))
       is HomeEvent.OpenSettings -> sendUiEvent(UiEvent.Navigate(SettingsScreen.HOME))
       is HomeEvent.UpdateFavoriteOrder -> {
         val favorites = _favoriteApps.value.toMutableList()
@@ -285,15 +283,15 @@ class HomeViewModel @Inject constructor(
         }
       }
 
-      is HomeEvent.UpdateAppTimer -> {
+      is HomeEvent.UpdateMindfulDelay -> {
         viewModelScope.launch(Dispatchers.IO) {
-          roomRepository.updateAppTimer(event.app, event.timerValue)
+          roomRepository.updateMindfulDelay(event.app, event.delayValue)
         }
       }
 
-      is HomeEvent.ResetAppTimerToDefault -> {
+      is HomeEvent.ResetMindfulDelayToDefault -> {
         viewModelScope.launch(Dispatchers.IO) {
-          roomRepository.removeAppTimer(event.app)
+          roomRepository.removeMindfulDelay(event.app)
         }
       }
 

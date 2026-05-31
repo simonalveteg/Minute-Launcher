@@ -65,7 +65,7 @@ fun NameBottomSheet(
 
   MinuteBottomSheet(
     onDismissRequest = onDismissRequest, sheetState = sheetState,
-    title = stringResource(R.string.title_set_display_name),
+    title = stringResource(R.string.description_edit_app_name),
   ) {
     OutlinedTextField(
       value = displayName,

@@ -30,7 +30,7 @@ fun LauncherActivityInfo.toApp() =
   )
 
 /**
- * Stores specific AccessTimer overrides for apps.
+ * Stores specific MindfulDelay overrides for apps.
  * If an app is not in this table, it uses the global default from DataStore.
  */
 @Entity(
@@ -44,9 +44,9 @@ fun LauncherActivityInfo.toApp() =
   ],
   indices = [Index(value = ["packageName"])]
 )
-data class AppTimer(
+data class MindfulDelay(
   @PrimaryKey val packageName: String,
-  val timer: Int
+  val delay: Int
 )
 
 @Entity(
@@ -99,9 +99,10 @@ data class FavoriteAppWithApp(
   val app: App
 )
 
-data class TimerAppWithApp(
-  @Embedded val appTimer: AppTimer,
-  @Relation(    parentColumn = "packageName",
+data class MindfulDelayAppWithApp(
+  @Embedded val mindfulDelay: MindfulDelay,
+  @Relation(
+    parentColumn = "packageName",
     entityColumn = "packageName"
   )
   val app: App

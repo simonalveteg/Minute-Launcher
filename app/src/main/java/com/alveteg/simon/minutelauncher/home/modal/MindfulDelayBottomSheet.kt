@@ -27,14 +27,14 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimerBottomSheet(
+fun MindfulDelayBottomSheet(
   sheetState: SheetState,
   appInfo: AppInfo,
-  defaultTimerLength: Int,
+  defaultMindfulDelayLength: Int,
   onDismissRequest: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
-  var _timerLength by remember(appInfo.timer) { mutableFloatStateOf(appInfo.timer.toFloat()) }
+  var _timerLength by remember(appInfo.mindfulDelay) { mutableFloatStateOf(appInfo.mindfulDelay.toFloat()) }
   val timerLengthLabel by remember(_timerLength) {
     derivedStateOf { _timerLength.roundToInt().toString() + "s" }
   }
@@ -42,24 +42,24 @@ fun TimerBottomSheet(
   MinuteBottomSheet(
     onDismissRequest = onDismissRequest, sheetState = sheetState,
     title = stringResource(R.string.title_mindful_delay),
-    description = stringResource(R.string.description_app_timer)
+    description = stringResource(R.string.description_mindful_delay)
   ) {
     SliderInput(
       value = _timerLength,
       valueLabel = timerLengthLabel,
-      valueRange = PreferenceRepository.Defaults.MIN_TIMER.toFloat()..PreferenceRepository.Defaults.MAX_TIMER.toFloat(),
-      steps = PreferenceRepository.Defaults.MAX_TIMER,
+      valueRange = PreferenceRepository.Defaults.MIN_MINDFUL_DELAY.toFloat()..PreferenceRepository.Defaults.MAX_MINDFUL_DELAY.toFloat(),
+      steps = PreferenceRepository.Defaults.MAX_MINDFUL_DELAY,
       roundToInt = true,
       onValueChangeFinished = {
-        onEvent(HomeEvent.UpdateAppTimer(appInfo.app, _timerLength.roundToInt()))
+        onEvent(HomeEvent.UpdateMindfulDelay(appInfo.app, _timerLength.roundToInt()))
       },
       onValueChange = { _timerLength = it }
     )
     TextButton(
       onClick = {
-        onEvent(HomeEvent.ResetAppTimerToDefault(appInfo.app))
+        onEvent(HomeEvent.ResetMindfulDelayToDefault(appInfo.app))
       },
-      enabled = appInfo.timer != defaultTimerLength,
+      enabled = appInfo.mindfulDelay != defaultMindfulDelayLength,
     ) {
       Text(
         text = stringResource(R.string.label_reset_to_default).uppercase(),

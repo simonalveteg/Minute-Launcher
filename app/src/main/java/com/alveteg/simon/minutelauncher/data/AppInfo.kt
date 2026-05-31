@@ -3,7 +3,7 @@ package com.alveteg.simon.minutelauncher.data
 data class AppInfo(
   val app: App,
   val favorite: Boolean,
-  val timer: Int,
+  val mindfulDelay: Int,
   val usage: List<UsageStatistics>
 ) {
   companion object {
@@ -19,4 +19,3 @@ data class FavoriteAppInfo(
   val favoriteApp: FavoriteAppWithApp,
   val appInfo: AppInfo,
 )
-

@@ -27,13 +27,15 @@ import com.alveteg.simon.minutelauncher.home.ActionBarAction
 fun AppModalActionBar(
   appInfo: AppInfo,
   enabled: Boolean,
-  onChangeTimer: () -> Unit,
+  onChangeDelay: () -> Unit,
   onEditName: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
   val mContext = LocalContext.current
 
   val favoriteIcon = if (appInfo.favorite) Icons.Filled.Star else Icons.Filled.StarBorder
+  val favoriteText = if (appInfo.favorite) R.string.description_remove_favorite else R.string.description_add_favorite
+
   val actions = listOf(
     ActionBarAction(
       imageVector = Icons.Outlined.Delete,
@@ -49,8 +51,8 @@ fun AppModalActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Timer,
-      description = stringResource(R.string.description_change_app_timer),
-      action = onChangeTimer,
+      description = stringResource(R.string.description_change_mindful_delay),
+      action = onChangeDelay,
       enabled = enabled
     ),
     ActionBarAction(
@@ -71,12 +73,12 @@ fun AppModalActionBar(
     ),
     ActionBarAction(
       imageVector = favoriteIcon,
-      description = stringResource(R.string.description_toggle_app_favorite),
+      description = stringResource(favoriteText),
       action = { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) },
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,
-      description = stringResource(R.string.description_open_app_info_modal),
+      description = stringResource(R.string.action_open_app_info),
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS

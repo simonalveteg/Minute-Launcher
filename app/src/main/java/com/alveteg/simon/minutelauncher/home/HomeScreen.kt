@@ -13,7 +13,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +31,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
@@ -42,12 +41,10 @@ import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
 import com.alveteg.simon.minutelauncher.home.modal.MinuteBottomSheet
 import com.alveteg.simon.minutelauncher.settings.components.GestureInput
-import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import timber.log.Timber
 import java.lang.reflect.Method
 import java.time.LocalDate
-import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +70,7 @@ fun HomeScreen(
   val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsStateWithLifecycle()
   val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
   val backgroundTransparency by viewModel.transparencyAmount.collectAsStateWithLifecycle()
-  val defaultTimerLength by viewModel.timerLength.collectAsStateWithLifecycle()
+  val defaultMindfulDelayLength by viewModel.mindfulDelayLength.collectAsStateWithLifecycle()
   val backgroundAlpha by derivedStateOf { (1f - backgroundTransparency) }
   val altBackgroundAlpha by derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
 
@@ -109,7 +106,7 @@ fun HomeScreen(
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)
         is UiEvent.ShowModal -> {
-          if (skipAppModal && event.appInfo.timer == 0) {
+          if (skipAppModal && event.appInfo.mindfulDelay == 0) {
             viewModel.onEvent(HomeEvent.LaunchActivity(event.appInfo))
           } else {
             currentAppPackage = event.appInfo.app.packageName
@@ -137,7 +134,7 @@ fun HomeScreen(
 
   AppModalBottomSheet(
     appInfo = currentAppModal,
-    defaultTimerLength = defaultTimerLength,
+    defaultMindfulDelayLength = defaultMindfulDelayLength,
     onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent
   )

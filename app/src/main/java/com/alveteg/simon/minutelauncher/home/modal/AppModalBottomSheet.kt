@@ -28,19 +28,19 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppModalBottomSheet(
   appInfo: AppInfo?,
-  defaultTimerLength: Int,
+  defaultMindfulDelayLength: Int,
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
   val coroutineScope = rememberCoroutineScope()
   val visible = appInfo != null
-  var timerVisible by remember { mutableStateOf(false) }
+  var delayVisible by remember { mutableStateOf(false) }
   var nameChangeVisible by remember { mutableStateOf(false) }
 
   if (visible) {
     val mContext = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val timerSheetState = rememberModalBottomSheetState()
+    val delaySheetState = rememberModalBottomSheetState()
     val nameChangeSheetState = rememberModalBottomSheetState()
     MinuteBottomSheet(
       onDismissRequest = onDismiss,
@@ -68,11 +68,11 @@ fun AppModalBottomSheet(
             mContext.startActivity(intent)
           }
         },
-        onChangeTimer = {
-          timerVisible = true
+        onChangeDelay = {
+          delayVisible = true
           coroutineScope.launch {
             sheetState.hide()
-            timerSheetState.expand()
+            delaySheetState.expand()
           }
         },
         onEditName = {
@@ -84,13 +84,13 @@ fun AppModalBottomSheet(
         }
       )
     }
-    if (timerVisible) {
-      TimerBottomSheet(
+    if (delayVisible) {
+      MindfulDelayBottomSheet(
         appInfo = appInfo,
-        defaultTimerLength = defaultTimerLength,
-        sheetState = timerSheetState,
+        defaultMindfulDelayLength = defaultMindfulDelayLength,
+        sheetState = delaySheetState,
         onDismissRequest = {
-          timerVisible = false
+          delayVisible = false
           coroutineScope.launch {
             sheetState.show()
           }

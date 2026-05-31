@@ -49,15 +49,15 @@ fun AppModal(
   onEvent: (Event) -> Unit,
   onConfirmation: () -> Unit,
   onCancel: () -> Unit,
-  onChangeTimer: () -> Unit,
+  onChangeDelay: () -> Unit,
   onEditName: () -> Unit
 ) {
   var enabled by remember { mutableStateOf(false) }
-  var timer by remember { mutableIntStateOf(PreferenceRepository.Defaults.TIMER_LENGTH) }
+  var mindfulDelay by remember { mutableIntStateOf(PreferenceRepository.Defaults.MINDFUL_DELAY_LENGTH) }
   val usage by remember(appInfo) { mutableStateOf(appInfo.usage) }
   var confirmationText by remember { mutableStateOf("") }
-  val animationPeriod = remember(appInfo.timer) {
-    (1 - appInfo.timer / PreferenceRepository.Defaults.MAX_TIMER)
+  val animationPeriod = remember(appInfo.mindfulDelay) {
+    (1 - appInfo.mindfulDelay / PreferenceRepository.Defaults.MAX_MINDFUL_DELAY)
       .times(650)
       .plus(150)
   }
@@ -74,24 +74,24 @@ fun AppModal(
     )
   }
 
-  val waitText = stringResource(R.string.label_wait_seconds, timer)
+  val waitText = stringResource(R.string.label_wait_seconds, mindfulDelay)
   val openAnywayText = stringResource(R.string.label_open_anyway)
 
   LaunchedEffect(appInfo) {
-    Timber.d("New timer: ${appInfo.timer}, animationPeriod: $animationPeriod, ${PreferenceRepository.Defaults.MAX_TIMER} ")
-    timer = appInfo.timer
+    Timber.d("New mindful delay: ${appInfo.mindfulDelay}, animationPeriod: $animationPeriod, ${PreferenceRepository.Defaults.MAX_MINDFUL_DELAY} ")
+    mindfulDelay = appInfo.mindfulDelay
   }
 
-  LaunchedEffect(key1 = timer) {
-    confirmationText = if (timer > 0 && !enabled) {
+  LaunchedEffect(key1 = mindfulDelay) {
+    confirmationText = if (mindfulDelay > 0 && !enabled) {
       waitText
     } else {
       openAnywayText
     }
     
-    if (timer > 0 && !enabled) {
+    if (mindfulDelay > 0 && !enabled) {
       delay(1000L)
-      timer -= 1
+      mindfulDelay -= 1
     } else {
       enabled = true
     }
@@ -99,7 +99,7 @@ fun AppModal(
   AppModalActionBar(
     appInfo = appInfo,
     enabled = enabled,
-    onChangeTimer = onChangeTimer,
+    onChangeDelay = onChangeDelay,
     onEditName = onEditName,
     onEvent = onEvent
   )

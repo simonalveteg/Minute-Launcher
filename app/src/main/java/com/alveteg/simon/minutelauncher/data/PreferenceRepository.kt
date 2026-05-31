@@ -24,7 +24,7 @@ class PreferenceRepository @Inject constructor(
     val APP_THEME = AppTheme.DARK
     const val USE_DYNAMIC_COLOR = true
     const val TRANSPARENCY_AMOUNT = 0.5f
-    const val TIMER_LENGTH = 5
+    const val MINDFUL_DELAY_LENGTH = 5
     const val SHOW_DEFAULT_HOME_PROMPT = true
     const val SHOW_ADMIN_ACCESS_PROMPT = true
     const val SHOW_USAGE_ACCESS_PROMPT = true
@@ -33,15 +33,15 @@ class PreferenceRepository @Inject constructor(
     // Bounds for validation
     const val MIN_TRANSPARENCY = 0f
     const val MAX_TRANSPARENCY = 1f
-    const val MIN_TIMER = 0
-    const val MAX_TIMER = 30
+    const val MIN_MINDFUL_DELAY = 0
+    const val MAX_MINDFUL_DELAY = 30
   }
 
   private object PreferencesKeys {
     val APP_THEME = stringPreferencesKey("app_theme")
     val USE_DYNAMIC_COLOR = booleanPreferencesKey("use_dynamic_color")
     val TRANSPARENCY_AMOUNT = floatPreferencesKey("transparency_amount")
-    val TIMER_LENGTH = intPreferencesKey("timer_length")
+    val MINDFUL_DELAY_LENGTH = intPreferencesKey("timer_length") // Keeping "timer_length" key for migration
     val SHOW_DEFAULT_HOME_PROMPT = booleanPreferencesKey("show_default_home_prompt")
     val SHOW_ADMIN_ACCESS_PROMPT = booleanPreferencesKey("show_admin_access_prompt")
     val SHOW_USAGE_ACCESS_PROMPT = booleanPreferencesKey("show_usage_access_prompt")
@@ -60,8 +60,8 @@ class PreferenceRepository @Inject constructor(
   val transparencyAmount: Flow<Float> = context.dataStore.data
     .map { it[PreferencesKeys.TRANSPARENCY_AMOUNT] ?: Defaults.TRANSPARENCY_AMOUNT }
 
-  val timerLength: Flow<Int> = context.dataStore.data
-    .map { it[PreferencesKeys.TIMER_LENGTH] ?: Defaults.TIMER_LENGTH }
+  val mindfulDelayLength: Flow<Int> = context.dataStore.data
+    .map { it[PreferencesKeys.MINDFUL_DELAY_LENGTH] ?: Defaults.MINDFUL_DELAY_LENGTH }
 
   val showDefaultHomePrompt: Flow<Boolean> = context.dataStore.data
     .map { it[PreferencesKeys.SHOW_DEFAULT_HOME_PROMPT] ?: Defaults.SHOW_DEFAULT_HOME_PROMPT }
@@ -89,9 +89,9 @@ class PreferenceRepository @Inject constructor(
     }
   }
 
-  suspend fun updateTimerLength(value: Int) {
+  suspend fun updateMindfulDelayLength(value: Int) {
     context.dataStore.edit {
-      it[PreferencesKeys.TIMER_LENGTH] = value.coerceIn(Defaults.MIN_TIMER, Defaults.MAX_TIMER)
+      it[PreferencesKeys.MINDFUL_DELAY_LENGTH] = value.coerceIn(Defaults.MIN_MINDFUL_DELAY, Defaults.MAX_MINDFUL_DELAY)
     }
   }
 

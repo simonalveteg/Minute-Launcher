@@ -25,8 +25,8 @@ interface LauncherDao {
   fun getFavoriteApps(): Flow<List<FavoriteAppWithApp>>
 
   @Transaction
-  @Query("SELECT * FROM AppTimer")
-  fun getAppsWithTimer(): Flow<List<TimerAppWithApp>>
+  @Query("SELECT * FROM MindfulDelay")
+  fun getAppsWithMindfulDelay(): Flow<List<MindfulDelayAppWithApp>>
 
   @Query("SELECT * FROM App WHERE packageName = :packageName")
   fun getAppById(packageName: String): App?
@@ -41,21 +41,21 @@ interface LauncherDao {
   fun removeApp(app: App)
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
-  fun insertAppTimer(timer: AppTimer)
+  fun insertMindfulDelay(delay: MindfulDelay)
 
-  @Query("UPDATE AppTimer SET timer = :timer WHERE packageName = :packageName")
-  fun updateAppTimerInternal(packageName: String, timer: Int): Int
+  @Query("UPDATE MindfulDelay SET delay = :delay WHERE packageName = :packageName")
+  fun updateMindfulDelayInternal(packageName: String, delay: Int): Int
 
   @Transaction
-  fun updateAppTimer(packageName: String, timer: Int) {
-    val rowsUpdated = updateAppTimerInternal(packageName, timer)
+  fun updateMindfulDelay(packageName: String, delay: Int) {
+    val rowsUpdated = updateMindfulDelayInternal(packageName, delay)
     if (rowsUpdated == 0) {
-      insertAppTimer(AppTimer(packageName, timer))
+      insertMindfulDelay(MindfulDelay(packageName, delay))
     }
   }
 
-  @Query("DELETE FROM AppTimer WHERE packageName = :packageName")
-  fun removeAppTimer(packageName: String)
+  @Query("DELETE FROM MindfulDelay WHERE packageName = :packageName")
+  fun removeMindfulDelay(packageName: String)
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   fun insertFavoriteApp(app: FavoriteApp)
