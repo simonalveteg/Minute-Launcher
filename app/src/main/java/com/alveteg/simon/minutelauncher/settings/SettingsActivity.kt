@@ -1,7 +1,6 @@
 package com.alveteg.simon.minutelauncher.settings
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -33,11 +32,7 @@ class SettingsActivity : ComponentActivity() {
         dynamicColor = useDynamicColor
       ) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        val destination = intent.getStringExtra("screen")
-        if (destination == null) {
-          Toast.makeText(this, "Destination missing.", Toast.LENGTH_SHORT).show()
-          return@MinuteLauncherTheme
-        }
+        val destination = intent.getStringExtra("screen") ?: SettingsScreen.HOME
         SettingsNavHost(navController = rememberNavController(), startDestination = destination)
       }
     }
