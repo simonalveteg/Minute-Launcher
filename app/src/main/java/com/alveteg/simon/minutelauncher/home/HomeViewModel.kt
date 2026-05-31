@@ -11,6 +11,7 @@ import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.AppSignals
 import com.alveteg.simon.minutelauncher.data.LauncherRepository
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.data.UsageRepository
@@ -18,6 +19,7 @@ import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.settings.SettingsEvent
 import com.alveteg.simon.minutelauncher.settings.SettingsScreen
 import com.alveteg.simon.minutelauncher.utilities.Gesture
+import com.alveteg.simon.minutelauncher.utilities.combine
 import com.alveteg.simon.minutelauncher.utilities.filterBySearchTerm
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -99,6 +101,8 @@ class HomeViewModel @Inject constructor(
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
+  private val _appSignals = MutableStateFlow<List<AppSignals>>(emptyList())
+
   private val _favoriteApps = MutableStateFlow<List<AppInfo>>(emptyList())
   val favoriteApps = _favoriteApps.asStateFlow()
 
@@ -107,14 +111,27 @@ class HomeViewModel @Inject constructor(
     roomRepository.mindfulDelayApps(),
     roomRepository.favoriteApps(),
     usageRepository.usageStats,
+    _appSignals,
     mindfulDelayLength
-  ) { apps, delayApps, favorites, usageStats, defaultDelayLength ->
+  ) { apps, delayApps, favorites, usageStats, signals, defaultDelayLength ->
     apps.map { app ->
       val favorite = favorites.map { it.app.packageName }.contains(app.packageName)
       val usage = usageStats.filter { app.packageName == it.packageName }
       val delay = delayApps.find { it.app.packageName == app.packageName }?.mindfulDelay?.delay
         ?: defaultDelayLength
-      AppInfo(app, favorite, delay, usage)
+      val signal = signals.find { it.packageName == app.packageName }
+      AppInfo(
+        app = app,
+        favorite = favorite,
+        mindfulDelay = delay,
+        usage = usage,
+        isSystemApp = signal?.isSystemApp ?: false,
+        isUpdatedSystemApp = signal?.isUpdatedSystemApp ?: false,
+        isDefaultBrowser = signal?.isDefaultBrowser ?: false,
+        isDefaultSms = signal?.isDefaultSms ?: false,
+        isDefaultDialer = signal?.isDefaultDialer ?: false,
+        canHandleShare = signal?.canHandleShare ?: false
+      )
     }
   }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -159,6 +176,7 @@ class HomeViewModel @Inject constructor(
   init {
     usageRepository.registerCallback(packageCallback)
     updateDatabase()
+    updateAppSignals()
     monitorUsage()
 
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
@@ -206,6 +224,13 @@ class HomeViewModel @Inject constructor(
 
       newApps.forEach { roomRepository.insertApp(it) }
       removedApps.forEach { roomRepository.removeApp(it) }
+      updateAppSignals()
+    }
+  }
+
+  private fun updateAppSignals() {
+    viewModelScope.launch(Dispatchers.IO) {
+      _appSignals.value = usageRepository.getAppSignals()
     }
   }
 

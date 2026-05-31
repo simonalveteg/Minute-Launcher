@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.data.AppCategory
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
@@ -58,6 +59,49 @@ fun Onboarding(
 ) {
 
   val (favoriteApps, regularApps) = apps.partition { it.favorite }
+
+  val (suggestedApps, otherApps) = remember(apps) {
+    val scored = apps.map { appInfo ->
+      val app = appInfo.app
+      var score = 0
+
+      score += when (app.category) {
+        AppCategory.SOCIAL -> 10
+        AppCategory.PRODUCTIVITY -> 9
+        AppCategory.MAPS -> 8
+        AppCategory.AUDIO -> 7
+        AppCategory.NEWS -> 6
+        AppCategory.VIDEO -> 5
+        AppCategory.IMAGE -> 4
+        AppCategory.ACCESSIBILITY -> 3
+        AppCategory.GAME -> 1
+        else -> 0
+      }
+
+      if (appInfo.isSystemApp && !appInfo.isUpdatedSystemApp) {
+        score -= 15
+      }
+
+      if (appInfo.isDefaultBrowser || appInfo.isDefaultSms || appInfo.isDefaultDialer) {
+        score += 20
+      }
+
+      if (app.category == AppCategory.SOCIAL && !appInfo.canHandleShare) {
+        score -= 8
+      }
+
+      appInfo to score
+    }
+
+    val suggested = scored
+      .filter { it.second >= 5 && !it.first.favorite }
+      .sortedByDescending { it.second }
+      .map { it.first }
+      .take(12)
+
+    val others = regularApps.filter { it !in suggested }
+    suggested to others
+  }
 
   val scale = remember { Animatable(0f) }
   LaunchedEffect(favoriteApps.isNotEmpty()) {
@@ -134,41 +178,64 @@ fun Onboarding(
         modifier = Modifier
           .fillMaxWidth()
       ) {
-        item {
-          Spacer(modifier = Modifier.height(16.dp))
-          if (favoriteApps.isNotEmpty()) {
+        if (favoriteApps.isNotEmpty()) {
+          item {
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
               text = "Selected".uppercase(),
               style = MaterialTheme.typography.labelLarge,
               fontFamily = archivoBlackFamily,
             )
           }
+          items(
+            items = favoriteApps,
+            key = { it.app.packageName }
+          ) { appInfo ->
+            SelectableApp(
+              modifier = Modifier.animateItem(),
+              appInfo = appInfo
+            ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
+          }
         }
-        items(
-          items = favoriteApps,
-          key = { it.app.packageName }
-        ) { appInfo ->
-          SelectableApp(
-            modifier = Modifier.animateItem(),
-            appInfo = appInfo
-          ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
+
+        if (suggestedApps.isNotEmpty()) {
+          item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+              text = "Suggestions".uppercase(),
+              style = MaterialTheme.typography.labelLarge,
+              fontFamily = archivoBlackFamily,
+            )
+          }
+          items(
+            items = suggestedApps,
+            key = { it.app.packageName }
+          ) { appInfo ->
+            SelectableApp(
+              modifier = Modifier.animateItem(),
+              appInfo = appInfo
+            ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
+          }
         }
-        item {
-          Spacer(modifier = Modifier.height(16.dp))
-          Text(
-            text = "Suggestions".uppercase(),
-            style = MaterialTheme.typography.labelLarge,
-            fontFamily = archivoBlackFamily,
-          )
-        }
-        items(
-          items = regularApps,
-          key = { it.app.packageName }
-        ) { appInfo ->
-          SelectableApp(
-            modifier = Modifier.animateItem(),
-            appInfo = appInfo
-          ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
+
+        if (otherApps.isNotEmpty()) {
+          item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+              text = if (suggestedApps.isEmpty()) "Suggestions".uppercase() else "Other Apps".uppercase(),
+              style = MaterialTheme.typography.labelLarge,
+              fontFamily = archivoBlackFamily,
+            )
+          }
+          items(
+            items = otherApps,
+            key = { it.app.packageName }
+          ) { appInfo ->
+            SelectableApp(
+              modifier = Modifier.animateItem(),
+              appInfo = appInfo
+            ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
+          }
         }
         item {
           Spacer(Modifier.navigationBarsPadding().padding(bottom = 16.dp))

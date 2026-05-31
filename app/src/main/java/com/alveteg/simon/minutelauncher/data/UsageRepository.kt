@@ -4,13 +4,16 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Telephony
+import android.telecom.TelecomManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import timber.log.Timber
@@ -67,6 +70,42 @@ class UsageRepository @Inject constructor(
   fun getLaunchIntentForPackage(packageName: String): Intent? {
     return packageManager.getLaunchIntentForPackage(packageName)?.apply {
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+    }
+  }
+
+  fun getAppSignals(): List<AppSignals> {
+    val allApps = launcherApps.getActivityList(null, launcherApps.profiles.firstOrNull())
+
+    // Default Browser
+    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com"))
+    val defaultBrowser = packageManager.resolveActivity(browserIntent, PackageManager.MATCH_DEFAULT_ONLY)
+      ?.activityInfo?.packageName
+
+    // Default SMS
+    val defaultSms = Telephony.Sms.getDefaultSmsPackage(context)
+
+    // Default Dialer
+    val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+    val defaultDialer = telecomManager.defaultDialerPackage
+
+    // Apps that can handle share
+    val shareIntent = Intent(Intent.ACTION_SEND).apply { type = "text/plain" }
+    val shareHandlers = packageManager.queryIntentActivities(shareIntent, 0)
+      .map { it.activityInfo.packageName }
+      .toSet()
+
+    return allApps.map { info ->
+      val appInfo = info.applicationInfo
+      val pkg = appInfo.packageName
+      AppSignals(
+        packageName = pkg,
+        isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
+        isUpdatedSystemApp = (appInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0,
+        isDefaultBrowser = pkg == defaultBrowser,
+        isDefaultSms = pkg == defaultSms,
+        isDefaultDialer = pkg == defaultDialer,
+        canHandleShare = shareHandlers.contains(pkg)
+      )
     }
   }
 
@@ -161,3 +200,13 @@ class UsageRepository @Inject constructor(
     return stats
   }
 }
+
+data class AppSignals(
+  val packageName: String,
+  val isSystemApp: Boolean,
+  val isUpdatedSystemApp: Boolean,
+  val isDefaultBrowser: Boolean,
+  val isDefaultSms: Boolean,
+  val isDefaultDialer: Boolean,
+  val canHandleShare: Boolean
+)
