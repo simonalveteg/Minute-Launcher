@@ -29,6 +29,7 @@ class PreferenceRepository @Inject constructor(
     const val SHOW_ADMIN_ACCESS_PROMPT = true
     const val SHOW_USAGE_ACCESS_PROMPT = true
     const val SKIP_APP_MODAL = false
+    const val SHOW_ONBOARDING = true
 
     // Bounds for validation
     const val MIN_TRANSPARENCY = 0f
@@ -46,6 +47,7 @@ class PreferenceRepository @Inject constructor(
     val SHOW_ADMIN_ACCESS_PROMPT = booleanPreferencesKey("show_admin_access_prompt")
     val SHOW_USAGE_ACCESS_PROMPT = booleanPreferencesKey("show_usage_access_prompt")
     val SKIP_APP_MODAL = booleanPreferencesKey("skip_app_modal")
+    val SHOW_ONBOARDING = booleanPreferencesKey("show_onboarding")
   }
 
   val appTheme: Flow<AppTheme> = context.dataStore.data
@@ -74,6 +76,9 @@ class PreferenceRepository @Inject constructor(
 
   val skipAppModal: Flow<Boolean> = context.dataStore.data
     .map { it[PreferencesKeys.SKIP_APP_MODAL] ?: Defaults.SKIP_APP_MODAL }
+
+  val showOnboarding: Flow<Boolean> = context.dataStore.data
+    .map { it[PreferencesKeys.SHOW_ONBOARDING] ?: Defaults.SHOW_ONBOARDING }
 
   suspend fun updateAppTheme(theme: AppTheme) {
     context.dataStore.edit { it[PreferencesKeys.APP_THEME] = theme.name }
@@ -109,5 +114,9 @@ class PreferenceRepository @Inject constructor(
 
   suspend fun setShowUsageAccessPrompt(show: Boolean) {
     context.dataStore.edit { it[PreferencesKeys.SHOW_USAGE_ACCESS_PROMPT] = show }
+  }
+
+  suspend fun updateShowOnboarding(show: Boolean) {
+    context.dataStore.edit { it[PreferencesKeys.SHOW_ONBOARDING] = show }
   }
 }

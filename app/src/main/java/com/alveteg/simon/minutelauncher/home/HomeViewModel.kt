@@ -89,6 +89,13 @@ class HomeViewModel @Inject constructor(
       PreferenceRepository.Defaults.SKIP_APP_MODAL
     )
 
+  val showOnboarding = preferenceRepository.showOnboarding
+    .stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      PreferenceRepository.Defaults.SHOW_ONBOARDING
+    )
+
   private val _searchTerm = MutableStateFlow("")
   val searchTerm = _searchTerm.asStateFlow()
 
@@ -320,6 +327,12 @@ class HomeViewModel @Inject constructor(
       is HomeEvent.HideAdminAccessPrompt -> {
         viewModelScope.launch(Dispatchers.IO) {
           preferenceRepository.setShowAdminAccessPrompt(false)
+        }
+      }
+
+      is HomeEvent.HideOnboarding -> {
+        viewModelScope.launch(Dispatchers.IO) {
+          preferenceRepository.updateShowOnboarding(false)
         }
       }
 

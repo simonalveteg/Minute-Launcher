@@ -1,12 +1,6 @@
-buildscript {
-    ext {
-        hilt_version = '2.48.1'
-    }
-}
 plugins {
     alias libs.plugins.google.ksp apply false
     alias libs.plugins.android.application apply false
-    alias libs.plugins.jetbrains.kotlin.android apply false
     alias libs.plugins.google.dagger.hilt apply false
 }
 

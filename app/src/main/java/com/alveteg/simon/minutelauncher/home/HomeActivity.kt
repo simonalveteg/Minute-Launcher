@@ -16,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
+import com.alveteg.simon.minutelauncher.home.onboarding.Onboarding
 import com.alveteg.simon.minutelauncher.settings.SettingsActivity
 import com.alveteg.simon.minutelauncher.theme.MinuteLauncherTheme
 import dagger.hilt.android.AndroidEntryPoint

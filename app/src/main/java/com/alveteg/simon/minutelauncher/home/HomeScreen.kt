@@ -40,6 +40,7 @@ import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
 import com.alveteg.simon.minutelauncher.home.modal.MinuteBottomSheet
+import com.alveteg.simon.minutelauncher.home.onboarding.Onboarding
 import com.alveteg.simon.minutelauncher.settings.components.GestureInput
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import timber.log.Timber
@@ -65,14 +66,15 @@ fun HomeScreen(
   }
   val favorites by viewModel.favoriteApps.collectAsState()
 
+  val showOnboarding by viewModel.showOnboarding.collectAsState(initial = false)
   val showDefaultHomePrompt by viewModel.showDefaultHomePrompt.collectAsStateWithLifecycle()
   val showAdminAccessPrompt by viewModel.showAdminAccessPrompt.collectAsStateWithLifecycle()
   val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsStateWithLifecycle()
   val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
   val backgroundTransparency by viewModel.transparencyAmount.collectAsStateWithLifecycle()
   val defaultMindfulDelayLength by viewModel.mindfulDelayLength.collectAsStateWithLifecycle()
-  val backgroundAlpha by derivedStateOf { (1f - backgroundTransparency) }
-  val altBackgroundAlpha by derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
+  val backgroundAlpha by remember(backgroundTransparency) { derivedStateOf { (1f - backgroundTransparency) } }
+  val altBackgroundAlpha by remember(backgroundAlpha) { derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f } }
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
@@ -149,54 +151,63 @@ fun HomeScreen(
         gesture = showGestureModal,
         iconResource = showGestureModal.getIcon(),
         onEvent = viewModel::onEvent,
-        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 24.dp, bottom = 46.dp)
+        modifier = Modifier
+          .padding(horizontal = 16.dp)
+          .padding(top = 24.dp, bottom = 46.dp)
       )
     }
   }
 
   CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-    Surface(
-      color = backgroundColor,
-      modifier = Modifier
-        .fillMaxSize()
-    ) {
-      Box(
-        modifier = Modifier.fillMaxSize()
+    if (showOnboarding) {
+      Onboarding(
+        apps = apps,
+        onEvent = viewModel::onEvent
+      )
+    } else {
+      Surface(
+        color = backgroundColor,
+        modifier = Modifier
+          .fillMaxSize()
       ) {
-        val offsetY = remember { Animatable(0f) }
-        val keyboardController = LocalSoftwareKeyboardController.current
-        val appListSelectionAction: (AppInfo) -> Unit = {
-          Timber.d("App selected: $it")
-          viewModel.onEvent(HomeEvent.OpenApplication(it))
-          keyboardController?.hide()
-        }
-
-        FavoriteList(
-          screenState = screenState,
-          favorites = favorites,
-          onEvent = viewModel::onEvent,
-          totalUsage = totalUsage,
-          offsetY = offsetY,
-          showDefaultHomePrompt = showDefaultHomePrompt,
-          showAdminAccessPrompt = showAdminAccessPrompt,
-          showUsageAccessPrompt = showUsageAccessPrompt,
-          onAppClick = appListSelectionAction
-        )
-
-        Dashboard(
-          screenState = screenState,
-          onEvent = viewModel::onEvent,
-          searchText = searchText,
-          onAppClick = appListSelectionAction,
-          apps = apps,
-          offsetY = offsetY,
-          onSearch = {
-            apps.firstOrNull()?.let {
-              appListSelectionAction(it)
-            }
-            this.defaultKeyboardAction(ImeAction.Done)
+        Box(
+          modifier = Modifier.fillMaxSize()
+        ) {
+          val offsetY = remember { Animatable(0f) }
+          val keyboardController = LocalSoftwareKeyboardController.current
+          val appListSelectionAction: (AppInfo) -> Unit = {
+            Timber.d("App selected: $it")
+            viewModel.onEvent(HomeEvent.OpenApplication(it))
+            keyboardController?.hide()
           }
-        )
+
+          FavoriteList(
+            screenState = screenState,
+            favorites = favorites,
+            onEvent = viewModel::onEvent,
+            totalUsage = totalUsage,
+            offsetY = offsetY,
+            showDefaultHomePrompt = showDefaultHomePrompt,
+            showAdminAccessPrompt = showAdminAccessPrompt,
+            showUsageAccessPrompt = showUsageAccessPrompt,
+            onAppClick = appListSelectionAction
+          )
+
+          Dashboard(
+            screenState = screenState,
+            onEvent = viewModel::onEvent,
+            searchText = searchText,
+            onAppClick = appListSelectionAction,
+            apps = apps,
+            offsetY = offsetY,
+            onSearch = {
+              apps.firstOrNull()?.let {
+                appListSelectionAction(it)
+              }
+              this.defaultKeyboardAction(ImeAction.Done)
+            }
+          )
+        }
       }
     }
   }
@@ -204,7 +215,7 @@ fun HomeScreen(
 
 fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
   try {
-    val statusBarService = context.getSystemService(Context.STATUS_BAR_SERVICE)
+    val statusBarService = context.getSystemService("statusbar")
     val methodName = if (expand) "expandNotificationsPanel" else "collapsePanels"
     val statusBarManager = Class.forName("android.app.StatusBarManager")
     val method: Method = statusBarManager.getMethod(methodName)
