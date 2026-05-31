@@ -13,7 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     FavoriteApp::class,
     MindfulDelay::class
   ],
-  version = 5,
+  version = 6,
   exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -21,6 +21,12 @@ abstract class LauncherDatabase : RoomDatabase() {
   abstract fun launcherDao(): LauncherDao
 
   companion object {
+
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+      override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `App` ADD COLUMN `category` TEXT NOT NULL DEFAULT 'UNDEFINED'")
+      }
+    }
 
     val MIGRATION_4_5 = object : Migration(4, 5) {
       override fun migrate(db: SupportSQLiteDatabase) {

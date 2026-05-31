@@ -1,5 +1,6 @@
 package com.alveteg.simon.minutelauncher.data
 
+import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
@@ -16,6 +17,7 @@ import java.time.LocalDate
 data class App(
   @PrimaryKey val packageName: String,
   val appTitle: String,
+  val category: AppCategory = AppCategory.UNDEFINED,
   val displayTitle: String? = null
 ) {
   companion object {
@@ -23,9 +25,31 @@ data class App(
   }
 }
 
+enum class AppCategory {
+  ACCESSIBILITY, AUDIO, GAME, IMAGE, MAPS, NEWS, PRODUCTIVITY, SOCIAL, VIDEO, UNDEFINED;
+
+  companion object {
+    fun fromInt(category: Int): AppCategory {
+      return when (category) {
+        ApplicationInfo.CATEGORY_ACCESSIBILITY -> ACCESSIBILITY
+        ApplicationInfo.CATEGORY_AUDIO -> AUDIO
+        ApplicationInfo.CATEGORY_GAME -> GAME
+        ApplicationInfo.CATEGORY_IMAGE -> IMAGE
+        ApplicationInfo.CATEGORY_MAPS -> MAPS
+        ApplicationInfo.CATEGORY_NEWS -> NEWS
+        ApplicationInfo.CATEGORY_PRODUCTIVITY -> PRODUCTIVITY
+        ApplicationInfo.CATEGORY_SOCIAL -> SOCIAL
+        ApplicationInfo.CATEGORY_VIDEO -> VIDEO
+        else -> UNDEFINED
+      }
+    }
+  }
+}
+
 fun LauncherActivityInfo.toApp() =
   App(
     packageName = this.applicationInfo.packageName,
+    category = AppCategory.fromInt(this.applicationInfo.category),
     appTitle = this.label.toString()
   )
 

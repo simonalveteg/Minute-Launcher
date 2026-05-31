@@ -9,4 +9,10 @@ class Converters {
 
   @TypeConverter
   fun fromGestureDirection(value: Gesture) = value.name
+
+  @TypeConverter
+  fun toAppCategory(value: String) = AppCategory.valueOf(value)
+
+  @TypeConverter
+  fun fromAppCategory(value: AppCategory) = value.name
 }

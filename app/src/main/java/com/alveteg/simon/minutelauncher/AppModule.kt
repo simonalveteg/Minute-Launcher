@@ -31,7 +31,8 @@ object AppModule {
         LauncherDatabase.MIGRATION_1_2,
         LauncherDatabase.MIGRATION_2_3,
         LauncherDatabase.MIGRATION_3_4,
-        LauncherDatabase.MIGRATION_4_5
+        LauncherDatabase.MIGRATION_4_5,
+        LauncherDatabase.MIGRATION_5_6
       )
       .build()
   }

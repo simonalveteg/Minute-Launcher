@@ -2,20 +2,15 @@ package com.alveteg.simon.minutelauncher.data
 
 data class AppInfo(
   val app: App,
-  val favorite: Boolean,
-  val mindfulDelay: Int,
-  val usage: List<UsageStatistics>
+  val favorite: Boolean = false,
+  val mindfulDelay: Int = PreferenceRepository.Defaults.MINDFUL_DELAY_LENGTH,
+  val usage: List<UsageStatistics> = emptyList()
 ) {
   companion object {
-    val EMPTY = AppInfo(App.EMPTY, false, 0, emptyList())
+    val EMPTY = AppInfo(App.EMPTY)
 
     fun placeholder(id: Int) = EMPTY.copy(
       app = App(packageName = "placeholder_$id", appTitle = "")
     )
   }
 }
-
-data class FavoriteAppInfo(
-  val favoriteApp: FavoriteAppWithApp,
-  val appInfo: AppInfo,
-)
