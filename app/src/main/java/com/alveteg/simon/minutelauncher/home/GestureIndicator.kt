@@ -134,7 +134,7 @@ fun BoxScope.GestureIndicator(
             val verticalOffset = localFingerPosition.y.times(0.1f)
 
             iconVerticalShift = with(density) {
-              val iconOffset = findVerticalOffset(bulgeX.div(2)) - centerY + verticalOffset
+              val iconOffset = findVerticalOffset(midX) - centerY + verticalOffset
               Timber.d("Offset: $iconOffset")
               iconOffset.toDp()
             }
