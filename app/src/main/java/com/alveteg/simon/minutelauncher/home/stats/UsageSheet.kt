@@ -23,8 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
@@ -109,14 +111,14 @@ fun UsageSheet(
               .padding(horizontal = 4.dp)
           ) {
             Text(
-              text = "MOST USED APPS",
+              text = stringResource(R.string.label_most_used_apps),
               style = MaterialTheme.typography.labelSmall,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
               fontFamily = archivoFamily,
               modifier = Modifier.weight(1f)
             )
             Text(
-              text = "DURATION (AVG)",
+              text = stringResource(R.string.label_duration_avg),
               style = MaterialTheme.typography.labelSmall,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
               fontFamily = archivoFamily,

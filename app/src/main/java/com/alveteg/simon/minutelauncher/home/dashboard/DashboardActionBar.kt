@@ -6,26 +6,21 @@ import android.os.Build
 import android.provider.Settings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Feedback
-import androidx.compose.material.icons.filled.Gesture
-import androidx.compose.material.icons.filled.Handyman
-import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.BuildConfig
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
-import com.alveteg.simon.minutelauncher.home.HomeActivity
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 import timber.log.Timber
 
 
@@ -37,7 +32,7 @@ fun DashboardActionBar(
   val actions = listOf(
     ActionBarAction(
       imageVector = Icons.Default.Settings,
-      description = "Open system settings",
+      description = stringResource(R.string.description_open_system_settings),
       action = {
         val intent = Intent(Settings.ACTION_SETTINGS)
         mContext.startActivity(intent, null)
@@ -45,21 +40,21 @@ fun DashboardActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Default.Wallpaper,
-      description = "Change Wallpaper",
+      description = stringResource(R.string.description_change_wallpaper),
       action = {
         val intent = Intent(Intent.ACTION_SET_WALLPAPER).apply {
           flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         try {
-          mContext.startActivity(Intent.createChooser(intent, "Select Wallpaper"))
+          mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.chooser_title_select_wallpaper)))
         } catch (e: Exception) {
-          Timber.e(e, "No wallpaper app found")
+          Timber.e(e, mContext.getString(R.string.no_wallpaper_app_found))
         }
       }
     ),
     ActionBarAction(
       imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
-      description = "Open Digital Wellbeing",
+      description = stringResource(R.string.description_open_digital_wellbeing),
       action = {
         val intent = Intent().apply {
           setClassName(
@@ -73,12 +68,12 @@ fun DashboardActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Default.Tune,
-      description = "Open launcher settings",
+      description = stringResource(R.string.description_open_launcher_settings),
       action = { onEvent(HomeEvent.OpenSettings) }
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,
-      description = "Open App Info",
+      description = stringResource(R.string.description_open_app_info),
       action = {
         val intent = Intent().apply {
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
@@ -90,7 +85,7 @@ fun DashboardActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Default.Feedback,
-      description = "Send Feedback",
+      description = stringResource(R.string.description_send_feedback),
       action = {
         val body = """
         |
@@ -104,14 +99,14 @@ fun DashboardActionBar(
         val intent = Intent(Intent.ACTION_SENDTO).apply {
           data = Uri.parse("mailto:")
           putExtra(Intent.EXTRA_EMAIL, arrayOf("dev@simonalveteg.com"))
-          putExtra(Intent.EXTRA_SUBJECT, "Feedback: Minute Launcher")
+          putExtra(Intent.EXTRA_SUBJECT, mContext.getString(R.string.feedback_subject))
           putExtra(Intent.EXTRA_TEXT, body)
           flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         try {
-          mContext.startActivity(Intent.createChooser(intent, "Send Feedback"))
+          mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.chooser_title_send_feedback)))
         } catch (e: Exception) {
-          Timber.e(e, "No email app found")
+          Timber.e(e, mContext.getString(R.string.no_email_app_found))
         }
       }
     ),

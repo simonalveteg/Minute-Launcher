@@ -13,15 +13,14 @@ import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
-import timber.log.Timber
 
 
 @Composable
@@ -38,7 +37,7 @@ fun AppModalActionBar(
   val actions = listOf(
     ActionBarAction(
       imageVector = Icons.Outlined.Delete,
-      description = "Uninstall app",
+      description = stringResource(R.string.description_uninstall_app),
       action = {
         val intent = Intent().apply {
           action = Intent.ACTION_DELETE
@@ -50,13 +49,13 @@ fun AppModalActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Timer,
-      description = "Change app timer",
+      description = stringResource(R.string.description_change_app_timer),
       action = onChangeTimer,
       enabled = enabled
     ),
     ActionBarAction(
       imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
-      description = "Show app usage details",
+      description = stringResource(R.string.description_show_app_usage_details),
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APP_USAGE_SETTINGS
@@ -66,18 +65,18 @@ fun AppModalActionBar(
         try {
           mContext.startActivity(intent, null)
         } catch (e: Exception) {
-          onEvent(HomeEvent.ShowToast("Could not open app usage settings. Digital Wellbeing might not be present on your device."))
+          onEvent(HomeEvent.ShowToast(mContext.getString(R.string.error_digital_wellbeing_not_found)))
         }
       }
     ),
     ActionBarAction(
       imageVector = favoriteIcon,
-      description = "Toggle app favorite",
+      description = stringResource(R.string.description_toggle_app_favorite),
       action = { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) },
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,
-      description = "Open app info",
+      description = stringResource(R.string.description_open_app_info_modal),
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
@@ -90,11 +89,10 @@ fun AppModalActionBar(
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Edit,
-      description = "Edit app name",
+      description = stringResource(R.string.description_edit_app_name),
       action = { onEditName() },
     ),
   )
 
   ActionBar(actions = actions)
 }
-

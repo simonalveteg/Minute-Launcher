@@ -22,10 +22,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.home.isDefaultLauncher
 import com.alveteg.simon.minutelauncher.home.isDeviceAdmin
@@ -66,7 +68,7 @@ fun PermissionCheckers(
   ) {
     if (!isDefaultLauncher && showDefaultHomePrompt) {
       ButtonInput(
-        label = "Set as Default Launcher",
+        label = stringResource(R.string.label_set_default_launcher),
         colors = buttonColors,
         onClick = {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -94,8 +96,8 @@ fun PermissionCheckers(
     }
     if (!isAdminActive && showAdminAccessPrompt) {
       ButtonInput(
-        label = "Grant Admin Access",
-        description = "Admin access is needed to be able to lock the screen with a button press.",
+        label = stringResource(R.string.label_grant_admin_access),
+        description = stringResource(R.string.description_admin_access),
         colors = buttonColors,
         onClick = {
           val componentName = ComponentName(context, MinuteDeviceAdminReceiver::class.java)
@@ -103,7 +105,7 @@ fun PermissionCheckers(
             putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
             putExtra(
               DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-              "Minute Launcher requests admin access in order to give you the ability to lock the screen from the launcher with the press of a button."
+              context.getString(R.string.admin_access_explanation)
             )
           }
           context.startActivity(intent)
@@ -114,8 +116,8 @@ fun PermissionCheckers(
     }
     if (!hasUsageAccess && showUsageAccessPrompt) {
       ButtonInput(
-        label = "Grant Usage Access",
-        description = "Usage access is needed to display usage statistics.",
+        label = stringResource(R.string.label_grant_usage_access),
+        description = stringResource(R.string.description_usage_access),
         colors = buttonColors,
         onClick = {
           val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)

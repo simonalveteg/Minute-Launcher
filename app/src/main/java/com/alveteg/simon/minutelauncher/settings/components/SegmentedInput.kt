@@ -18,7 +18,7 @@ fun <T> SegmentedInput(
   options: List<T>,
   selectedOption: T,
   onOptionSelect: (T) -> Unit,
-  labelProvider: (T) -> String,
+  labelProvider: @Composable (T) -> String,
   modifier: Modifier = Modifier,
 ) {
   GenericColumnInput(

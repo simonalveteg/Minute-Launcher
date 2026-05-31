@@ -29,10 +29,12 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.sumOf
@@ -143,8 +145,8 @@ fun HomeScreen(
   if (showGestureModal != Gesture.NONE) {
     MinuteBottomSheet(
       onDismissRequest = { showGestureModal = Gesture.NONE },
-      title = "Unset Gesture",
-      description = "Select an app to open when performing this gesture."
+      title = stringResource(R.string.title_unset_gesture),
+      description = stringResource(R.string.description_unset_gesture)
     ) {
       GestureInput(
         gesture = showGestureModal,

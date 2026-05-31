@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxOfOrNull
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
@@ -149,13 +151,13 @@ fun UsageBarGraph(
             .padding(top = 12.dp, bottom = 8.dp)
         ) {
           Text(
-            text = "Daily usage",
+            text = stringResource(R.string.label_daily_usage),
             style = MaterialTheme.typography.titleMedium,
             fontFamily = archivoBlackFamily,
             modifier = Modifier.alignByBaseline()
           )
           Text(
-            text = "~${dailyAverage.toTimeUsed(expanded = true)}/day",
+            text = stringResource(R.string.label_daily_average, dailyAverage.toTimeUsed(expanded = true)),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = archivoFamily,
@@ -248,7 +250,7 @@ fun UsageBarGraph(
     } else {
       val usageAccess = isUsageAccessGranted(context)
       Text(
-        text = if (usageAccess) "No recent usage found." else "Usage access is not granted.",
+        text = if (usageAccess) stringResource(R.string.label_no_usage_found) else stringResource(R.string.label_usage_access_not_granted),
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()
@@ -292,7 +294,7 @@ private fun rememberSelectionColumnProvider(
         return LineComponent(
           fill = Fill(color),
           thicknessDp = thickness.value,
-          shape = shape,
+          shape = shape
         )
       }
 
@@ -302,7 +304,7 @@ private fun rememberSelectionColumnProvider(
       ): LineComponent = LineComponent(
         fill = Fill(primaryColor),
         thicknessDp = thickness.value,
-        shape = shape,
+        shape = shape
       )
     }
   }

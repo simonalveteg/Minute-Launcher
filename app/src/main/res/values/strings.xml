@@ -2,4 +2,107 @@
     <string name="app_name">Minute Launcher</string>
     <string name="accessibility_service_summary">Screen locking service</string>
     <string name="accessibility_service_description">This service needs to be enabled in order for you to be able to quickly turn off your phone\'s screen from Minute Launcher.</string>
+
+    <!-- Dashboard ActionBar -->
+    <string name="description_open_system_settings">Open system settings</string>
+    <string name="description_change_wallpaper">Change Wallpaper</string>
+    <string name="chooser_title_select_wallpaper">Select Wallpaper</string>
+    <string name="description_open_digital_wellbeing">Open Digital Wellbeing</string>
+    <string name="description_open_launcher_settings">Open launcher settings</string>
+    <string name="description_open_app_info">Open App Info</string>
+    <string name="description_send_feedback">Send Feedback</string>
+    <string name="feedback_subject">Feedback: Minute Launcher</string>
+    <string name="chooser_title_send_feedback">Send Feedback</string>
+    <string name="no_email_app_found">No email app found</string>
+    <string name="no_wallpaper_app_found">No wallpaper app found</string>
+
+    <!-- Home Screen -->
+    <string name="title_unset_gesture">Unset Gesture</string>
+    <string name="description_unset_gesture">Select an app to open when performing this gesture.</string>
+    <string name="label_search_apps">Search apps</string>
+    <string name="description_search_icon">Search Icon</string>
+    <string name="description_clear_search">Clear searchbar</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Minute Launcher Settings</string>
+    <string name="description_navigate_back">Navigate back.</string>
+    <string name="section_title_gestures">Gestures</string>
+    <string name="section_description_gestures">Choose which apps to open when swiping on the home screen.</string>
+    <string name="section_title_mindful_delay">Mindful Delay</string>
+    <string name="section_description_mindful_delay">Add a short pause before apps open to help you stay intentional, by giving you a moment to reconsider.</string>
+    <string name="label_default_delay_length">Default Delay Length</string>
+    <string name="description_default_delay_length">Choose how long the delay should be for apps that have no custom timer set. Default is 5 seconds.</string>
+    <string name="label_auto_open">Auto-Open</string>
+    <string name="description_auto_open">Automatically open apps with a Mindful Delay of zero seconds, without showing the confirmation dialog first.</string>
+    <string name="label_apps_with_custom_timers">Apps with custom timers set</string>
+    <string name="description_apps_with_custom_timers">View and reset the timers for apps that have one set.</string>
+    <string name="description_reset_timer">Reset Timer</string>
+    <string name="section_title_appearance">Appearance</string>
+    <string name="label_app_theme">App Theme</string>
+    <string name="description_app_theme">Choose whether the app should be in Light, Dark, or follow System settings.</string>
+    <string name="label_color_palette">Color Palette</string>
+    <string name="description_color_palette">Choose whether to use the default theme or colors generated from your wallpaper (Material You).</string>
+    <string name="color_palette_dynamic">Dynamic</string>
+    <string name="color_palette_default">Default</string>
+    <string name="label_background_transparency">Background Transparency</string>
+    <string name="description_background_transparency">Choose how transparent the color layer above your background picture should be. Default is 50%</string>
+
+    <!-- Permissions -->
+    <string name="label_set_default_launcher">Set as Default Launcher</string>
+    <string name="label_grant_admin_access">Grant Admin Access</string>
+    <string name="description_admin_access">Admin access is needed to be able to lock the screen with a button press.</string>
+    <string name="admin_access_explanation">Minute Launcher requests admin access in order to give you the ability to lock the screen from the launcher with the press of a button.</string>
+    <string name="label_grant_usage_access">Grant Usage Access</string>
+    <string name="description_usage_access">Usage access is needed to display usage statistics.</string>
+
+    <!-- Bottom Sheets -->
+    <string name="title_mindful_delay">Mindful Delay</string>
+    <string name="description_app_timer">Set how long you want to wait before being able to open this app. A longer delay helps you pause and break the habit of mindless clicking.</string>
+    <string name="label_reset_to_default">Reset to default</string>
+    <string name="title_set_display_name">Set display name</string>
+
+    <!-- App Modal -->
+    <string name="label_open_anyway">Open Anyway</string>
+    <string name="label_put_phone_down">Put the phone down</string>
+    <string name="label_wait_seconds">Wait %1$ds..</string>
+    <string name="description_uninstall_app">Uninstall app</string>
+    <string name="description_change_app_timer">Change app timer</string>
+    <string name="description_show_app_usage_details">Show app usage details</string>
+    <string name="description_toggle_app_favorite">Toggle app favorite</string>
+    <string name="description_open_app_info_modal">Open app info</string>
+    <string name="description_edit_app_name">Edit app name</string>
+    <string name="error_digital_wellbeing_not_found">Could not open app usage settings. Digital Wellbeing might not be present on your device.</string>
+
+    <!-- Usage -->
+    <string name="label_daily_usage">Daily usage</string>
+    <string name="label_daily_average">~%1$s/day</string>
+    <string name="label_no_usage_found">No recent usage found.</string>
+    <string name="label_usage_access_not_granted">Usage access is not granted.</string>
+    <string name="label_most_used_apps">MOST USED APPS</string>
+    <string name="label_duration_avg">DURATION (AVG)</string>
+
+    <!-- Toasts -->
+    <string name="toast_app_usage">%1$s used for %2$s</string>
+
+    <!-- Themes -->
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+
+    <!-- Time Formatting -->
+    <string name="time_h">%1$dh</string>
+    <string name="time_m">%1$dm</string>
+    <string name="time_s">%1$ds</string>
+    <plurals name="time_hours">
+        <item quantity="one">%1$d hour</item>
+        <item quantity="other">%1$d hours</item>
+    </plurals>
+    <plurals name="time_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <plurals name="time_seconds">
+        <item quantity="one">%1$d second</item>
+        <item quantity="other">%1$d seconds</item>
+    </plurals>
 </resources>

@@ -2,6 +2,7 @@ package com.alveteg.simon.minutelauncher.theme
 
 import android.app.Activity
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -13,6 +14,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.alveteg.simon.minutelauncher.R
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -90,10 +92,10 @@ private val DarkColors = darkColorScheme(
     scrim = md_theme_dark_scrim,
 )
 
-enum class AppTheme(val label: String) {
-    LIGHT("Light"),
-    DARK("Dark"),
-    SYSTEM("System")
+enum class AppTheme(@StringRes val labelRes: Int) {
+    LIGHT(R.string.theme_light),
+    DARK(R.string.theme_dark),
+    SYSTEM(R.string.theme_system)
 }
 
 @Composable

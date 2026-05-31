@@ -29,10 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.home.stats.UsageBarGraph
@@ -72,18 +74,25 @@ fun AppModal(
     )
   }
 
+  val waitText = stringResource(R.string.label_wait_seconds, timer)
+  val openAnywayText = stringResource(R.string.label_open_anyway)
+
   LaunchedEffect(appInfo) {
     Timber.d("New timer: ${appInfo.timer}, animationPeriod: $animationPeriod, ${PreferenceRepository.Defaults.MAX_TIMER} ")
     timer = appInfo.timer
   }
 
   LaunchedEffect(key1 = timer) {
-    confirmationText = "Wait ${timer}s.."
+    confirmationText = if (timer > 0 && !enabled) {
+      waitText
+    } else {
+      openAnywayText
+    }
+    
     if (timer > 0 && !enabled) {
       delay(1000L)
       timer -= 1
     } else {
-      confirmationText = "Open Anyway"
       enabled = true
     }
   }
@@ -114,7 +123,7 @@ fun AppModal(
       Box(contentAlignment = Alignment.Center) {
         // Transparent copy for alignment consistency
         Text(
-          text = "Open Anyway",
+          text = openAnywayText,
           color = Color.Transparent,
           fontFamily = archivoFamily,
           fontWeight = FontWeight.Bold
@@ -139,7 +148,7 @@ fun AppModal(
       shape = MaterialTheme.shapes.medium
     ) {
       Text(
-        text = "Put the phone down",
+        text = stringResource(R.string.label_put_phone_down),
         fontFamily = archivoFamily,
         fontWeight = FontWeight.Bold,
         style = LocalTextStyle.current.copy(textMotion = TextMotion.Animated)

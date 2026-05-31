@@ -1,9 +1,6 @@
 package com.alveteg.simon.minutelauncher.home.modal
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -21,16 +18,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import kotlinx.coroutines.launch
 
@@ -69,7 +65,7 @@ fun NameBottomSheet(
 
   MinuteBottomSheet(
     onDismissRequest = onDismissRequest, sheetState = sheetState,
-    title = "Set display name",
+    title = stringResource(R.string.title_set_display_name),
   ) {
     OutlinedTextField(
       value = displayName,
@@ -88,7 +84,7 @@ fun NameBottomSheet(
         ) {
           Icon(
             imageVector = Icons.AutoMirrored.Filled.Undo,
-            contentDescription = "Reset to default",
+            contentDescription = stringResource(R.string.label_reset_to_default),
           )
         }
       },

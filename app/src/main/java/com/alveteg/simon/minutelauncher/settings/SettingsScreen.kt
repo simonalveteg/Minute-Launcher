@@ -37,9 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.home.HomeEvent
@@ -95,7 +97,7 @@ fun SettingsScreen(
     topBar = {
       LargeTopAppBar(
         title = {
-          Text("Minute Launcher Settings")
+          Text(stringResource(R.string.settings_title))
         },
         navigationIcon = {
           IconButton(
@@ -103,7 +105,7 @@ fun SettingsScreen(
           ) {
             Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Navigate back."
+              contentDescription = stringResource(R.string.description_navigate_back)
             )
           }
         },
@@ -127,8 +129,8 @@ fun SettingsScreen(
       }
 
       settingsSection(
-        title = "Gestures",
-        description = "Choose which apps to open when swiping on the home screen."
+        title = R.string.section_title_gestures,
+        description = R.string.section_description_gestures
       ) {
         items(Gesture.getHorizontalGestures()) {
           GestureInput(
@@ -141,13 +143,13 @@ fun SettingsScreen(
       }
 
       settingsSection(
-        title = "Mindful Delay",
-        description = "Add a short pause before apps open to help you stay intentional, by giving you a moment to reconsider."
+        title = R.string.section_title_mindful_delay,
+        description = R.string.section_description_mindful_delay
       ) {
         item {
           SliderInput(
-            label = "Default Delay Length",
-            description = "Choose how long the delay should be for apps that have no custom timer set. Default is 5 seconds.",
+            label = stringResource(R.string.label_default_delay_length),
+            description = stringResource(R.string.description_default_delay_length),
             value = _timerLength.toFloat(),
             valueLabel = timerLengthLabel,
             valueRange = PreferenceRepository.Defaults.MIN_TIMER.toFloat() .. PreferenceRepository.Defaults.MAX_TIMER.toFloat(),
@@ -159,8 +161,8 @@ fun SettingsScreen(
         }
         item {
           ToggleInput(
-            label = "Auto-Open",
-            description = "Automatically open apps with a Mindful Delay of zero seconds, without showing the confirmation dialog first.",
+            label = stringResource(R.string.label_auto_open),
+            description = stringResource(R.string.description_auto_open),
             checked = skipAppModal,
             onCheckedChange = { viewModel.onSkipAppModalChange(it) },
           )
@@ -169,8 +171,8 @@ fun SettingsScreen(
         item {
           if (appsWithTimers.isNotEmpty()) {
             GenericColumnInput(
-              label = "Apps with custom timers set",
-              description = "View and reset the timers for apps that have one set.",
+              label = stringResource(R.string.label_apps_with_custom_timers),
+              description = stringResource(R.string.description_apps_with_custom_timers),
               modifier = Modifier.padding(top = 16.dp)
             )
           }
@@ -227,7 +229,7 @@ fun SettingsScreen(
                 ) {
                   Icon(
                     imageVector = Icons.AutoMirrored.Filled.Undo,
-                    contentDescription = "Reset Timer",
+                    contentDescription = stringResource(R.string.description_reset_timer),
                   )
                 }
               }
@@ -235,35 +237,35 @@ fun SettingsScreen(
           }
         }
 
-        settingsSection(title = "Appearance") {
+        settingsSection(title = R.string.section_title_appearance) {
           item {
             SegmentedInput(
-              label = "App Theme",
-              description = "Choose whether the app should be in Light, Dark, or follow System settings.",
+              label = stringResource(R.string.label_app_theme),
+              description = stringResource(R.string.description_app_theme),
               options = AppTheme.entries,
               selectedOption = appTheme,
               onOptionSelect = { viewModel.onThemeChange(it) },
-              labelProvider = { it.label }
+              labelProvider = { stringResource(it.labelRes) }
             )
           }
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             item {
               SegmentedInput(
-                label = "Color Palette",
-                description = "Choose whether to use the default theme or colors generated from your wallpaper (Material You).",
+                label = stringResource(R.string.label_color_palette),
+                description = stringResource(R.string.description_color_palette),
                 options = listOf(false, true),
                 selectedOption = useDynamicColor,
                 onOptionSelect = { viewModel.onDynamicColorChange(it) },
                 labelProvider = {
-                  if (it) "Dynamic" else "Default"
+                  if (it) stringResource(R.string.color_palette_dynamic) else stringResource(R.string.color_palette_default)
                 }
               )
             }
           }
           item {
             SliderInput(
-              label = "Background Transparency",
-              description = "Choose how transparent the color layer above your background picture should be. Default is 50%",
+              label = stringResource(R.string.label_background_transparency),
+              description = stringResource(R.string.description_background_transparency),
               value = _transparencyAmount,
               valueLabel = transparencyAmountLabel,
               valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,

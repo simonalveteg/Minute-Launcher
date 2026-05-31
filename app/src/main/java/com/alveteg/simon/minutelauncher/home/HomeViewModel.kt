@@ -7,6 +7,7 @@ import android.os.UserHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
@@ -216,9 +217,11 @@ class HomeViewModel @Inject constructor(
           sendUiEvent(UiEvent.LaunchActivity(intent))
           sendUiEvent(
             UiEvent.ShowToast(
-              "${appInfo.app.appTitle} used for ${
-                appInfo.usage.firstOrNull()?.usageDuration.toTimeUsed(false)
-              }"
+              context.getString(
+                R.string.toast_app_usage,
+                appInfo.app.appTitle,
+                appInfo.usage.firstOrNull()?.usageDuration.toTimeUsed(context, false)
+              )
             )
           )
           viewModelScope.launch {
