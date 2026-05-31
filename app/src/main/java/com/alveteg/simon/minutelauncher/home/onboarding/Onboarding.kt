@@ -60,8 +60,9 @@ fun Onboarding(
 
   val (favoriteApps, regularApps) = apps.partition { it.favorite }
 
-  val (suggestedApps, otherApps) = remember(apps) {
-    val scored = apps.filter { !it.favorite }.map { appInfo ->
+  val suggestedPackageNames = remember(apps.map { it.app.packageName }) {
+    val initialRegular = apps.filter { !it.favorite }
+    val scored = initialRegular.map { appInfo ->
       val app = appInfo.app
       var score = 0
 
@@ -97,9 +98,11 @@ fun Onboarding(
     )
     val defaultLimit = 1
 
-    val suggested = scored
+    scored
+      .asSequence()
       .filter { it.second >= 5 }
       .groupBy { it.first.app.category }
+      .asSequence()
       .flatMap { (category, appsInCategory) ->
         val limit = categoryLimits[category] ?: defaultLimit
         appsInCategory
@@ -108,11 +111,15 @@ fun Onboarding(
       }
       .map { it.first }
       .sortedByDescending { app -> scored.find { it.first == app }?.second ?: 0 }
-      .take(12)
-
-    val others = regularApps.filter { it !in suggested }
-    suggested to others
+      .take(16)
+      .map { it.app.packageName }
+      .toList()
   }
+
+  val suggestedApps = remember(regularApps, suggestedPackageNames) {
+    suggestedPackageNames.mapNotNull { pkg -> regularApps.find { it.app.packageName == pkg } }
+  }
+  val otherApps = regularApps.filter { it.app.packageName !in suggestedPackageNames }
 
 
   val scale = remember { Animatable(0f) }
@@ -190,24 +197,25 @@ fun Onboarding(
         modifier = Modifier
           .fillMaxWidth()
       ) {
-        if (favoriteApps.isNotEmpty()) {
-          item {
+        item {
+          if (favoriteApps.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
               text = "Selected".uppercase(),
               style = MaterialTheme.typography.labelLarge,
               fontFamily = archivoBlackFamily,
+              modifier = Modifier.animateItem()
             )
           }
-          items(
-            items = favoriteApps,
-            key = { it.app.packageName }
-          ) { appInfo ->
-            SelectableApp(
-              modifier = Modifier.animateItem(),
-              appInfo = appInfo
-            ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
-          }
+        }
+        items(
+          items = favoriteApps,
+          key = { it.app.packageName }
+        ) { appInfo ->
+          SelectableApp(
+            modifier = Modifier.animateItem(),
+            appInfo = appInfo
+          ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
         }
 
         if (suggestedApps.isNotEmpty()) {
@@ -217,6 +225,7 @@ fun Onboarding(
               text = "Suggestions".uppercase(),
               style = MaterialTheme.typography.labelLarge,
               fontFamily = archivoBlackFamily,
+              modifier = Modifier.animateItem()
             )
           }
           items(
@@ -237,6 +246,7 @@ fun Onboarding(
               text = if (suggestedApps.isEmpty()) "Suggestions".uppercase() else "Other Apps".uppercase(),
               style = MaterialTheme.typography.labelLarge,
               fontFamily = archivoBlackFamily,
+              modifier = Modifier.animateItem()
             )
           }
           items(
@@ -250,7 +260,9 @@ fun Onboarding(
           }
         }
         item {
-          Spacer(Modifier.navigationBarsPadding().padding(bottom = 16.dp))
+          Spacer(Modifier
+            .navigationBarsPadding()
+            .padding(bottom = 16.dp))
         }
       }
     }
