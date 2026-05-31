@@ -2,6 +2,7 @@ package com.alveteg.simon.minutelauncher.home.dashboard
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Feedback
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.core.content.ContextCompat
+import com.alveteg.simon.minutelauncher.BuildConfig
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.R
@@ -89,7 +91,29 @@ fun DashboardActionBar(
     ActionBarAction(
       imageVector = Icons.Default.Feedback,
       description = "Send Feedback",
-      action = {}
+      action = {
+        val body = """
+        |
+        |
+        |------------------------------------------------------
+        |Launcher Version: ${BuildConfig.VERSION_NAME}
+        |Android Version: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})
+        |Device: ${Build.MANUFACTURER} ${Build.MODEL}
+        |------------------------------------------------------
+        """.trimMargin()
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+          data = Uri.parse("mailto:")
+          putExtra(Intent.EXTRA_EMAIL, arrayOf("dev@simonalveteg.com"))
+          putExtra(Intent.EXTRA_SUBJECT, "Feedback: Minute Launcher")
+          putExtra(Intent.EXTRA_TEXT, body)
+          flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+          mContext.startActivity(Intent.createChooser(intent, "Send Feedback"))
+        } catch (e: Exception) {
+          Timber.e(e, "No email app found")
+        }
+      }
     ),
   )
 
