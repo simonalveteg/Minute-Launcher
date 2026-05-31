@@ -114,7 +114,7 @@ fun SettingsScreen(
     LazyColumn(
       modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 16.dp)
+        .padding(horizontal = 24.dp)
         .padding(padding),
       horizontalAlignment = Alignment.Start
     ) {
@@ -124,10 +124,6 @@ fun SettingsScreen(
           onEvent = viewModel::onEvent,
           showDismissButton = false,
         )
-      }
-
-      settingsSection(title = "Preferences") {
-
       }
 
       settingsSection(
@@ -174,7 +170,8 @@ fun SettingsScreen(
           if (appsWithTimers.isNotEmpty()) {
             GenericColumnInput(
               label = "Apps with custom timers set",
-              description = "View and reset the timers for apps that have one set."
+              description = "View and reset the timers for apps that have one set.",
+              modifier = Modifier.padding(top = 16.dp)
             )
           }
         }
@@ -270,7 +267,8 @@ fun SettingsScreen(
               value = _transparencyAmount,
               valueLabel = transparencyAmountLabel,
               valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,
-              roundToInt = false,
+              roundToInt = true,
+              steps = 19,
               onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
               onValueChange = { _transparencyAmount = it }
             )
