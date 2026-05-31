@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,22 +23,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.alveteg.simon.minutelauncher.R
+import com.alveteg.simon.minutelauncher.BuildConfig
 import com.alveteg.simon.minutelauncher.utilities.Gesture
-import kotlin.math.abs
+import timber.log.Timber
 
 @Composable
 fun BoxScope.GestureIndicator(
   dragProgress: Float,
   isTriggered: Boolean,
   activeGesture: Gesture,
-  verticalPosition: Float,
+  fingerPosition: Offset,
   modifier: Modifier = Modifier
 ) {
   val density = LocalDensity.current
@@ -82,27 +84,7 @@ fun BoxScope.GestureIndicator(
     label = "IndicatorContentColor"
   )
 
-  var startY by remember { mutableStateOf(0f) }
-  if (startY == 0f && verticalPosition != 0f) {
-    startY = verticalPosition
-  }
-
   if (finalWidth > 0.1.dp && activeGesture != Gesture.NONE) {
-    val screenHeightPx = with(density) { screenHeightDp.toPx() }
-
-    val containerOffsetPx = if (activeGesture.isBottom()) screenHeightPx / 2f else 0f
-    val containerHeightPx = screenHeightPx / 2f
-
-    val startWithinContainer = (startY - containerOffsetPx) - (containerHeightPx / 2f)
-
-    val rawOffset = (verticalPosition - startY)
-    val maxOffsetPx = screenHeightPx / 2f * 0.2f
-
-    val totalOffsetPx = startWithinContainer + rawOffset
-    val normalizedOffset = if (maxOffsetPx != 0f) totalOffsetPx / maxOffsetPx else 0f
-    val resistedOffsetPx = (normalizedOffset / (1f + abs(normalizedOffset))) * maxOffsetPx
-    val verticalOffsetDp = with(density) { resistedOffsetPx.toDp() }
-
     val alignment = when (activeGesture) {
       Gesture.TOP_LEFT -> Alignment.TopStart
       Gesture.TOP_RIGHT -> Alignment.TopEnd
@@ -110,6 +92,9 @@ fun BoxScope.GestureIndicator(
       Gesture.BOTTOM_RIGHT -> Alignment.BottomEnd
       else -> Alignment.Center
     }
+
+    var indicatorOffset by remember { mutableStateOf(Offset.Zero) }
+    var iconVerticalShift by remember { mutableStateOf(0.dp) }
 
     Box(
       modifier = modifier
@@ -126,36 +111,62 @@ fun BoxScope.GestureIndicator(
           .fillMaxHeight(animatedProgress * 0.1f + (0.5f * popScaleVertical))
           .fillMaxWidth()
           .align(Alignment.Center)
-          .offset(y = verticalOffsetDp)
+          .onGloballyPositioned { coords ->
+            indicatorOffset = coords.positionInRoot()
+          }
           .drawWithCache {
             val isLeft = activeGesture.isLeft()
-            val offsetPx = verticalOffsetDp.toPx()
-            val bulgeX = if (isLeft) size.width else 0f
             val startX = if (isLeft) 0f else size.width
-            val tipY = size.height * 0.5f + offsetPx * 0.2f
+            val centerY = size.height / 2f
+            val bulgeX = if (isLeft) size.width else 0f
+            val midX = (startX + bulgeX) / 2f
+
+            val localFingerPosition = fingerPosition - indicatorOffset - Offset(startX, centerY)
+
+            fun findVerticalOffset(x: Float): Float {
+              if (localFingerPosition.x == 0f) return centerY
+              val k = localFingerPosition.y / localFingerPosition.x
+              val dx = x - startX
+              return k * dx + centerY
+            }
+
+            val bulgeY = findVerticalOffset(bulgeX)
+            val verticalOffset = localFingerPosition.y.times(0.1f)
+
+            iconVerticalShift = with(density) {
+              val iconOffset = findVerticalOffset(bulgeX.div(2)) - centerY + verticalOffset
+              Timber.d("Offset: $iconOffset")
+              iconOffset.toDp()
+            }
 
             onDrawBehind {
               val path = Path().apply {
-                val midX = (startX + bulgeX) / 2f
 
-                moveTo(startX, 0f)
+                moveTo(startX, verticalOffset + 0f)
                 cubicTo(
-                  midX, 0f,
-                  bulgeX, tipY - size.height * 0.3f,
-                  bulgeX, tipY
+                  midX, verticalOffset + 0f,
+                  bulgeX, verticalOffset + bulgeY - size.height * 0.3f,
+                  bulgeX, verticalOffset + bulgeY
                 )
                 cubicTo(
-                  bulgeX, tipY + size.height * 0.3f,
-                  midX, size.height,
-                  startX, size.height
+                  bulgeX, verticalOffset + bulgeY + size.height * 0.3f,
+                  midX, verticalOffset + size.height,
+                  startX, verticalOffset + size.height
                 )
                 close()
               }
               drawPath(path, color = indicatorColor)
+              if (BuildConfig.DEBUG) {
+                drawLine(
+                  color = Color.Red,
+                  start = Offset(startX, verticalOffset + centerY),
+                  end = Offset(bulgeX, verticalOffset + bulgeY),
+                  strokeWidth = 4f
+                )
+              }
             }
           }
       ) {
-        val iconVerticalShift = verticalOffsetDp * 0.45f
         Icon(
           painter = painterResource(activeGesture.getIcon()),
           contentDescription = null,

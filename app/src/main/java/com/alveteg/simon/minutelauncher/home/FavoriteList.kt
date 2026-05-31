@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -59,7 +60,7 @@ fun FavoriteList(
   var dragProgress by remember { mutableStateOf(0f) }
   var activeGesture by remember { mutableStateOf(Gesture.NONE) }
   var isTriggered by remember { mutableStateOf(false) }
-  var verticalTouchPosition by remember { mutableStateOf(0f) }
+  var touchPosition by remember { mutableStateOf(Offset.Zero) }
 
   val favoritesAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
@@ -76,7 +77,7 @@ fun FavoriteList(
       dragProgress = dragProgress,
       isTriggered = isTriggered,
       activeGesture = activeGesture,
-      verticalPosition = verticalTouchPosition
+      fingerPosition = touchPosition
     )
     Column(
       modifier = Modifier
@@ -89,7 +90,7 @@ fun FavoriteList(
           onDragProgressChange = { dragProgress = it },
           onActiveGestureChange = { activeGesture = it },
           onGestureTriggered = { isTriggered = it },
-          onVerticalPositionChange = { verticalTouchPosition = it },
+          onVerticalPositionChange = { touchPosition = it },
           onEvent = { onEvent(it) }
         )
         .verticalGestureHandler(

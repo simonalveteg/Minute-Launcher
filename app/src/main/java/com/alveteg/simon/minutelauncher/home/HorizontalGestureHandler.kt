@@ -24,7 +24,7 @@ fun Modifier.horizontalGestureHandler(
   onDragProgressChange: (Float) -> Unit,
   onActiveGestureChange: (Gesture) -> Unit,
   onGestureTriggered: (Boolean) -> Unit,
-  onVerticalPositionChange: (Float) -> Unit,
+  onVerticalPositionChange: (Offset) -> Unit,
   onEvent: (HomeEvent) -> Unit
 ): Modifier {
   val hapticFeedback = LocalHapticFeedback.current
@@ -56,7 +56,7 @@ fun Modifier.horizontalGestureHandler(
         onActiveGestureChange(Gesture.NONE)
         startPosition = offset
         currentZone = if (offset.y < screenHeightPx / 2f) GestureZone.UPPER else GestureZone.LOWER
-        onVerticalPositionChange(offset.y)
+        onVerticalPositionChange(offset)
         resetDrag()
       },
       onDragEnd = {
@@ -66,7 +66,7 @@ fun Modifier.horizontalGestureHandler(
         resetDrag()
       },
       onHorizontalDrag = { change, _ ->
-        onVerticalPositionChange(change.position.y)
+        onVerticalPositionChange(change.position)
         var horizontalOffset = change.position.x - startPosition.x
 
         if (currentActiveGesture != Gesture.NONE) {
