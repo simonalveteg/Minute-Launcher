@@ -61,7 +61,7 @@ fun Onboarding(
   val (favoriteApps, regularApps) = apps.partition { it.favorite }
 
   val (suggestedApps, otherApps) = remember(apps) {
-    val scored = apps.map { appInfo ->
+    val scored = apps.filter { !it.favorite }.map { appInfo ->
       val app = appInfo.app
       var score = 0
 
@@ -78,30 +78,42 @@ fun Onboarding(
         else -> 0
       }
 
-      if (appInfo.isSystemApp && !appInfo.isUpdatedSystemApp) {
-        score -= 15
-      }
-
-      if (appInfo.isDefaultBrowser || appInfo.isDefaultSms || appInfo.isDefaultDialer) {
-        score += 20
-      }
-
-      if (app.category == AppCategory.SOCIAL && !appInfo.canHandleShare) {
-        score -= 8
-      }
+      if (appInfo.isSystemApp && !appInfo.isUpdatedSystemApp) score -= 15
+      if (appInfo.isDefaultBrowser || appInfo.isDefaultSms || appInfo.isDefaultDialer) score += 20
+      if (app.category == AppCategory.SOCIAL && !appInfo.canHandleShare) score -= 8
 
       appInfo to score
     }
 
+    val categoryLimits = mapOf(
+      AppCategory.SOCIAL to 3,
+      AppCategory.PRODUCTIVITY to 3,
+      AppCategory.MAPS to 1,
+      AppCategory.AUDIO to 2,
+      AppCategory.NEWS to 1,
+      AppCategory.VIDEO to 1,
+      AppCategory.IMAGE to 1,
+      AppCategory.GAME to 1
+    )
+    val defaultLimit = 1
+
     val suggested = scored
-      .filter { it.second >= 5 && !it.first.favorite }
-      .sortedByDescending { it.second }
+      .filter { it.second >= 5 }
+      .groupBy { it.first.app.category }
+      .flatMap { (category, appsInCategory) ->
+        val limit = categoryLimits[category] ?: defaultLimit
+        appsInCategory
+          .sortedByDescending { it.second }
+          .take(limit)
+      }
       .map { it.first }
+      .sortedByDescending { app -> scored.find { it.first == app }?.second ?: 0 }
       .take(12)
 
     val others = regularApps.filter { it !in suggested }
     suggested to others
   }
+
 
   val scale = remember { Animatable(0f) }
   LaunchedEffect(favoriteApps.isNotEmpty()) {
