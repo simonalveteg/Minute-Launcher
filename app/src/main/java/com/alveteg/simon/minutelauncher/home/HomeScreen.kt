@@ -202,15 +202,15 @@ fun HomeScreen(
   }
 }
 
-@SuppressLint("WrongConstant")
 fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
   try {
-    val statusBarService = context.getSystemService("statusbar")
+    val statusBarService = context.getSystemService(Context.STATUS_BAR_SERVICE)
     val methodName = if (expand) "expandNotificationsPanel" else "collapsePanels"
-    val statusBarManager: Class<*> = Class.forName("android.app.StatusBarManager")
+    val statusBarManager = Class.forName("android.app.StatusBarManager")
     val method: Method = statusBarManager.getMethod(methodName)
+    method.isAccessible = true
     method.invoke(statusBarService)
   } catch (e: Exception) {
-    e.printStackTrace()
+    Timber.e(e, "Failed to toggle notification drawer")
   }
 }

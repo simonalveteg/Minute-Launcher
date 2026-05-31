@@ -246,15 +246,14 @@ class HomeViewModel @Inject constructor(
       is HomeEvent.HandleGesture -> {
         val gesture = event.gesture
         Timber.d("Gesture handled, $gesture")
+        sendUiEvent(UiEvent.VibrateLongPress)
         when (gesture) {
           Gesture.UP -> {
             sendUiEvent(UiEvent.ShowDashboard)
-            sendUiEvent(UiEvent.VibrateLongPress)
           }
 
           Gesture.DOWN -> {
             sendUiEvent(UiEvent.ExpandNotifications)
-            sendUiEvent(UiEvent.VibrateLongPress)
           }
 
           else -> {
@@ -263,7 +262,6 @@ class HomeViewModel @Inject constructor(
                 getAppInfoForApp(it.app)
               }
               sendUiEvent(UiEvent.TriggerGesture(gesture, appInfo))
-              sendUiEvent(UiEvent.VibrateLongPress)
             }
           }
         }

@@ -18,7 +18,6 @@ fun Modifier.verticalGestureHandler(
   onActiveGestureChange: (Gesture) -> Unit,
   onEvent: (HomeEvent) -> Unit
 ): Modifier {
-
   val coroutineScope = rememberCoroutineScope()
 
   return this.pointerInput(Unit) {
@@ -42,6 +41,7 @@ fun Modifier.verticalGestureHandler(
       val weight = (abs(originalY) - threshold) / threshold
       val easingFactor = (1 - weight * 0.85f) * 0.10f
       val easedDragAmount = dragAmount * easingFactor
+
       coroutineScope.launch {
         offsetY.snapTo(originalY + easedDragAmount)
       }
