@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
@@ -150,7 +151,7 @@ fun Onboarding(
 
   Scaffold(
     modifier = modifier.fillMaxSize(),
-    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
+    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
     floatingActionButton = {
       if (favoriteApps.isNotEmpty() || scale.value > 0f) {
         MediumFloatingActionButton(
@@ -285,7 +286,7 @@ private fun SelectableApp(modifier: Modifier = Modifier, appInfo: AppInfo, onCli
     )
     Text(
       text = appInfo.app.displayTitle ?: appInfo.app.appTitle,
-      style = MaterialTheme.typography.bodyLarge,
+      style = MaterialTheme.typography.bodyLargeEmphasized,
       fontFamily = archivoFamily,
       modifier = Modifier.padding(start = 16.dp)
     )
