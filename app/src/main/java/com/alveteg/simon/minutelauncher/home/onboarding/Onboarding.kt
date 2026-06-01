@@ -9,6 +9,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -196,26 +197,28 @@ fun Onboarding(
       }
     }
   ) { paddingValues ->
+    val topPadding = paddingValues.calculateTopPadding()
     val topSpacerHeight = LocalWindowInfo.current.containerDpSize.height.div(9)
     val subtitleHeight = 24.dp
     val titleHeight = 64.dp
     val dividerPadding = 4.dp
+    val dividerThickness = 1.dp
 
-    val expandedHeight = topSpacerHeight + titleHeight + subtitleHeight + dividerPadding
-    val collapsedHeight = titleHeight
+    val expandedHeight = topSpacerHeight + titleHeight + subtitleHeight + dividerPadding + dividerThickness
+    val collapsedHeight = titleHeight + dividerThickness
 
     Box(
-      modifier = Modifier
-        .padding(paddingValues)
+      modifier = Modifier.fillMaxSize()
     ) {
       LazyColumn(
         state = listState,
         modifier = Modifier
           .fillMaxWidth()
+          .padding(bottom = paddingValues.calculateBottomPadding())
           .graphicsLayer { clip = true }
           .drawWithContent {
             val currentHeaderHeight = with(density) {
-              (expandedHeight - (expandedHeight - collapsedHeight) * scrollProgress).toPx()
+              (expandedHeight + topPadding - (expandedHeight - collapsedHeight) * scrollProgress).toPx()
             }
             clipRect(top = currentHeaderHeight) {
               this@drawWithContent.drawContent()
@@ -223,7 +226,7 @@ fun Onboarding(
           }
       ) {
         item {
-          Spacer(modifier = Modifier.height(expandedHeight))
+          Spacer(modifier = Modifier.height(expandedHeight + topPadding))
         }
         item {
           if (favoriteApps.isNotEmpty()) {
@@ -308,43 +311,65 @@ fun Onboarding(
         }
       }
 
-      Column(
+      Box(
         modifier = Modifier
           .fillMaxWidth()
+          .height(expandedHeight + topPadding - (expandedHeight - collapsedHeight) * scrollProgress)
+          .graphicsLayer { clip = true }
       ) {
-        Spacer(modifier = Modifier.height(topSpacerHeight * (1 - scrollProgress)))
-        Text(
-          text = "Favorites",
-          style = MaterialTheme.typography.displayMedium,
-          fontFamily = archivoBlackFamily,
+        Box(
           modifier = Modifier
-            .height(titleHeight)
-            .padding(horizontal = 46.dp)
-            .wrapContentHeight(Alignment.CenterVertically)
+            .matchParentSize()
+            .graphicsLayer {
+              alpha = scrollProgress
+              scaleX = scrollProgress * 5f
+              scaleY = scrollProgress * 5f
+              rotationZ = scrollProgress * 45f
+            }
+            .background(
+              color = MaterialTheme.colorScheme.surfaceContainerHigh,
+              shape = MaterialShapes.Cookie6Sided.toShape()
+            )
         )
         Column(
           modifier = Modifier
             .fillMaxWidth()
-            .height(subtitleHeight * (1 - scrollProgress))
-            .graphicsLayer {
-              alpha = 1 - scrollProgress
-              scaleY = 1 - scrollProgress
-              transformOrigin = TransformOrigin(0.5f, 0f)
-            }
+            .padding(top = topPadding)
         ) {
+          Spacer(modifier = Modifier.height(topSpacerHeight * (1 - scrollProgress)))
           Text(
-            text = "Select your favorite apps to get started.",
-            style = MaterialTheme.typography.bodyLarge,
-            fontFamily = archivoFamily,
-            modifier = Modifier.padding(horizontal = 46.dp)
+            text = "Favorites",
+            style = MaterialTheme.typography.displayMedium,
+            fontFamily = archivoBlackFamily,
+            modifier = Modifier
+              .height(titleHeight)
+              .padding(horizontal = 46.dp)
+              .wrapContentHeight(Alignment.CenterVertically)
+          )
+          Column(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(subtitleHeight * (1 - scrollProgress))
+              .graphicsLayer {
+                alpha = 1 - scrollProgress
+                scaleY = 1 - scrollProgress
+                transformOrigin = TransformOrigin(0.5f, 0f)
+              }
+          ) {
+            Text(
+              text = "Select your favorite apps to get started.",
+              style = MaterialTheme.typography.bodyLarge,
+              fontFamily = archivoFamily,
+              modifier = Modifier.padding(horizontal = 46.dp)
+            )
+          }
+          HorizontalDivider(
+            modifier = Modifier
+              .padding(top = dividerPadding * (1 - scrollProgress))
+              .padding(horizontal = (46 * (1 - scrollProgress)).dp),
+            color = MaterialTheme.colorScheme.onBackground
           )
         }
-        HorizontalDivider(
-          modifier = Modifier
-            .padding(top = dividerPadding * (1 - scrollProgress))
-            .padding(horizontal = (46 * (1 - scrollProgress)).dp),
-          color = MaterialTheme.colorScheme.onBackground
-        )
       }
     }
   }
