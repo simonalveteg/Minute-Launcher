@@ -4,8 +4,15 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -159,19 +166,24 @@ fun HomeScreen(
   }
 
   CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-    if (showOnboarding) {
-      Onboarding(
-        apps = apps,
-        onEvent = viewModel::onEvent
-      )
-    } else {
-      Surface(
-        color = backgroundColor,
-        modifier = Modifier
-          .fillMaxSize()
-      ) {
-        Box(
-          modifier = Modifier.fillMaxSize()
+    AnimatedContent(
+      targetState = showOnboarding,
+      transitionSpec = {
+        fadeIn(animationSpec = tween(500))
+          .togetherWith(fadeOut(animationSpec = tween(500)))
+      },
+      label = "onboarding_transition"
+    ) { targetShowOnboarding ->
+      if (targetShowOnboarding) {
+        Onboarding(
+          apps = apps,
+          onEvent = viewModel::onEvent
+        )
+      } else {
+        Surface(
+          color = backgroundColor,
+          modifier = Modifier
+            .fillMaxSize()
         ) {
           val offsetY = remember { Animatable(0f) }
           val keyboardController = LocalSoftwareKeyboardController.current
