@@ -229,9 +229,7 @@ fun UsageBarGraph(
               override fun onUpdated(
                 marker: CartesianMarker,
                 targets: List<CartesianMarker.Target>
-              ) {
-                updateSelection(targets)
-              }
+              ) {}
 
               override fun onHidden(marker: CartesianMarker) {
                 updateSelection(null)
