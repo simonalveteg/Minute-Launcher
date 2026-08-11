@@ -150,7 +150,9 @@ fun HomeScreen(
         iconResource = showGestureModal.getIcon(),
         onEvent = viewModel::onEvent,
         modifier = Modifier.padding(horizontal = 16.dp).padding(top = 24.dp, bottom = 46.dp)
-      )
+      ) {
+        showGestureModal = Gesture.NONE
+      }
     }
   }
 
