@@ -1,5 +1,6 @@
 package com.alveteg.simon.minutelauncher.home.dashboard
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
@@ -63,6 +64,13 @@ fun Dashboard(
     var searchHeight by remember { mutableStateOf(0.dp) }
     val scaffoldState = rememberBottomSheetScaffoldState()
     val density = LocalDensity.current
+
+    BackHandler(enabled = scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {
+      coroutineScope.launch {
+        scaffoldState.bottomSheetState.partialExpand()
+      }
+    }
+
     BottomSheetScaffold(
       scaffoldState = scaffoldState,
       sheetPeekHeight = peekHeight.value.dp,
