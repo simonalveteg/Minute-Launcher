@@ -10,7 +10,6 @@
     <string name="action_send_feedback">Send feedback</string>
     <string name="feedback_subject">Feedback: Minute Launcher</string>
     <string name="no_email_app_found">No email app found.</string>
-    <string name="no_wallpaper_app_found">No wallpaper app found.</string>
 
     <!-- Home Screen -->
     <string name="title_unset_gesture">Unset Gesture</string>

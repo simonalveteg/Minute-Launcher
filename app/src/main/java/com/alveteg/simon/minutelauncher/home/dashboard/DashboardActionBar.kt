@@ -1,5 +1,6 @@
 package com.alveteg.simon.minutelauncher.home.dashboard
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -22,6 +23,7 @@ import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import timber.log.Timber
+import androidx.core.net.toUri
 
 
 @Composable
@@ -29,6 +31,10 @@ fun DashboardActionBar(
   onEvent: (Event) -> Unit
 ) {
   val mContext = LocalContext.current
+  val wallpaperIntentTitle = stringResource(R.string.action_change_wallpaper)
+  val feedbackSubject = stringResource(R.string.feedback_subject)
+  val feedbackIntentTitle = stringResource(R.string.action_send_feedback)
+  val wellbeingNotFound = stringResource(R.string.error_digital_wellbeing_not_found)
   val actions = listOf(
     ActionBarAction(
       imageVector = Icons.Default.Settings,
@@ -46,9 +52,9 @@ fun DashboardActionBar(
           flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         try {
-          mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.action_change_wallpaper)))
+          mContext.startActivity(Intent.createChooser(intent, wallpaperIntentTitle))
         } catch (e: Exception) {
-          Timber.e(e, mContext.getString(R.string.no_wallpaper_app_found))
+          Timber.e(e)
         }
       }
     ),
@@ -56,14 +62,9 @@ fun DashboardActionBar(
       imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
       description = stringResource(R.string.action_open_digital_wellbeing),
       action = {
-        val intent = Intent().apply {
-          setClassName(
-            "com.google.android.apps.wellbeing",
-            "com.google.android.apps.wellbeing.settings.TopLevelSettingsActivity"
-          )
-          flags += Intent.FLAG_ACTIVITY_NEW_TASK
+        launchDigitalWellbeing(mContext) {
+          onEvent(HomeEvent.ShowToast(wellbeingNotFound))
         }
-        mContext.startActivity(intent, null)
       }
     ),
     ActionBarAction(
@@ -97,20 +98,47 @@ fun DashboardActionBar(
         |------------------------------------------------------
         """.trimMargin()
         val intent = Intent(Intent.ACTION_SENDTO).apply {
-          data = Uri.parse("mailto:")
+          data = "mailto:".toUri()
           putExtra(Intent.EXTRA_EMAIL, arrayOf("dev@simonalveteg.com"))
-          putExtra(Intent.EXTRA_SUBJECT, mContext.getString(R.string.feedback_subject))
+          putExtra(Intent.EXTRA_SUBJECT, feedbackSubject)
           putExtra(Intent.EXTRA_TEXT, body)
           flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         try {
-          mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.action_send_feedback)))
+          mContext.startActivity(Intent.createChooser(intent, feedbackIntentTitle))
         } catch (e: Exception) {
-          Timber.e(e, mContext.getString(R.string.no_email_app_found))
+          Timber.e(e)
         }
       }
     ),
   )
 
   ActionBar(actions = actions)
+}
+
+fun launchDigitalWellbeing(mContext: Context, onError: () -> Unit) {
+  val pm = mContext.packageManager
+
+  fun tryLaunch(packageName: String): Boolean {
+    val intent = pm.getLaunchIntentForPackage(packageName) ?: return false
+    return try {
+      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      mContext.startActivity(intent)
+      true
+    } catch (e: Exception) {
+      false
+    }
+  }
+
+
+  val digitalWellbeingApps = listOf(
+    "com.google.android.apps.wellbeing",
+    "com.samsung.android.forest",
+  )
+
+  val launched = digitalWellbeingApps.any { tryLaunch(it) }
+
+  if (!launched) {
+    onError()
+  }
 }
