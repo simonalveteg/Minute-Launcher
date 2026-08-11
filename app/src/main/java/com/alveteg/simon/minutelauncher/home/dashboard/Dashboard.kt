@@ -3,6 +3,7 @@ package com.alveteg.simon.minutelauncher.home.dashboard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,7 +48,7 @@ fun Dashboard(
     val coroutineScope = rememberCoroutineScope()
     val peekHeight = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
-      peekHeight.animateTo(100f, tween(200))
+      peekHeight.animateTo(100f, spring(0.74f, 1000f))
     }
     DisposableEffect(Unit) {
       onDispose {

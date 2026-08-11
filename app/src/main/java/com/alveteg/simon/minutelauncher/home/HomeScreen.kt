@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -71,8 +72,12 @@ fun HomeScreen(
   val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
   val backgroundTransparency by viewModel.transparencyAmount.collectAsStateWithLifecycle()
   val defaultMindfulDelayLength by viewModel.mindfulDelayLength.collectAsStateWithLifecycle()
-  val backgroundAlpha by derivedStateOf { (1f - backgroundTransparency) }
-  val altBackgroundAlpha by derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
+  val backgroundAlpha by remember {
+    derivedStateOf { (1f - backgroundTransparency) }
+  }
+  val altBackgroundAlpha by remember {
+    derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
+  }
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
@@ -81,11 +86,6 @@ fun HomeScreen(
     derivedStateOf { apps.firstOrNull { it.app.packageName == currentAppPackage } }
   }
   var showGestureModal by remember { mutableStateOf(Gesture.NONE) }
-
-  LaunchedEffect(altBackgroundAlpha) {
-    Timber.d("Background transparency: $backgroundTransparency")
-    Timber.d("Alternative background transparency: $altBackgroundAlpha")
-  }
 
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {

@@ -2,6 +2,7 @@ package com.alveteg.simon.minutelauncher.home
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
@@ -57,7 +60,7 @@ fun FavoriteList(
 ) {
   val hapticFeedback = LocalHapticFeedback.current
 
-  var dragProgress by remember { mutableStateOf(0f) }
+  var dragProgress by remember { mutableFloatStateOf(0f) }
   var activeGesture by remember { mutableStateOf(Gesture.NONE) }
   var isTriggered by remember { mutableStateOf(false) }
   var touchPosition by remember { mutableStateOf(Offset.Zero) }
@@ -65,12 +68,10 @@ fun FavoriteList(
   val favoritesAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
     label = "",
-    animationSpec = if (screenState.isFavorites()) tween(durationMillis = 1000) else tween(300)
+    animationSpec = if (screenState.isFavorites()) tween(durationMillis = 600) else tween(100)
   )
 
-  val configuration = LocalConfiguration.current
-  val bottomHeight = configuration.screenHeightDp.div(6)
-  val bottomHeightDp = bottomHeight.dp
+  val bottomHeightDp = LocalWindowInfo.current.containerDpSize.height.div(6)
 
   Box {
     GestureIndicator(
