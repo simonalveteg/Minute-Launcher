@@ -3,7 +3,6 @@ package com.alveteg.simon.minutelauncher.home
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.FavoriteAppInfo
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 
 

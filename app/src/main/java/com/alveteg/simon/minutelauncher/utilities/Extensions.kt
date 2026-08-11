@@ -43,7 +43,7 @@ fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
 
 fun List<AppInfo>.filterBySearchTerm(searchTerm: String) : List<AppInfo> {
   return filter { appInfo ->
-    appInfo.app.appTitle.lowercase().filterNot { it.isWhitespace() }
+    appInfo.getTitle().lowercase().filterNot { it.isWhitespace() }
       .contains(searchTerm.lowercase().filterNot { it.isWhitespace() })
-  }.sortedBy { (it.app.displayTitle ?: it.app.appTitle).lowercase() }
+  }.sortedBy { it.getTitle().lowercase() }
 }

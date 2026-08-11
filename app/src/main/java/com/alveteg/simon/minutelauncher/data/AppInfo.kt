@@ -6,6 +6,9 @@ data class AppInfo(
   val mindfulDelay: Int,
   val usage: List<UsageStatistics>
 ) {
+
+  fun getTitle() = this.app.displayTitle ?: this.app.appTitle
+
   companion object {
     val EMPTY = AppInfo(App.EMPTY, false, 0, emptyList())
 
@@ -14,8 +17,3 @@ data class AppInfo(
     )
   }
 }
-
-data class FavoriteAppInfo(
-  val favoriteApp: FavoriteAppWithApp,
-  val appInfo: AppInfo,
-)
