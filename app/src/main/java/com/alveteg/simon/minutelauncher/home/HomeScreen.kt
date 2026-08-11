@@ -115,7 +115,7 @@ fun HomeScreen(
 
         is UiEvent.TriggerGesture -> {
           if (event.appInfo != null) {
-            viewModel.onEvent(HomeEvent.OpenApplication(event.appInfo))
+            viewModel.onEvent(HomeEvent.ShowModal(event.appInfo))
           } else {
             showGestureModal = event.gesture
             Timber.d("Gesture triggered: $showGestureModal")

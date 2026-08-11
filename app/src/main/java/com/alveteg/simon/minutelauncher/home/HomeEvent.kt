@@ -8,6 +8,7 @@ import com.alveteg.simon.minutelauncher.utilities.Gesture
 
 sealed class HomeEvent : Event {
   data class OpenApplication(val appInfo: AppInfo) : HomeEvent()
+  data class ShowModal(val appInfo: AppInfo) : HomeEvent()
   data class LaunchActivity(val appInfo: AppInfo) : HomeEvent()
   data class UpdateSearch(val searchTerm: String) : HomeEvent()
   data class ToggleFavorite(val app: App) : HomeEvent()

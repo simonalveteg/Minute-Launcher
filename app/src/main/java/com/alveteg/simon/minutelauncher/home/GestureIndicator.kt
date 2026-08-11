@@ -30,6 +30,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.BuildConfig
@@ -45,8 +46,7 @@ fun BoxScope.GestureIndicator(
   modifier: Modifier = Modifier
 ) {
   val density = LocalDensity.current
-  val configuration = LocalConfiguration.current
-  val screenHeightDp = configuration.screenHeightDp.dp
+  val screenHeightDp = LocalWindowInfo.current.containerDpSize.height
   val verticalPadding = screenHeightDp.div(12)
   val defaultWidth = 30.dp
 

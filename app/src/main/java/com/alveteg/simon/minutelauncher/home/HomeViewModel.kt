@@ -210,6 +210,10 @@ class HomeViewModel @Inject constructor(
         sendUiEvent(UiEvent.VibrateLongPress)
       }
 
+      is HomeEvent.ShowModal -> {
+        sendUiEvent(UiEvent.ShowModal(event.appInfo))
+      }
+
       is HomeEvent.LaunchActivity -> {
         val appInfo = event.appInfo
         Timber.d("Launch Activity ${appInfo.app.appTitle}")
@@ -246,10 +250,10 @@ class HomeViewModel @Inject constructor(
       is HomeEvent.HandleGesture -> {
         val gesture = event.gesture
         Timber.d("Gesture handled, $gesture")
-        sendUiEvent(UiEvent.VibrateLongPress)
         when (gesture) {
           Gesture.UP -> {
             sendUiEvent(UiEvent.ShowDashboard)
+            sendUiEvent(UiEvent.VibrateLongPress)
           }
 
           Gesture.DOWN -> {
@@ -262,6 +266,7 @@ class HomeViewModel @Inject constructor(
                 getAppInfoForApp(it.app)
               }
               sendUiEvent(UiEvent.TriggerGesture(gesture, appInfo))
+              sendUiEvent(UiEvent.VibrateLongPress)
             }
           }
         }

@@ -8,13 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import com.alveteg.simon.minutelauncher.utilities.GestureDirection
 import com.alveteg.simon.minutelauncher.utilities.GestureZone
+import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -28,10 +27,8 @@ fun Modifier.horizontalGestureHandler(
   onEvent: (HomeEvent) -> Unit
 ): Modifier {
   val hapticFeedback = LocalHapticFeedback.current
-  val configuration = LocalConfiguration.current
-  val density = LocalDensity.current
-  val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
-  val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
+  val screenHeightPx = LocalWindowInfo.current.containerSize.height
+  val screenWidthPx = LocalWindowInfo.current.containerSize.width
 
   val currentActiveGesture by rememberUpdatedState(activeGesture)
 
