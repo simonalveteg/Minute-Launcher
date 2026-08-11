@@ -49,10 +49,10 @@
     <!-- Permissions -->
     <string name="label_set_default_launcher">Set as Default Launcher</string>
     <string name="label_grant_admin_access">Grant Admin Access</string>
-    <string name="description_admin_access">Admin access is needed to be able to lock the screen with a button press.</string>
+    <string name="description_admin_access">Needed to lock the screen with a button press.</string>
     <string name="admin_access_explanation">Minute Launcher requests admin access in order to give you the ability to lock the screen from the launcher with the press of a button.</string>
     <string name="label_grant_usage_access">Grant Usage Access</string>
-    <string name="description_usage_access">Usage access is needed to display usage statistics.</string>
+    <string name="description_usage_access">Needed to display usage statistics.</string>
 
     <!-- App Modal -->
     <string name="description_uninstall_app">Uninstall app</string>

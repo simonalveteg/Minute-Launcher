@@ -170,7 +170,7 @@ fun HomeScreen(
       targetState = showOnboarding,
       transitionSpec = {
         fadeIn(animationSpec = tween(500))
-          .togetherWith(fadeOut(animationSpec = tween(500)))
+          .togetherWith(fadeOut(animationSpec = tween(1000)))
       },
       label = "onboarding_transition"
     ) { targetShowOnboarding ->

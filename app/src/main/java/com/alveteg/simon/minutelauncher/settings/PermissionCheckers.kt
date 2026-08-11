@@ -95,6 +95,7 @@ fun PermissionCheckers(
       )
     }
     if (!isAdminActive && showAdminAccessPrompt) {
+      val adminExplanationString = stringResource(R.string.admin_access_explanation)
       ButtonInput(
         label = stringResource(R.string.label_grant_admin_access),
         description = stringResource(R.string.description_admin_access),
@@ -105,7 +106,7 @@ fun PermissionCheckers(
             putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
             putExtra(
               DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-              context.getString(R.string.admin_access_explanation)
+              adminExplanationString
             )
           }
           context.startActivity(intent)
