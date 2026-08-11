@@ -21,6 +21,7 @@ import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
+import com.alveteg.simon.minutelauncher.home.AnimatedFavoriteIcon
 import com.alveteg.simon.minutelauncher.home.dashboard.launchDigitalWellbeing
 
 
@@ -74,9 +75,9 @@ fun AppModalActionBar(
       }
     ),
     ActionBarAction(
-      imageVector = favoriteIcon,
       description = stringResource(favoriteText),
       action = { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) },
+      icon = { AnimatedFavoriteIcon(favorite = appInfo.favorite) }
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,
