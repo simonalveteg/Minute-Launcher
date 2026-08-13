@@ -261,6 +261,7 @@ class HomeViewModel @Inject constructor(
           }
 
           else -> {
+            if (gesture == Gesture.NONE) return
             viewModelScope.launch(Dispatchers.IO) {
               val appInfo = roomRepository.getAppInfoForGesture(gesture)?.let {
                 getAppInfoForApp(it.app)
