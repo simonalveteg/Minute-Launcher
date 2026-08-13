@@ -6,13 +6,13 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.material3.BottomSheetScaffold
@@ -38,14 +38,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastCoerceAtMost
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
-import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.home.ScreenState
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dashboard(
@@ -60,7 +59,7 @@ fun Dashboard(
   AnimatedVisibility(
     visible = screenState.isDashboard(),
     enter = fadeIn(),
-    exit = fadeOut()
+    exit = fadeOut(tween(150))
   ) {
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
