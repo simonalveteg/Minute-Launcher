@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastCoerceAtMost
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
@@ -68,7 +69,7 @@ fun Dashboard(
 
     val nestedScrollConnection = remember {
       object : NestedScrollConnection {
-        val THRESHOLD = 80f
+        val THRESHOLD = 50f
         var thresholdTriggered = false
 
         fun checkThreshold(offset: Float) {
@@ -125,7 +126,7 @@ fun Dashboard(
 
           if (abs(dashboardOffset.value) > THRESHOLD) {
             onEvent(HomeEvent.DismissDashboard)
-            dashboardOffset.animateDecay(available.y, exponentialDecay())
+            dashboardOffset.animateDecay(available.y.coerceIn(-2000f, -300f), exponentialDecay(3f))
             return Velocity.Zero
           }
 
