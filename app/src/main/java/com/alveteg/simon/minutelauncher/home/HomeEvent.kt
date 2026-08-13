@@ -23,4 +23,5 @@ sealed class HomeEvent : Event {
   data object HideDefaultAppPrompt : HomeEvent()
   data object HideUsageAccessPrompt : HomeEvent()
   data object HideAdminAccessPrompt : HomeEvent()
+  data object DismissDashboard : HomeEvent()
 }

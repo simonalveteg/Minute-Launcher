@@ -98,6 +98,7 @@ fun Dashboard(
           apps = apps,
           offsetY = offsetY,
           onAppClick = onAppClick,
+          onEvent = onEvent,
           searchHeight = searchHeight
         )
         if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {

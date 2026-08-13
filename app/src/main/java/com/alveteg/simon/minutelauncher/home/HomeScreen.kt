@@ -123,6 +123,7 @@ fun HomeScreen(
         }
 
         is UiEvent.ShowDashboard -> screenState = ScreenState.DASHBOARD
+        is UiEvent.ShowFavorites -> screenState = ScreenState.FAVORITES
         is UiEvent.Navigate -> onNavigate(event)
       }
     }

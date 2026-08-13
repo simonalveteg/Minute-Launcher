@@ -329,6 +329,8 @@ class HomeViewModel @Inject constructor(
         }
       }
 
+      is HomeEvent.DismissDashboard -> sendUiEvent(UiEvent.ShowFavorites)
+
       is HomeEvent.ShowToast -> sendUiEvent(UiEvent.ShowToast(event.text))
 
       is SettingsEvent.OpenGestureList -> sendUiEvent(UiEvent.Navigate(SettingsScreen.GESTURE_SETTINGS_LIST + "/${event.gesture}"))
