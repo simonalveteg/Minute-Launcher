@@ -253,7 +253,6 @@ class HomeViewModel @Inject constructor(
         when (gesture) {
           Gesture.UP -> {
             sendUiEvent(UiEvent.ShowDashboard)
-            sendUiEvent(UiEvent.VibrateLongPress)
           }
 
           Gesture.DOWN -> {

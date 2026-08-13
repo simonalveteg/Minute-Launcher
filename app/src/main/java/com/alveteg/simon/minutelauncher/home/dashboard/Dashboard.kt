@@ -30,10 +30,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
@@ -62,20 +64,35 @@ fun Dashboard(
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val dashboardOffset = remember { Animatable(0f) }
+    val hapticFeedback = LocalHapticFeedback.current
 
     val nestedScrollConnection = remember {
       object : NestedScrollConnection {
+        val THRESHOLD = 80f
+        var thresholdTriggered = false
+
+        fun checkThreshold(offset: Float) {
+          val isPastThreshold = abs(offset) > THRESHOLD
+          if (isPastThreshold && !thresholdTriggered) {
+            thresholdTriggered = true
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+          } else if (!isPastThreshold && thresholdTriggered) {
+            thresholdTriggered = false
+          }
+        }
+
         override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
           if (source != NestedScrollSource.UserInput || dashboardOffset.value == 0f) return Offset.Zero
 
-          val threshold = 100f
-          val weight = (abs(dashboardOffset.value) - threshold) / threshold
+          val weight = (abs(dashboardOffset.value) - THRESHOLD) / THRESHOLD
           val easingFactor = (1 - weight * 0.85f) * 0.10f
           val easedDelta = available.y * easingFactor
 
           coroutineScope.launch {
             val next = dashboardOffset.value + easedDelta
-            dashboardOffset.snapTo(if (abs(next) < 0.5f) 0f else next)
+            val newValue = if (abs(next) < 0.5f) 0f else next
+            dashboardOffset.snapTo(newValue)
+            checkThreshold(newValue)
           }
           return available
         }
@@ -90,13 +107,15 @@ fun Dashboard(
             return super.onPostScroll(consumed, available, source)
           }
 
-          val threshold = 100f
-          val weight = (abs(dashboardOffset.value) - threshold) / threshold
+          val weight = (abs(dashboardOffset.value) - THRESHOLD) / THRESHOLD
           val easingFactor = (1 - weight * 0.85f) * 0.10f
           val easedDelta = available.y * easingFactor
 
+          val newOffset = dashboardOffset.value + easedDelta
+
           coroutineScope.launch {
-            dashboardOffset.snapTo(dashboardOffset.value + easedDelta)
+            dashboardOffset.snapTo(newOffset)
+            checkThreshold(newOffset)
           }
           return Offset(0f, available.y)
         }
@@ -104,13 +123,14 @@ fun Dashboard(
         override suspend fun onPreFling(available: Velocity): Velocity {
           if (dashboardOffset.value == 0f) return Velocity.Zero
 
-          if (abs(dashboardOffset.value) > 100f) {
+          if (abs(dashboardOffset.value) > THRESHOLD) {
             onEvent(HomeEvent.DismissDashboard)
             dashboardOffset.animateDecay(available.y, exponentialDecay())
             return Velocity.Zero
           }
 
           dashboardOffset.animateTo(0f, spring(0.55f, 800f))
+          thresholdTriggered = false
           return available
         }
       }
