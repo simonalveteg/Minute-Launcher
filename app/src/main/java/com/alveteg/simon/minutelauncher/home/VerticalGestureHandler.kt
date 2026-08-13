@@ -25,7 +25,7 @@ fun Modifier.verticalGestureHandler(
 
     val onDragEnd = {
       coroutineScope.launch {
-        offsetY.animateTo(0f, spring(0.55f, 900f))
+        offsetY.animateTo(0f, spring(0.55f, 800f))
       }
     }
 

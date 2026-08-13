@@ -54,7 +54,7 @@ fun Dashboard(
     val coroutineScope = rememberCoroutineScope()
     val peekHeight = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
-      peekHeight.animateTo(100f, spring(0.74f, 1000f))
+      peekHeight.animateTo(100f, spring(0.74f, 550f))
     }
     DisposableEffect(Unit) {
       onDispose {
