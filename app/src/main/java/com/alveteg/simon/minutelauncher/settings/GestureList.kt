@@ -58,8 +58,7 @@ fun GestureList(
       AppList(
         apps = apps,
         onAppClick = { viewModel.onEvent(SettingsEvent.SetAppGesture(it.app, gesture)) },
-        searchHeight = searchHeight,
-        onEvent = viewModel::onEvent
+        searchHeight = searchHeight
       )
       SearchBar(
         searchText = searchText,
