@@ -70,13 +70,13 @@ fun BoxScope.GestureIndicator(
   val animatedProgress = (baseWidth / 24.dp).coerceIn(0f, 1f)
 
   val indicatorColor by animateColorAsState(
-    targetValue = if (isTriggered) MaterialTheme.colorScheme.primary.copy(alpha = 1f)
-    else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 1f),
+    targetValue = if (isTriggered) MaterialTheme.colorScheme.surfaceContainerHighest
+    else MaterialTheme.colorScheme.surfaceContainerLow,
     label = "IndicatorColor"
   )
   val contentColor by animateColorAsState(
     targetValue = if (isTriggered) {
-      MaterialTheme.colorScheme.onPrimary
+      MaterialTheme.colorScheme.primary
     } else {
       Color.Transparent
     },
