@@ -44,6 +44,7 @@ import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.home.ScreenState
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.sign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,7 +124,9 @@ fun Dashboard(
         override suspend fun onPreFling(available: Velocity): Velocity {
           if (dashboardOffset.value == 0f) return Velocity.Zero
 
-          if (abs(dashboardOffset.value) > THRESHOLD) {
+          val continuesGesture = sign(available.y) == sign(dashboardOffset.value)
+
+          if (abs(dashboardOffset.value) > THRESHOLD && continuesGesture) {
             onEvent(HomeEvent.DismissDashboard)
             dashboardOffset.animateDecay(available.y.coerceIn(-2000f, -300f), exponentialDecay(3f))
             return Velocity.Zero

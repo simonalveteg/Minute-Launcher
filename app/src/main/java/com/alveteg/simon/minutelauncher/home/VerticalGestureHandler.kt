@@ -59,11 +59,13 @@ fun Modifier.verticalGestureHandler(
         thresholdTriggered = false
       }
 
-      val directionDown = offsetY.value > 0
+      val draggingDown = dragAmount > 0
+      val offsetIsDown = offsetY.value > 0
+
       gesture = when {
         easingFactor >= 0.14 -> Gesture.NONE
-        directionDown -> Gesture.DOWN
-        thresholdTriggered -> Gesture.UP
+        draggingDown && offsetIsDown -> Gesture.DOWN
+        !draggingDown && !offsetIsDown && thresholdTriggered -> Gesture.UP
         else -> Gesture.NONE
       }
 
