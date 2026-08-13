@@ -3,7 +3,9 @@ package com.alveteg.simon.minutelauncher.home
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +21,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
@@ -42,6 +45,7 @@ import com.alveteg.simon.minutelauncher.data.toTimeUsed
 import com.alveteg.simon.minutelauncher.settings.PermissionCheckers
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.alveteg.simon.minutelauncher.utilities.Gesture
+import kotlinx.coroutines.delay
 import sh.calvin.reorderable.ReorderableColumn
 import timber.log.Timber
 import kotlin.time.Duration
@@ -68,7 +72,7 @@ fun FavoriteList(
   val favoritesAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
     label = "",
-    animationSpec = if (screenState.isFavorites()) tween(durationMillis = 600) else tween(100)
+    animationSpec = if (screenState.isFavorites()) tween(delayMillis = 100, durationMillis = 600) else tween(100)
   )
 
   val bottomHeightDp = LocalWindowInfo.current.containerDpSize.height.div(6)
