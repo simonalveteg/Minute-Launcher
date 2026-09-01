@@ -77,6 +77,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -174,7 +175,7 @@ fun UsageBarGraph(
               columnCollectionSpacing = 4.dp,
               rangeProvider = CartesianLayerRangeProvider.fixed(
                 minY = 0.0,
-                maxY = maxDuration.inWholeMilliseconds * 1.15,
+                maxY = maxDuration.coerceAtLeast(30.minutes).inWholeMilliseconds * 1.15,
                 minX = 1.0,
                 maxX = 7.0
               ),
