@@ -2,13 +2,13 @@
 
 Minute Launcher is a free and open-source launcher designed to promote mindful phone usage. 
 
-I was not satisfied with any of the minimal launchers available on the play store, and set out to create a launcher that does exactly what I need it to do - and nothing else. Usage statistics are prominently displayed on the homescreen to give you conscious awareness of screen time, while the countdown timer encourages more intentional phone usage by preventing you from mindlessly opening apps.
+I was not satisfied with any of the minimal launchers available on the play store, so I set out to create one that does exactly what I need it to do and nothing else. Usage statistics are prominently displayed on the homescreen to give you conscious awareness of your screen time. The app is completely free and open source, forever. No data will ever leave your device.
 
 ### Key Features
 * *Minimalist design*: A distraction free homescreen, with quick and easy access to the apps you need the most.
-* *Usage statistics*: Your app usage statistics is integrated into your homescreen, giving you .
-* *Mindful Delay*: Add a customizable delay before apps open, giving you a moment to reconsider, and helping you stay intentional,.
-* *Gesture Shortcuts*: Intuitive gestures to access notifications, the app darwer, and four custom app shortcuts.
+* *Usage statistics*: Your app usage statistics is integrated into the homescreen, giving you immediate insight into your usage.
+* *Mindful Delay*: Add an optional delay before being allowed to open distracting apps, helping you stay intentional.
+* *Gesture Shortcuts*: Intuitive gestures let you access the app drawer, notifications, and four custom app shortcuts.
 * *Material You integration*: Colors automatically match your wallpaper and the rest of your system.
 
 
@@ -32,13 +32,13 @@ I was not satisfied with any of the minimal launchers available on the play stor
 </p>
 
 ### Getting Started
-The launcher is still in development, if you're eager to try it out there will be some releases here on Github under the releases-tab. 
+For now, releases are only available here on GitHub under the releases tab.
 
 ### Contributing
-Contributions are welcome! The project is completely open source, so if you'd like to get involved you can easily fork it and make any changes you want, and then submit a pull request. 
+Contributions are welcome! The project is completely open source, so if you'd like to get involved you can easily fork it and make any changes you want, and then submit a pull request. If you run into any issues or have feature requests, please create an issue here on GitHub. All input is appreciated. 
 
 ### Contact
-For feedback, questions, or bug reports, please open a new issue or discussion thread here on Github. 
+For feedback, questions, or bug reports, please open a new issue or discussion thread here on GitHub. 
 
 
 
