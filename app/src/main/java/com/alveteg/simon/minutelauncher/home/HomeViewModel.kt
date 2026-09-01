@@ -223,7 +223,7 @@ class HomeViewModel @Inject constructor(
             UiEvent.ShowToast(
               context.getString(
                 R.string.toast_app_usage,
-                appInfo.app.appTitle,
+                appInfo.app.displayTitle,
                 appInfo.usage.firstOrNull()?.usageDuration.toTimeUsed(context, false)
               )
             )
