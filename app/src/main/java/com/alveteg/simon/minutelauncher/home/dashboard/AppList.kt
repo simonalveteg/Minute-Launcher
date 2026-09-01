@@ -39,7 +39,7 @@ fun AppList(
   offset: Dp = 0.dp,
   searchHeight: Dp = 0.dp
 ) {
-  val fadeHeight = 64.dp
+  val fadeHeight = 100.dp
   val canScrollFurther by remember {
     derivedStateOf { listState.canScrollForward }
   }
