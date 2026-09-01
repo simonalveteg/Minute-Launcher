@@ -67,7 +67,7 @@
     <string name="label_no_usage_found">No recent usage found.</string>
     <string name="label_usage_access_not_granted">Usage access is not granted.</string>
     <string name="label_most_used_apps">MOST USED APPS</string>
-    <string name="label_duration_avg">DURATION (AVG)</string>
+    <string name="label_duration_avg">DURATION (AVG PER DAY)</string>
 
     <!-- Toasts -->
     <string name="toast_app_usage">%1$s used for %2$s</string>
