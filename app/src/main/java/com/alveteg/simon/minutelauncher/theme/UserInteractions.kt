@@ -40,7 +40,7 @@ private class ScaleIndicationNode(
     restingAnimation = coroutineScope.launch {
       // Wait for the existing press animation to finish if it is still ongoing
       pressedAnimation?.join()
-      animatedScalePercent.animateTo(1f, tween(400))
+      animatedScalePercent.animateTo(1f, tween(300))
     }
   }
 
