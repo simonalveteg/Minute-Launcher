@@ -13,7 +13,6 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 
 fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
@@ -41,7 +40,7 @@ fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
 }
 
 
-fun List<AppInfo>.filterBySearchTerm(searchTerm: String) : List<AppInfo> {
+fun List<AppInfo>.filterBySearchTerm(searchTerm: String): List<AppInfo> {
   return filter { appInfo ->
     appInfo.getTitle().lowercase().filterNot { it.isWhitespace() }
       .contains(searchTerm.lowercase().filterNot { it.isWhitespace() })

@@ -12,7 +12,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.material3.BottomSheetScaffold
@@ -43,6 +46,7 @@ import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.home.ScreenState
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -139,9 +143,11 @@ fun Dashboard(
       }
     }
 
+    val density = LocalDensity.current
     val peekHeight = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-      peekHeight.animateTo(100f, spring(0.74f, 550f))
+    val navbarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    LaunchedEffect(navbarHeight) {
+      peekHeight.animateTo(navbarHeight.value + 80f, spring(0.74f, 550f))
     }
     DisposableEffect(Unit) {
       onDispose {
@@ -150,7 +156,6 @@ fun Dashboard(
     }
     var searchHeight by remember { mutableStateOf(0.dp) }
     val scaffoldState = rememberBottomSheetScaffoldState()
-    val density = LocalDensity.current
 
     BackHandler(enabled = scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {
       coroutineScope.launch {

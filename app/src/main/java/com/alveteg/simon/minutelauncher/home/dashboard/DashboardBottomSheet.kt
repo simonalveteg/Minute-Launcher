@@ -1,6 +1,7 @@
 package com.alveteg.simon.minutelauncher.home.dashboard
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -15,6 +16,7 @@ import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.stats.UsageSheet
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DashboardBottomSheet(
   searchText: String,
