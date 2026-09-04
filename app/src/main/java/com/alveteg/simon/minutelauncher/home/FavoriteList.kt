@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
@@ -39,6 +41,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
@@ -72,8 +75,17 @@ fun FavoriteList(
   val favoritesAlpha by animateFloatAsState(
     targetValue = if (screenState.isFavorites()) 1f else 0f,
     label = "",
-    animationSpec = if (screenState.isFavorites()) tween(delayMillis = 100, durationMillis = 600) else tween(100)
+    animationSpec = if (screenState.isFavorites()) tween(
+      delayMillis = 100, durationMillis = 600
+    ) else tween(100)
   )
+  val favoritesProgress by animateFloatAsState(
+    targetValue = if (screenState.isFavorites()) 1f else 0f,
+    label = "",
+    animationSpec = if (screenState.isFavorites()) tween(delayMillis = 100, durationMillis = 300) else tween(100)
+  )
+  val favoritesScaleX by remember { derivedStateOf { lerp(0.97f, 1f, favoritesProgress) } }
+  val favoritesScaleY by remember { derivedStateOf { lerp(0.9f, 1f, favoritesProgress) } }
 
   val bottomHeightDp = LocalWindowInfo.current.containerDpSize.height.div(6)
 
@@ -96,13 +108,11 @@ fun FavoriteList(
           onActiveGestureChange = { activeGesture = it },
           onGestureTriggered = { isTriggered = it },
           onVerticalPositionChange = { touchPosition = it },
-          onEvent = { onEvent(it) }
-        )
+          onEvent = { onEvent(it) })
         .verticalGestureHandler(
           offsetY = offsetY,
           onActiveGestureChange = { activeGesture = it },
-          onEvent = { onEvent(it) }
-        ),
+          onEvent = { onEvent(it) }),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Bottom,
     ) {
@@ -144,14 +154,16 @@ fun FavoriteList(
         key(appInfo.app.packageName) {
           ReorderableItem {
             FavoriteCard(
-              appInfo = appInfo, modifier = Modifier.longPressDraggableHandle(
-                onDragStarted = {
-                  hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                },
-                onDragStopped = {
-                  hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                },
-              )
+              appInfo = appInfo, modifier = Modifier
+                .longPressDraggableHandle(
+                  onDragStarted = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                  },
+                  onDragStopped = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                  },
+                )
+                .graphicsLayer(scaleX = favoritesScaleX, scaleY = favoritesScaleY)
             ) { onAppClick(appInfo) }
           }
         }
