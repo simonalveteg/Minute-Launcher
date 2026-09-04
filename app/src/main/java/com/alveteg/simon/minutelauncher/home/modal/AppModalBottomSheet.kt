@@ -8,7 +8,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,25 +28,25 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppModalBottomSheet(
   appInfo: AppInfo?,
+  defaultMindfulDelayLength: Int,
   onDismiss: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
   val coroutineScope = rememberCoroutineScope()
   val visible = appInfo != null
-  var timerVisible by remember { mutableStateOf(false) }
+  var delayVisible by remember { mutableStateOf(false) }
   var nameChangeVisible by remember { mutableStateOf(false) }
 
   if (visible) {
     val mContext = LocalContext.current
-    val sheetState = rememberModalBottomSheetState()
-    val timerSheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val delaySheetState = rememberModalBottomSheetState()
     val nameChangeSheetState = rememberModalBottomSheetState()
-    ModalBottomSheet(
+    MinuteBottomSheet(
       onDismissRequest = onDismiss,
       sheetState = sheetState,
-      dragHandle = {},
+      title = appInfo.app.displayTitle ?: appInfo.app.appTitle
     ) {
-      Spacer(modifier = Modifier.height(4.dp))
       BackHandler(true) { onDismiss() }
       AppModal(
         appInfo = appInfo,
@@ -69,11 +68,11 @@ fun AppModalBottomSheet(
             mContext.startActivity(intent)
           }
         },
-        onChangeTimer = {
-          timerVisible = true
+        onChangeDelay = {
+          delayVisible = true
           coroutineScope.launch {
             sheetState.hide()
-            timerSheetState.expand()
+            delaySheetState.expand()
           }
         },
         onEditName = {
@@ -84,14 +83,14 @@ fun AppModalBottomSheet(
           }
         }
       )
-      Spacer(modifier = Modifier.height(4.dp))
     }
-    if (timerVisible) {
-      TimerBottomSheet(
+    if (delayVisible) {
+      MindfulDelayBottomSheet(
         appInfo = appInfo,
-        sheetState = timerSheetState,
+        defaultMindfulDelayLength = defaultMindfulDelayLength,
+        sheetState = delaySheetState,
         onDismissRequest = {
-          timerVisible = false
+          delayVisible = false
           coroutineScope.launch {
             sheetState.show()
           }

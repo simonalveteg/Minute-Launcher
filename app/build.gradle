@@ -12,7 +12,7 @@ def props = new Properties()
 props.load(new FileInputStream(propsFile))
 
 android {
-    compileSdk 35
+    compileSdk = 36
     signingConfigs {
         release {
             storeFile keyFile
@@ -24,7 +24,7 @@ android {
     defaultConfig {
         applicationId "com.alveteg.simon.minutelauncher"
         minSdk 29
-        targetSdk 35
+        targetSdk 36
         versionCode 1
         versionName "1.0"
 
@@ -56,6 +56,7 @@ android {
     }
     buildFeatures {
         compose true
+        buildConfig true
     }
     packaging {
         resources {
@@ -66,6 +67,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.ktx)
     implementation platform(libs.androidx.compose.bom)
     implementation(libs.androidx.compose.ui)

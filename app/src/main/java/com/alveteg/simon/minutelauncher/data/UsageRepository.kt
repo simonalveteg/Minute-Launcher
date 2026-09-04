@@ -5,20 +5,22 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
-import com.alveteg.simon.minutelauncher.utilities.toTimeUsed
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
-class ApplicationRepository @Inject constructor(
+class UsageRepository @Inject constructor(
   @ApplicationContext private val context: Context
 ) {
 
@@ -33,8 +35,8 @@ class ApplicationRepository @Inject constructor(
   private val usageStatsManager =
     context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
-  private val _usageStats = MutableSharedFlow<List<UsageStatistics>>(replay = 1)
-  val usageStats = _usageStats.asSharedFlow()
+  private val _usageStats = MutableStateFlow<List<UsageStatistics>>(emptyList())
+  val usageStats = _usageStats.asStateFlow()
 
 
   fun registerCallback(callback: LauncherApps.Callback) {
@@ -71,8 +73,8 @@ class ApplicationRepository @Inject constructor(
   suspend fun startUsageUpdater() {
     Timber.d("Starting usage updater.")
     while (currentCoroutineContext().isActive) {
-      Timber.d("Emitting usage stats.")
-      _usageStats.emit(getDailyStatsForWeek())
+      val stats = getDailyStatsForWeek()
+      _usageStats.value = stats
       delay(TimeUnit.MINUTES.toMillis(1))
     }
   }
@@ -87,12 +89,9 @@ class ApplicationRepository @Inject constructor(
       getDailyStats(date)
         .filter { !launcherApps.contains(it.packageName) }
         .filter { context.packageName != it.packageName }
-        .also {
-          Timber.d(
-            "$date: ${it.size} packages, ${
-              it.sumOf { it.usageDuration }.toTimeUsed()
-            }"
-          )
+        .also { statsList ->
+          val totalDuration = statsList.sumOf { it.usageDuration }
+          Timber.d("$date: ${statsList.size} packages, ${totalDuration.toTimeUsed()}")
         }
     }
   }
@@ -155,13 +154,10 @@ class ApplicationRepository @Inject constructor(
         UsageStatistics(
           packageName = packageName,
           usageDate = date,
-          usageDuration = totalTime
+          usageDuration = totalTime.milliseconds
         )
       )
     }
     return stats
   }
 }
-
-// Helper class to keep track of all of the stats
-data class Stat(val packageName: String, val totalTime: Long)

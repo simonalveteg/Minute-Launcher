@@ -15,13 +15,13 @@ class LauncherRepository @Inject constructor(
       .map { it.associate { gApp -> gApp.swipeApp.swipeDirection to gApp.app } }
 
   fun favoriteApps() = launcherDao.getFavoriteApps()
-  fun timerApps() = launcherDao.getAppsWithTimer()
+  fun mindfulDelayApps() = launcherDao.getAppsWithMindfulDelay()
   fun insertApp(app: App) = launcherDao.insertApp(app)
   fun updateApp(app: App) = launcherDao.updateApp(app)
-  fun updateAppTimer(app: App, timerValue: Int) {
-    launcherDao.updateAppTimer(app.packageName, timerValue)
+  fun updateMindfulDelay(app: App, delayValue: Int) {
+    launcherDao.updateMindfulDelay(app.packageName, delayValue)
   }
-  fun removeAppTimer(app: App) = launcherDao.removeAppTimer(app.packageName)
+  fun removeMindfulDelay(app: App) = launcherDao.removeMindfulDelay(app.packageName)
 
   fun removeApp(app: App) = launcherDao.removeApp(app)
 

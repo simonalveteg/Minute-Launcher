@@ -25,11 +25,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.utilities.clearFocusOnKeyboardDismiss
 
@@ -37,27 +37,25 @@ import com.alveteg.simon.minutelauncher.utilities.clearFocusOnKeyboardDismiss
 fun SearchBar(
   searchText: String,
   onSearch: KeyboardActionScope.() -> Unit,
-  topPadding: Dp,
-  bottomPadding: Dp,
   onGloballyPositioned: (Int) -> Unit = {},
   onSearchFocused: () -> Unit = {},
   onEvent: (Event) -> Unit
 ) {
   val focusRequester = remember { FocusRequester() }
 
-  Surface(shape = MaterialTheme.shapes.large,
-    tonalElevation = 8.dp,
+  Surface(
+    shape = MaterialTheme.shapes.large,
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
     modifier = Modifier
       .navigationBarsPadding()
       .onGloballyPositioned {
         onGloballyPositioned(
           it.size.height
-            .plus(bottomPadding.value)
-            .plus(topPadding.value)
-            .toInt()
         )
-      }) {
-    TextField(value = searchText,
+      }
+  ) {
+    TextField(
+      value = searchText,
       onValueChange = { onEvent(HomeEvent.UpdateSearch(it)) },
       modifier = Modifier
         .fillMaxWidth()
@@ -78,14 +76,14 @@ fun SearchBar(
       ),
       placeholder = {
         Text(
-          text = "Search apps", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
+          text = stringResource(R.string.label_search_apps), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
         )
       },
       textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
       leadingIcon = {
         Icon(
           imageVector = Icons.Default.Search,
-          contentDescription = "Search Icon",
+          contentDescription = null,
           tint = LocalContentColor.current
         )
       },
@@ -97,7 +95,7 @@ fun SearchBar(
           val tint = if (searchText.isNotBlank()) LocalContentColor.current else Color.Transparent
           Icon(
             imageVector = Icons.Default.Clear,
-            contentDescription = "Clear searchbar",
+            contentDescription = null,
             tint = tint
           )
         }

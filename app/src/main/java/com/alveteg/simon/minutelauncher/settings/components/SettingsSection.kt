@@ -1,5 +1,6 @@
 package com.alveteg.simon.minutelauncher.settings.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -8,17 +9,18 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
 fun LazyListScope.settingsSection(
-  title: String,
-  description: String? = null,
+  @StringRes title: Int,
+  @StringRes description: Int? = null,
   modifier: Modifier = Modifier,
   content: LazyListScope.() -> Unit
 ) {
   item {
     Text(
-      text = title,
+      text = stringResource(title),
       style = MaterialTheme.typography.labelLarge,
       color = MaterialTheme.colorScheme.secondary,
       modifier = modifier
@@ -27,7 +29,7 @@ fun LazyListScope.settingsSection(
     )
     if (description != null) {
       Text(
-        text = description,
+        text = stringResource(description),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
       )

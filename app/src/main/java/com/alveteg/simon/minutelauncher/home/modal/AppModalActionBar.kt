@@ -13,83 +13,91 @@ import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.core.content.ContextCompat
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
+import com.alveteg.simon.minutelauncher.home.AnimatedFavoriteIcon
+import com.alveteg.simon.minutelauncher.home.dashboard.launchDigitalWellbeing
 
 
 @Composable
 fun AppModalActionBar(
   appInfo: AppInfo,
   enabled: Boolean,
-  onChangeTimer: () -> Unit,
+  onChangeDelay: () -> Unit,
   onEditName: () -> Unit,
   onEvent: (Event) -> Unit
 ) {
   val mContext = LocalContext.current
 
   val favoriteIcon = if (appInfo.favorite) Icons.Filled.Star else Icons.Filled.StarBorder
+  val favoriteText = if (appInfo.favorite) R.string.description_remove_favorite else R.string.description_add_favorite
+  val wellbeingNotFound = stringResource(R.string.error_digital_wellbeing_not_found)
+
   val actions = listOf(
     ActionBarAction(
       imageVector = Icons.Outlined.Delete,
-      description = "Uninstall app",
+      description = stringResource(R.string.description_uninstall_app),
       action = {
         val intent = Intent().apply {
           action = Intent.ACTION_DELETE
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
           data = Uri.fromParts("package", appInfo.app.packageName, null)
         }
-        ContextCompat.startActivity(mContext, intent, null)
+        mContext.startActivity(intent, null)
       }
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Timer,
-      description = "Change app timer",
-      action = onChangeTimer,
+      description = stringResource(R.string.description_change_mindful_delay),
+      action = onChangeDelay,
       enabled = enabled
     ),
     ActionBarAction(
       imageVector = ImageVector.vectorResource(id = R.drawable.digital_wellbeing),
-      description = "Show app usage details",
+      description = stringResource(R.string.description_show_app_usage_details),
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APP_USAGE_SETTINGS
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
           putExtra(Intent.EXTRA_PACKAGE_NAME, appInfo.app.packageName)
         }
-        ContextCompat.startActivity(mContext, intent, null)
+        try {
+          mContext.startActivity(intent, null)
+        } catch (e: Exception) {
+          onEvent(HomeEvent.ShowToast(wellbeingNotFound))
+        }
       }
     ),
     ActionBarAction(
-      imageVector = favoriteIcon,
-      description = "Toggle app favorite",
+      description = stringResource(favoriteText),
       action = { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) },
+      icon = { AnimatedFavoriteIcon(favorite = appInfo.favorite) }
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,
-      description = "Open app info",
+      description = stringResource(R.string.action_open_app_info),
       action = {
         val intent = Intent().apply {
           action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
           flags += Intent.FLAG_ACTIVITY_NEW_TASK
           data = Uri.fromParts("package", appInfo.app.packageName, null)
         }
-        ContextCompat.startActivity(mContext, intent, null)
+        mContext.startActivity(intent, null)
       },
       enabled = enabled
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Edit,
-      description = "Edit app name",
+      description = stringResource(R.string.description_edit_app_name),
       action = { onEditName() },
     ),
   )
 
   ActionBar(actions = actions)
 }
-

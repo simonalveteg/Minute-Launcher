@@ -1,19 +1,7 @@
 package com.alveteg.simon.minutelauncher.settings
 
-import android.app.Activity
-import android.app.AppOpsManager
-import android.app.admin.DevicePolicyManager
-import android.app.role.RoleManager
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
 import android.os.Build
-import android.os.Process
-import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,35 +31,28 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
+import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.home.isDefaultLauncher
-import com.alveteg.simon.minutelauncher.home.isDeviceAdmin
-import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
-import com.alveteg.simon.minutelauncher.settings.components.ButtonInput
-import com.alveteg.simon.minutelauncher.settings.components.GenericInput
+import com.alveteg.simon.minutelauncher.settings.components.GenericColumnInput
 import com.alveteg.simon.minutelauncher.settings.components.GestureInput
 import com.alveteg.simon.minutelauncher.settings.components.SegmentedInput
 import com.alveteg.simon.minutelauncher.settings.components.SliderInput
+import com.alveteg.simon.minutelauncher.settings.components.ToggleInput
 import com.alveteg.simon.minutelauncher.settings.components.settingsSection
 import com.alveteg.simon.minutelauncher.theme.AppTheme
 import com.alveteg.simon.minutelauncher.utilities.Gesture
-import kotlinx.coroutines.flow.map
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,19 +64,22 @@ fun SettingsScreen(
   val appTheme by viewModel.appTheme.collectAsStateWithLifecycle()
   val useDynamicColor by viewModel.useDynamicColor.collectAsStateWithLifecycle()
   val transparencyAmount by viewModel.transparencyAmount.collectAsStateWithLifecycle()
-  val timerLength by viewModel.timerLength.collectAsStateWithLifecycle()
+  val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
+  val mindfulDelayLength by viewModel.mindfulDelayLength.collectAsStateWithLifecycle()
   val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
-  val appsWithTimers by viewModel.appsWithTimers.map { it.sortedBy { it.app.appTitle.lowercase() } }
-    .collectAsState(initial = emptyList())
+  val appsWithMindfulDelay by viewModel.appsWithMindfulDelay.collectAsState(initial = emptyList())
+  val appsWithMindfulDelaySorted = remember {
+    appsWithMindfulDelay.sortedBy { it.app.appTitle.lowercase() }
+  }
 
   var _transparencyAmount by remember(transparencyAmount) { mutableFloatStateOf(transparencyAmount) }
   val transparencyAmountLabel by remember(_transparencyAmount) {
     derivedStateOf { (_transparencyAmount * 100).roundToInt().toString() + "%" }
   }
 
-  var _timerLength by remember(timerLength) { mutableIntStateOf(timerLength) }
-  val timerLengthLabel by remember(_timerLength) {
-    derivedStateOf { "${_timerLength}s" }
+  var _mindfulDelayLength by remember(mindfulDelayLength) { mutableIntStateOf(mindfulDelayLength) }
+  val mindfulDelayLengthLabel by remember(_mindfulDelayLength) {
+    derivedStateOf { "${_mindfulDelayLength}s" }
   }
 
   LaunchedEffect(key1 = true) {
@@ -114,7 +98,7 @@ fun SettingsScreen(
     topBar = {
       LargeTopAppBar(
         title = {
-          Text("Minute Launcher Settings")
+          Text(stringResource(R.string.settings_title))
         },
         navigationIcon = {
           IconButton(
@@ -122,7 +106,7 @@ fun SettingsScreen(
           ) {
             Icon(
               imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Navigate back."
+              contentDescription = null
             )
           }
         },
@@ -133,122 +117,74 @@ fun SettingsScreen(
     LazyColumn(
       modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 16.dp)
+        .padding(horizontal = 24.dp)
         .padding(padding),
       horizontalAlignment = Alignment.Start
     ) {
 
       item {
-        PermissionCheckers()
-      }
-
-      settingsSection(title = "Preferences") {
-        item {
-          SliderInput(
-            label = "Background Transparency",
-            description = "Choose how transparent the color layer above your background picture should be. Default is 50%",
-            value = _transparencyAmount,
-            valueLabel = transparencyAmountLabel,
-            valueRange = 0f..1f,
-            roundToInt = false,
-            onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
-            onValueChange = { _transparencyAmount = it }
-          )
-        }
-      }
-
-      settingsSection(title = "Theme and Colors") {
-        item {
-          SegmentedInput(
-            label = "App Theme",
-            description = "Choose whether the app should be in Light, Dark, or follow System settings.",
-            options = AppTheme.entries,
-            selectedOption = appTheme,
-            onOptionSelect = { viewModel.onThemeChange(it) },
-            labelProvider = { it.label }
-          )
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-          item {
-            SegmentedInput(
-              label = "Color Palette",
-              description = "Choose whether to use the default theme or colors generated from your wallpaper (Material You).",
-              options = listOf(false, true),
-              selectedOption = useDynamicColor,
-              onOptionSelect = { viewModel.onDynamicColorChange(it) },
-              labelProvider = {
-                if (it) "Dynamic" else "Default"
-              }
-            )
-          }
-        }
+        PermissionCheckers(
+          onEvent = viewModel::onEvent,
+          showDismissButton = false,
+        )
       }
 
       settingsSection(
-        title = "Gestures",
-        description = "Choose which apps to open when swiping on the home screen."
+        title = R.string.section_title_gestures,
+        description = R.string.section_description_gestures
       ) {
-        item {
+        items(Gesture.getHorizontalGestures()) {
           GestureInput(
-            gesture = Gesture.TOP_LEFT,
-            app = gestureApps[Gesture.TOP_LEFT],
-            iconResource = R.drawable.gesture_top_left,
-            onEvent = viewModel::onEvent
-          )
-          GestureInput(
-            gesture = Gesture.TOP_RIGHT,
-            app = gestureApps[Gesture.TOP_RIGHT],
-            iconResource = R.drawable.gesture_top_right,
-            onEvent = viewModel::onEvent
-          )
-          GestureInput(
-            gesture = Gesture.BOTTOM_LEFT,
-            app = gestureApps[Gesture.BOTTOM_LEFT],
-            iconResource = R.drawable.gesture_bottom_left,
-            onEvent = viewModel::onEvent
-          )
-          GestureInput(
-            gesture = Gesture.BOTTOM_RIGHT,
-            app = gestureApps[Gesture.BOTTOM_RIGHT],
-            iconResource = R.drawable.gesture_bottom_right,
+            gesture = it,
+            app = gestureApps[it],
+            iconResource = it.getIcon(),
             onEvent = viewModel::onEvent
           )
         }
       }
 
       settingsSection(
-        title = "Mindful Delay",
-        description = "Add a short pause before apps open to help you stay intentional, by giving you a moment to reconsider."
+        title = R.string.title_mindful_delay,
+        description = R.string.description_mindful_delay
       ) {
         item {
           SliderInput(
-            label = "Default Delay Length",
-            description = "Choose how long the delay should be for apps that have no custom timer set. Default is 5 seconds.",
-            value = _timerLength.toFloat(),
-            valueLabel = timerLengthLabel,
-            valueRange = 0f..16f,
-            steps = 15,
+            label = stringResource(R.string.label_default_delay_length),
+            description = stringResource(R.string.description_default_delay_length),
+            value = _mindfulDelayLength.toFloat(),
+            valueLabel = mindfulDelayLengthLabel,
+            valueRange = PreferenceRepository.Defaults.MIN_MINDFUL_DELAY.toFloat() .. PreferenceRepository.Defaults.MAX_MINDFUL_DELAY.toFloat(),
+            steps = PreferenceRepository.Defaults.MAX_MINDFUL_DELAY,
             roundToInt = true,
-            onValueChangeFinished = { viewModel.onTimerLengthChange(_timerLength) },
-            onValueChange = { _timerLength = it.roundToInt() }
+            onValueChangeFinished = { viewModel.onMindfulDelayLengthChange(_mindfulDelayLength) },
+            onValueChange = { _mindfulDelayLength = it.roundToInt() }
+          )
+        }
+        item {
+          ToggleInput(
+            label = stringResource(R.string.label_auto_open),
+            description = stringResource(R.string.description_auto_open),
+            checked = skipAppModal,
+            onCheckedChange = { viewModel.onSkipAppModalChange(it) },
           )
         }
 
         item {
-          if (appsWithTimers.isNotEmpty()) {
-            GenericInput(
-              label = "Apps with custom timers set",
-              description = "View and reset the timers for apps that have one set."
+          if (appsWithMindfulDelaySorted.isNotEmpty()) {
+            GenericColumnInput(
+              label = stringResource(R.string.label_apps_with_custom_delays),
+              description = stringResource(R.string.description_apps_with_custom_delays),
+              modifier = Modifier.padding(top = 16.dp)
             )
           }
         }
         items(
-          items = appsWithTimers,
+          items = appsWithMindfulDelaySorted,
           key = { it.app.packageName }
         ) { item ->
-          val index = appsWithTimers.indexOf(item)
+          val index = appsWithMindfulDelaySorted.indexOf(item)
           val isFirst = index == 0
-          val isLast = index == appsWithTimers.lastIndex
+          val isLast = index == appsWithMindfulDelaySorted.lastIndex
 
           val shape = when {
             isFirst && isLast -> MaterialTheme.shapes.medium
@@ -285,21 +221,61 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically
               )
               {
-                Text(text = "${item.appTimer.timer}s")
+                Text(text = "${item.mindfulDelay.delay}s")
                 VerticalDivider(
                   modifier = Modifier.padding(start = 16.dp, end = 8.dp)
                 )
                 IconButton(
-                  onClick = { viewModel.onEvent(HomeEvent.ResetAppTimerToDefault(item.app)) }
+                  onClick = { viewModel.onEvent(HomeEvent.ResetMindfulDelayToDefault(item.app)) }
                 ) {
                   Icon(
                     imageVector = Icons.AutoMirrored.Filled.Undo,
-                    contentDescription = "Reset Timer",
+                    contentDescription = stringResource(R.string.label_reset_to_default),
                   )
                 }
               }
             }
           }
+        }
+      }
+
+      settingsSection(title = R.string.section_title_appearance) {
+        item {
+          SegmentedInput(
+            label = stringResource(R.string.label_app_theme),
+            description = stringResource(R.string.description_app_theme),
+            options = AppTheme.entries,
+            selectedOption = appTheme,
+            onOptionSelect = { viewModel.onThemeChange(it) },
+            labelProvider = { stringResource(it.labelRes) }
+          )
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          item {
+            SegmentedInput(
+              label = stringResource(R.string.label_color_palette),
+              description = stringResource(R.string.description_color_palette),
+              options = listOf(false, true),
+              selectedOption = useDynamicColor,
+              onOptionSelect = { viewModel.onDynamicColorChange(it) },
+              labelProvider = {
+                if (it) stringResource(R.string.color_palette_dynamic) else stringResource(R.string.color_palette_default)
+              }
+            )
+          }
+        }
+        item {
+          SliderInput(
+            label = stringResource(R.string.label_background_transparency),
+            description = stringResource(R.string.description_background_transparency),
+            value = _transparencyAmount,
+            valueLabel = transparencyAmountLabel,
+            valueRange = PreferenceRepository.Defaults.MIN_TRANSPARENCY .. PreferenceRepository.Defaults.MAX_TRANSPARENCY,
+            roundToInt = true,
+            steps = 19,
+            onValueChangeFinished = { viewModel.onTransparencyAmountChange(_transparencyAmount) },
+            onValueChange = { _transparencyAmount = it }
+          )
         }
       }
     }

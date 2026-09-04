@@ -16,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.home.dashboard.AppList
 import com.alveteg.simon.minutelauncher.home.dashboard.SearchBar
@@ -67,8 +67,6 @@ fun GestureList(
             viewModel.onEvent(SettingsEvent.SetAppGesture(it.app, gesture))
           }
         },
-        topPadding = 0.dp,
-        bottomPadding = 16.dp,
         onGloballyPositioned = {
           with(density) {
             searchHeight = it.toDp()

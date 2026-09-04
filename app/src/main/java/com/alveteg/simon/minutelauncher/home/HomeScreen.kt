@@ -1,6 +1,5 @@
 package com.alveteg.simon.minutelauncher.home
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -8,6 +7,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,28 +18,34 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.UiEvent
 import com.alveteg.simon.minutelauncher.data.AppInfo
+import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.home.dashboard.Dashboard
 import com.alveteg.simon.minutelauncher.home.modal.AppModalBottomSheet
-import kotlinx.coroutines.flow.map
+import com.alveteg.simon.minutelauncher.home.modal.MinuteBottomSheet
+import com.alveteg.simon.minutelauncher.settings.components.GestureInput
+import com.alveteg.simon.minutelauncher.utilities.Gesture
 import timber.log.Timber
 import java.lang.reflect.Method
 import java.time.LocalDate
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
   onNavigate: (UiEvent.Navigate) -> Unit,
@@ -48,30 +55,35 @@ fun HomeScreen(
   val searchText by viewModel.searchTerm.collectAsState()
   val apps by viewModel.filteredApps.collectAsState()
   val installedApps by viewModel.installedApps.collectAsState()
-  val totalUsage by remember {
+  val totalUsage by remember(installedApps) {
     derivedStateOf {
       installedApps.sumOf {
-        it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration ?: 0L
+        it.usage.firstOrNull { it.usageDate == LocalDate.now() }?.usageDuration
       }
     }
   }
   val favorites by viewModel.favoriteApps.collectAsState()
-  val showPermissionPrompts by viewModel.showPermissionPrompts.collectAsState()
+
+  val showDefaultHomePrompt by viewModel.showDefaultHomePrompt.collectAsStateWithLifecycle()
+  val showAdminAccessPrompt by viewModel.showAdminAccessPrompt.collectAsStateWithLifecycle()
+  val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsStateWithLifecycle()
+  val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
+  val backgroundTransparency by viewModel.transparencyAmount.collectAsStateWithLifecycle()
+  val defaultMindfulDelayLength by viewModel.mindfulDelayLength.collectAsStateWithLifecycle()
+  val backgroundAlpha by remember {
+    derivedStateOf { (1f - backgroundTransparency) }
+  }
+  val altBackgroundAlpha by remember {
+    derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
+  }
 
   val mContext = LocalContext.current
   val hapticFeedback = LocalHapticFeedback.current
   var currentAppPackage by remember { mutableStateOf<String?>(null) }
-  val currentAppModal by remember {
+  val currentAppModal by remember(currentAppPackage) {
     derivedStateOf { apps.firstOrNull { it.app.packageName == currentAppPackage } }
   }
-  val backgroundTransparency by viewModel.transparencyAmount.collectAsState()
-  val backgroundAlpha by derivedStateOf { (1f - backgroundTransparency) }
-  val altBackgroundAlpha by derivedStateOf { backgroundAlpha + (1f - backgroundAlpha) * 0.66f }
-
-  LaunchedEffect(altBackgroundAlpha) {
-    Timber.d("Background transparency: $backgroundTransparency")
-    Timber.d("Alternative background transparency: $altBackgroundAlpha")
-  }
+  var showGestureModal by remember { mutableStateOf(Gesture.NONE) }
 
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {
@@ -91,8 +103,25 @@ fun HomeScreen(
         is UiEvent.VibrateLongPress -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         is UiEvent.LaunchActivity -> mContext.startActivity(event.intent)
         is UiEvent.ExpandNotifications -> setExpandNotificationDrawer(mContext, true)
-        is UiEvent.ShowModal -> currentAppPackage = event.appInfo.app.packageName
+        is UiEvent.ShowModal -> {
+          if (skipAppModal && event.appInfo.mindfulDelay == 0) {
+            viewModel.onEvent(HomeEvent.LaunchActivity(event.appInfo))
+          } else {
+            currentAppPackage = event.appInfo.app.packageName
+          }
+        }
+
+        is UiEvent.TriggerGesture -> {
+          if (event.appInfo != null) {
+            viewModel.onEvent(HomeEvent.ShowModal(event.appInfo))
+          } else {
+            showGestureModal = event.gesture
+            Timber.d("Gesture triggered: $showGestureModal")
+          }
+        }
+
         is UiEvent.ShowDashboard -> screenState = ScreenState.DASHBOARD
+        is UiEvent.ShowFavorites -> screenState = ScreenState.FAVORITES
         is UiEvent.Navigate -> onNavigate(event)
       }
     }
@@ -104,24 +133,41 @@ fun HomeScreen(
 
   AppModalBottomSheet(
     appInfo = currentAppModal,
+    defaultMindfulDelayLength = defaultMindfulDelayLength,
     onDismiss = { currentAppPackage = null },
     onEvent = viewModel::onEvent
   )
 
+  if (showGestureModal != Gesture.NONE) {
+    MinuteBottomSheet(
+      onDismissRequest = { showGestureModal = Gesture.NONE },
+      title = stringResource(R.string.title_unset_gesture),
+      description = stringResource(R.string.description_unset_gesture)
+    ) {
+      GestureInput(
+        gesture = showGestureModal,
+        iconResource = showGestureModal.getIcon(),
+        onEvent = viewModel::onEvent,
+        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 24.dp, bottom = 46.dp)
+      ) {
+        showGestureModal = Gesture.NONE
+      }
+    }
+  }
+
   CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-    var screenHeight by remember { mutableFloatStateOf(0f) }
-    Surface(color = backgroundColor,
+    Surface(
+      color = backgroundColor,
       modifier = Modifier
         .fillMaxSize()
-        .onGloballyPositioned {
-          screenHeight = it.size.height.toFloat()
-        }) {
+    ) {
       Box(
         modifier = Modifier.fillMaxSize()
       ) {
         val offsetY = remember { Animatable(0f) }
         val keyboardController = LocalSoftwareKeyboardController.current
         val appListSelectionAction: (AppInfo) -> Unit = {
+          Timber.d("App selected: $it")
           viewModel.onEvent(HomeEvent.OpenApplication(it))
           keyboardController?.hide()
         }
@@ -130,10 +176,11 @@ fun HomeScreen(
           screenState = screenState,
           favorites = favorites,
           onEvent = viewModel::onEvent,
-          screenHeight = screenHeight,
           totalUsage = totalUsage,
           offsetY = offsetY,
-          showPermissionPrompts = showPermissionPrompts,
+          showDefaultHomePrompt = showDefaultHomePrompt,
+          showAdminAccessPrompt = showAdminAccessPrompt,
+          showUsageAccessPrompt = showUsageAccessPrompt,
           onAppClick = appListSelectionAction
         )
 
@@ -141,10 +188,9 @@ fun HomeScreen(
           screenState = screenState,
           onEvent = viewModel::onEvent,
           searchText = searchText,
-          onAppClick = { appListSelectionAction(it) },
+          onAppClick = appListSelectionAction,
           apps = apps,
           offsetY = offsetY,
-          usageStatistics = installedApps.flatMap { it.usage },
           onSearch = {
             apps.firstOrNull()?.let {
               appListSelectionAction(it)
@@ -157,15 +203,15 @@ fun HomeScreen(
   }
 }
 
-@SuppressLint("WrongConstant")
 fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
   try {
-    val statusBarService = context.getSystemService("statusbar")
+    val statusBarService = context.getSystemService(Context.STATUS_BAR_SERVICE)
     val methodName = if (expand) "expandNotificationsPanel" else "collapsePanels"
-    val statusBarManager: Class<*> = Class.forName("android.app.StatusBarManager")
+    val statusBarManager = Class.forName("android.app.StatusBarManager")
     val method: Method = statusBarManager.getMethod(methodName)
+    method.isAccessible = true
     method.invoke(statusBarService)
   } catch (e: Exception) {
-    e.printStackTrace()
+    Timber.e(e, "Failed to toggle notification drawer")
   }
 }

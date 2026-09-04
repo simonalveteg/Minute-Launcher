@@ -1,6 +1,12 @@
 package com.alveteg.simon.minutelauncher.home
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,71 +46,78 @@ fun ActionBar(
   var actionBarState by remember { mutableStateOf(ActionBarState.COLLAPSED) }
   val priorityActions = actions.take(numberOfPriorityActions)
 
-  val showMoreIcon =
-    if (actionBarState == ActionBarState.COLLAPSED) Icons.Default.ExpandMore else Icons.Default.ExpandLess
-
   Surface(
     modifier = Modifier
       .fillMaxWidth()
       .padding(vertical = 8.dp),
-    color = MaterialTheme.colorScheme.background,
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
     shape = MaterialTheme.shapes.large,
-    tonalElevation = 8.dp
   ) {
-    Column(
-      modifier = Modifier
-        .animateContentSize()
-        .padding(horizontal = 16.dp),
-      horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-      if (actionBarState == ActionBarState.COLLAPSED) {
-        Row(
-          modifier = Modifier
-            .height(60.dp)
-            .fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          priorityActions.forEach {
-            IconButton(
-              onClick = it.action,
-              enabled = it.enabled
-            ) {
-              Icon(imageVector = it.imageVector, contentDescription = it.description)
+    AnimatedContent(
+      targetState = actionBarState,
+      transitionSpec = {
+        if (targetState == ActionBarState.EXPANDED) {
+          (slideInVertically { height -> height } + fadeIn()).togetherWith(
+            slideOutVertically { height -> -height } + fadeOut())
+        } else {
+          (slideInVertically { height -> -height } + fadeIn()).togetherWith(
+            slideOutVertically { height -> height } + fadeOut())
+        }.using(
+          SizeTransform(clip = false)
+        )
+      },
+      label = "ActionBarExpansion"
+    ) { targetState ->
+      Column(
+        modifier = Modifier
+          .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        if (targetState == ActionBarState.COLLAPSED) {
+          Row(
+            modifier = Modifier
+              .height(60.dp)
+              .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            priorityActions.forEach {
+              IconButton(onClick = it.action, enabled = it.enabled) {
+                it.icon()
+              }
+            }
+            IconButton(onClick = { actionBarState = actionBarState.toggle() }) {
+              Icon(imageVector = Icons.Default.ExpandMore, contentDescription = "Show more actions")
             }
           }
-          IconButton(onClick = { actionBarState = actionBarState.toggle() }) {
-            Icon(imageVector = showMoreIcon, contentDescription = "Show more actions")
+        } else {
+          Spacer(modifier = Modifier.height(6.dp))
+          actions.forEach {
+            TextButton(
+              enabled = it.enabled,
+              onClick = it.action,
+              colors = ButtonDefaults.textButtonColors(
+                contentColor = LocalContentColor.current
+              )
+            ) {
+              it.icon()
+              Text(
+                text = it.description,
+                fontFamily = archivoFamily,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .padding(start = 24.dp)
+              )
+            }
           }
-        }
-      }
-      if (actionBarState == ActionBarState.EXPANDED) {
-        Spacer(modifier = Modifier.height(6.dp))
-        actions.forEach {
-          TextButton(
-            enabled = it.enabled,
-            onClick = it.action,
-            colors = ButtonDefaults.textButtonColors(
-              contentColor = LocalContentColor.current
-            )
+          IconButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { actionBarState = ActionBarState.COLLAPSED }
           ) {
-            Icon(imageVector = it.imageVector, contentDescription = it.description)
-            Text(
-              text = it.description,
-              fontFamily = archivoFamily,
-              fontWeight = FontWeight.Bold,
-              textAlign = TextAlign.Start,
-              modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp)
-            )
+            Icon(imageVector = Icons.Default.ExpandLess, contentDescription = "Show less actions")
           }
-        }
-        IconButton(
-          modifier = Modifier.fillMaxWidth(),
-          onClick = { actionBarState = ActionBarState.COLLAPSED }
-        ) {
-          Icon(imageVector = showMoreIcon, contentDescription = "Show less actions")
         }
       }
     }
@@ -112,11 +125,20 @@ fun ActionBar(
 }
 
 data class ActionBarAction(
-  val imageVector: ImageVector,
   val description: String,
   val action: () -> Unit,
-  val enabled: Boolean = true
+  val enabled: Boolean = true,
+  val icon: @Composable () -> Unit
 )
+
+fun ActionBarAction(
+  imageVector: ImageVector,
+  description: String,
+  action: () -> Unit,
+  enabled: Boolean = true
+) = ActionBarAction(description, action, enabled) {
+  Icon(imageVector = imageVector, contentDescription = description)
+}
 
 private enum class ActionBarState {
   COLLAPSED, EXPANDED;

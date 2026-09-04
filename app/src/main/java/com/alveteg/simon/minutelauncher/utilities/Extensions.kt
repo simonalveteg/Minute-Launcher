@@ -13,20 +13,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
-
-fun Long?.toTimeUsed(
-  blankIfZero: Boolean = true
-): String {
-  if (this == null) return if (!blankIfZero) "0m" else ""
-  val minutes = div(60000)
-  val hours = minutes.div(60)
-  val sb = StringBuilder()
-  if (hours != 0L) sb.append("${hours}h ")
-  if (minutes % 60 != 0L) sb.append("${minutes % 60}m")
-  return sb.toString().ifBlank { if (!blankIfZero) "0m" else "" }
-}
 
 fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
   var isFocused by remember { mutableStateOf(false) }
@@ -52,14 +39,10 @@ fun Modifier.clearFocusOnKeyboardDismiss(): Modifier = composed {
   }
 }
 
-inline fun Modifier.thenIf(
-  condition: Boolean,
-  crossinline other: Modifier.() -> Modifier,
-) = if (condition) other() else this
 
-fun List<AppInfo>.filterBySearchTerm(searchTerm: String) : List<AppInfo> {
+fun List<AppInfo>.filterBySearchTerm(searchTerm: String): List<AppInfo> {
   return filter { appInfo ->
-    appInfo.app.appTitle.lowercase().filterNot { it.isWhitespace() }
+    appInfo.getTitle().lowercase().filterNot { it.isWhitespace() }
       .contains(searchTerm.lowercase().filterNot { it.isWhitespace() })
-  }.sortedBy { (it.app.displayTitle ?: it.app.appTitle).lowercase() }
+  }.sortedBy { it.getTitle().lowercase() }
 }

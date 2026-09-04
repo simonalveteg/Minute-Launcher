@@ -7,18 +7,18 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Context.APP_OPS_SERVICE
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
+import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
 import com.alveteg.simon.minutelauncher.settings.SettingsActivity
-import com.alveteg.simon.minutelauncher.theme.AppTheme
 import com.alveteg.simon.minutelauncher.theme.MinuteLauncherTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -32,9 +32,10 @@ class HomeActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    window.isNavigationBarContrastEnforced = false
     setContent {
-      val appTheme by userPreferencesRepository.appTheme.collectAsState(initial = AppTheme.DARK)
-      val useDynamicColor by userPreferencesRepository.useDynamicColor.collectAsState(initial = true)
+      val appTheme by userPreferencesRepository.appTheme.collectAsState(initial = PreferenceRepository.Defaults.APP_THEME)
+      val useDynamicColor by userPreferencesRepository.useDynamicColor.collectAsState(initial = PreferenceRepository.Defaults.USE_DYNAMIC_COLOR)
 
       MinuteLauncherTheme(
         themePreference = appTheme,
@@ -52,16 +53,18 @@ class HomeActivity : ComponentActivity() {
 }
 
 fun isUsageAccessGranted(context: Context): Boolean {
-  val appOpsManager = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
-  return appOpsManager.unsafeCheckOpNoThrow(
-    "android:get_usage_stats",
-    android.os.Process.myUid(), context.packageName
-  ) == AppOpsManager.MODE_ALLOWED
+  val appOps = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
+  val mode = appOps.checkOpNoThrow(
+    AppOpsManager.OPSTR_GET_USAGE_STATS,
+    android.os.Process.myUid(),
+    context.packageName
+  )
+  return mode == AppOpsManager.MODE_ALLOWED
 }
 
 fun isDeviceAdmin(context: Context): Boolean {
   val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-  val adminComponent = ComponentName(context, "com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver")
+  val adminComponent = ComponentName(context, MinuteDeviceAdminReceiver::class.java)
   return dpm.isAdminActive(adminComponent)
 }
 
