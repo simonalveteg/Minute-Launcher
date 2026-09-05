@@ -3,26 +3,17 @@ package com.alveteg.simon.minutelauncher.home.onboarding
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -30,7 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
@@ -38,31 +28,37 @@ import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppCategory
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
+import kotlin.math.roundToInt
 
 @OptIn(
   ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class,
@@ -169,91 +165,153 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
     }
   }
 
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .statusBarsPadding(),
-    verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.Start
-  ) {
-    Text(
-      text = "Favorites",
-      style = MaterialTheme.typography.displayLargeEmphasized,
-      modifier = Modifier
-        .padding(bottom = 4.dp)
-        .padding(horizontal = 24.dp)
-    )
-    Text(
-      text = "Select your most important apps to get started.",
-      style = MaterialTheme.typography.bodyMedium,
-      modifier = Modifier
-        .padding(bottom = 20.dp)
-        .padding(horizontal = 24.dp)
-    )
+  val listState = rememberLazyListState()
+  var headerHeightPx by remember { mutableFloatStateOf(0f) }
+  var collapsedPx by remember { mutableFloatStateOf(0f) }
 
-    Surface(
-      modifier = Modifier.padding(horizontal = 16.dp),
-      shape = MaterialTheme.shapes.extraLarge.copy(
-        bottomEnd = CornerSize(0.dp),
-        bottomStart = CornerSize(0.dp)
-      )
-    ) {
-      LazyColumn(
-        modifier = Modifier
-          .padding(horizontal = 24.dp)
-      ) {
-        if (favoriteApps.isNotEmpty()) {
-          item(key = "favoritesHeader") { SectionHeader("Favorites") }
-          itemsIndexed(
-            items = favoriteApps,
-            key = { _, appInfo -> appInfo.app.packageName }
-          ) { index, appInfo ->
-            SelectableApp(
-              modifier = Modifier.animateItem(),
-              appInfo = appInfo,
-              shape = verticalItemShape(index, favoriteApps.size)
-            ) {
-              onEvent(HomeEvent.ToggleFavorite(appInfo.app))
-            }
-          }
-        }
-        if (suggestedApps.isNotEmpty()) {
-          item(key = "suggestionsHeader") { SectionHeader("Suggestions") }
-          itemsIndexed(
-            items = suggestedApps,
-            key = { _, appInfo -> appInfo.app.packageName }
-          ) { index, appInfo ->
-            SelectableApp(
-              modifier = Modifier.animateItem(),
-              appInfo = appInfo,
-              shape = verticalItemShape(index, suggestedApps.size)
-            ) {
-              onEvent(HomeEvent.ToggleFavorite(appInfo.app))
-            }
-          }
-        }
+  val nestedScrollConnection = remember {
+    object : NestedScrollConnection {
+      override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+        if (available.y >= 0f) return Offset.Zero
+        val remaining = headerHeightPx - collapsedPx
+        if (remaining <= 0f) return Offset.Zero
+        val consumed = maxOf(available.y, -remaining)
+        collapsedPx -= consumed
+        return Offset(0f, consumed)
+      }
 
-        if (otherApps.isNotEmpty()) {
-          item(key = "otherAppsHeader") { SectionHeader("Other apps") }
-          itemsIndexed(
-            items = otherApps,
-            key = { _, appInfo -> appInfo.app.packageName }
-          ) { index, appInfo ->
-            SelectableApp(
-              modifier = Modifier.animateItem(),
-              appInfo = appInfo,
-              shape = verticalItemShape(index, otherApps.size)
-            ) {
-              onEvent(HomeEvent.ToggleFavorite(appInfo.app))
-            }
-          }
-        }
-        item {
-          Spacer(
-            modifier = Modifier.navigationBarsPadding()
+      override fun onPostScroll(
+        consumed: Offset,
+        available: Offset,
+        source: NestedScrollSource
+      ): Offset {
+        if (available.y <= 0f || collapsedPx <= 0f) return Offset.Zero
+        val consume = minOf(available.y, collapsedPx)
+        collapsedPx -= consume
+        return Offset(0f, consume)
+      }
+    }
+  }
+
+  Layout(
+    contents = listOf(
+      {
+        Column(modifier = Modifier.statusBarsPadding()) {
+          Text(
+            text = "Favorites",
+            style = MaterialTheme.typography.displayLargeEmphasized,
+            modifier = Modifier
+              .padding(bottom = 4.dp)
+              .padding(horizontal = 24.dp)
+          )
+          Text(
+            text = "Select your most important apps to get started.",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+              .padding(bottom = 20.dp)
+              .padding(horizontal = 24.dp)
           )
         }
+      },
+      {
+        val surfaceColor = MaterialTheme.colorScheme.surface
+        val shape = MaterialTheme.shapes.extraLarge
+        Surface(
+          modifier = Modifier
+            .nestedScroll(nestedScrollConnection)
+            .padding(horizontal = 16.dp)
+            .drawBehind {
+              val layoutInfo = listState.layoutInfo
+              val lastItem = layoutInfo.visibleItemsInfo.lastOrNull { it.key != "navSpacer" }
+              val bottom = lastItem?.let { it.offset + it.size } ?: size.height.toInt()
+
+              drawOutline(
+                outline = shape.createOutline(
+                  size = size.copy(height = bottom.coerceAtMost(size.height.toInt()).toFloat()),
+                  layoutDirection = layoutDirection,
+                  density = this
+                ),
+                color = surfaceColor
+              )
+            },
+          shape = shape,
+          color = Color.Transparent
+        ) {
+          LazyColumn(
+            state = listState,
+            modifier = Modifier.padding(horizontal = 24.dp)
+          ) {
+            if (favoriteApps.isNotEmpty()) {
+              item(key = "favoritesHeader") { SectionHeader("Favorites") }
+              itemsIndexed(
+                items = favoriteApps,
+                key = { _, appInfo -> appInfo.app.packageName }
+              ) { index, appInfo ->
+                SelectableApp(
+                  modifier = Modifier.animateItem(),
+                  appInfo = appInfo,
+                  shape = verticalItemShape(index, favoriteApps.size)
+                ) {
+                  onEvent(HomeEvent.ToggleFavorite(appInfo.app))
+                }
+              }
+            }
+            if (suggestedApps.isNotEmpty()) {
+              item(key = "suggestionsHeader") { SectionHeader("Suggestions") }
+              itemsIndexed(
+                items = suggestedApps,
+                key = { _, appInfo -> appInfo.app.packageName }
+              ) { index, appInfo ->
+                SelectableApp(
+                  modifier = Modifier.animateItem(),
+                  appInfo = appInfo,
+                  shape = verticalItemShape(index, suggestedApps.size)
+                ) {
+                  onEvent(HomeEvent.ToggleFavorite(appInfo.app))
+                }
+              }
+            }
+
+            if (otherApps.isNotEmpty()) {
+              item(key = "otherAppsHeader") { SectionHeader("Other apps") }
+              itemsIndexed(
+                items = otherApps,
+                key = { _, appInfo -> appInfo.app.packageName }
+              ) { index, appInfo ->
+                SelectableApp(
+                  modifier = Modifier.animateItem(),
+                  appInfo = appInfo,
+                  shape = verticalItemShape(index, otherApps.size)
+                ) {
+                  onEvent(HomeEvent.ToggleFavorite(appInfo.app))
+                }
+              }
+            }
+            item {
+              Spacer(modifier = Modifier.padding(bottom = 24.dp))
+            }
+            item(key = "navSpacer") {
+              Spacer(modifier = Modifier.navigationBarsPadding())
+            }
+          }
+        }
       }
+    ),
+    modifier = Modifier.fillMaxSize()
+  ) { (headerMeasurables, surfaceMeasurables), constraints ->
+    val headerPlaceable = headerMeasurables.first().measure(
+      constraints.copy(minWidth = 0, minHeight = 0)
+    )
+    headerHeightPx = headerPlaceable.height.toFloat()
+
+    val surfacePlaceable = surfaceMeasurables.first().measure(
+      Constraints(maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight)
+    )
+
+    layout(constraints.maxWidth, constraints.maxHeight) {
+      headerPlaceable.placeRelative(0, 0)
+      val surfaceY = (headerPlaceable.height - collapsedPx).roundToInt().coerceAtLeast(0)
+      surfacePlaceable.placeRelative(0, surfaceY)
     }
   }
 }
