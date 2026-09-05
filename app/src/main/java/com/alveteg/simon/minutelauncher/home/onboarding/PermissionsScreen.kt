@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -59,7 +61,6 @@ import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
 fun SharedTransitionScope.PermissionsScreen(
   animatedVisibilityScope: AnimatedVisibilityScope,
   onFinish: () -> Unit,
-  onEvent: (HomeEvent) -> Unit
 ) {
 
   val context = LocalContext.current
@@ -73,15 +74,22 @@ fun SharedTransitionScope.PermissionsScreen(
   Column(
     modifier = Modifier
       .fillMaxSize()
-      .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
+      .statusBarsPadding()
       .padding(horizontal = 24.dp),
     verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.End
+    horizontalAlignment = Alignment.Start
   ) {
     Text(
       text = "Minute Launcher",
       style = MaterialTheme.typography.displayLargeEmphasized,
-      modifier = Modifier.padding(bottom = 36.dp)
+      modifier = Modifier
+        .padding(bottom = 4.dp)
+    )
+    Text(
+      text = "Take back your time.",
+      style = MaterialTheme.typography.bodyMedium,
+      modifier = Modifier
+        .padding(bottom = 20.dp)
     )
     Surface(
       shape = MaterialTheme.shapes.extraLarge
@@ -140,24 +148,29 @@ fun SharedTransitionScope.PermissionsScreen(
         )
       }
     }
-    FilledTonalButton(
-      onClick = onFinish,
-      colors = ButtonDefaults.filledTonalButtonColors(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary
-      ),
-      contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.End
     ) {
-      Icon(
-        imageVector = Icons.AutoMirrored.Default.ArrowForward,
-        contentDescription = null,
-        modifier = Modifier.size(ButtonDefaults.IconSize)
-      )
-      Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-      Text(
-        text = "Continue",
-        style = MaterialTheme.typography.bodyMediumEmphasized
-      )
+      FilledTonalButton(
+        onClick = onFinish,
+        colors = ButtonDefaults.filledTonalButtonColors(
+          containerColor = MaterialTheme.colorScheme.primary,
+          contentColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+      ) {
+        Icon(
+          imageVector = Icons.AutoMirrored.Default.ArrowForward,
+          contentDescription = null,
+          modifier = Modifier.size(ButtonDefaults.IconSize)
+        )
+        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+        Text(
+          text = "Continue",
+          style = MaterialTheme.typography.bodyMediumEmphasized
+        )
+      }
     }
   }
 }

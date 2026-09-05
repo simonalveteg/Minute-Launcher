@@ -14,35 +14,34 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckBox
-import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
-import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFloatingActionButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -52,23 +51,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppCategory
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
-import com.alveteg.simon.minutelauncher.theme.archivoFamily
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 
 @OptIn(
@@ -84,17 +77,6 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
 ) {
   var isExiting by remember { mutableStateOf(false) }
   val exitScale = remember { Animatable(1f) }
-
-  val iconAlpha by animateFloatAsState(
-    targetValue = if (isExiting) 0f else 1f,
-    animationSpec = tween(durationMillis = 100), label = "icon_alpha"
-  )
-
-  val fabColor by animateColorAsState(
-    targetValue = if (isExiting) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primaryContainer,
-    animationSpec = tween(durationMillis = 1000),
-    label = "fab_color"
-  )
 
   LaunchedEffect(isExiting) {
     if (isExiting) {
@@ -172,19 +154,6 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
   }
   val otherApps = regularApps.filter { it.app.packageName !in suggestedPackageNames }
 
-  val listState = rememberLazyListState()
-  val density = LocalDensity.current
-  val scrollProgress by remember {
-    derivedStateOf {
-      if (listState.firstVisibleItemIndex > 0) 1f
-      else {
-        val threshold = with(density) { 192.dp.toPx() }
-        (listState.firstVisibleItemScrollOffset / threshold).coerceIn(0f, 1f)
-      }
-    }
-  }
-
-
   val scale = remember { Animatable(0f) }
   LaunchedEffect(favoriteApps.isNotEmpty()) {
     if (favoriteApps.isNotEmpty()) {
@@ -200,225 +169,88 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
     }
   }
 
-  val infiniteTransition = rememberInfiniteTransition(label = "rotation")
-  val rotation by infiniteTransition.animateFloat(
-    initialValue = 0f,
-    targetValue = 360f,
-    animationSpec = infiniteRepeatable(
-      animation = tween(durationMillis = 10000, easing = LinearEasing),
-      repeatMode = RepeatMode.Restart
-    ),
-    label = "rotation"
-  )
-
-  Scaffold(
-    modifier = Modifier.fillMaxSize(),
-    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
-    floatingActionButton = {
-      if (favoriteApps.isNotEmpty() || scale.value > 0f) {
-        MediumFloatingActionButton(
-          onClick = { isExiting = true },
-          containerColor = fabColor,
-          shape = MaterialShapes.Cookie6Sided.toShape(),
-          modifier = Modifier
-            .sharedElement(
-              rememberSharedContentState(key = "fab"),
-              animatedVisibilityScope = animatedVisibilityScope
-            )
-            .graphicsLayer {
-              rotationZ = rotation
-              scaleX = scale.value * exitScale.value
-              scaleY = scale.value * exitScale.value
-            }
-        ) {
-          Icon(
-            imageVector = Icons.Default.Done,
-            contentDescription = null,
-            modifier = Modifier.graphicsLayer {
-              rotationZ = -rotation
-              alpha = iconAlpha
-            }
-          )
-        }
-      }
-    }
-  ) { paddingValues ->
-    val topPadding = paddingValues.calculateTopPadding()
-    val topSpacerHeight = LocalWindowInfo.current.containerDpSize.height.div(9)
-    val subtitleHeight = 24.dp
-    val titleHeight = 64.dp
-    val dividerPadding = 4.dp
-    val dividerThickness = 1.dp
-
-    val expandedHeight =
-      topSpacerHeight + titleHeight + subtitleHeight + dividerPadding + dividerThickness
-    val collapsedHeight = titleHeight + dividerThickness
-
-    Box(
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .statusBarsPadding(),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.Start
+  ) {
+    Text(
+      text = "Favorites",
+      style = MaterialTheme.typography.displayLargeEmphasized,
       modifier = Modifier
-        .fillMaxSize()
-        .graphicsLayer {
-          alpha = if (isExiting) 1f - (exitScale.value - 1f) / 5f else 1f
-        }
+        .padding(bottom = 4.dp)
+        .padding(horizontal = 24.dp)
+    )
+    Text(
+      text = "Select your most important apps to get started.",
+      style = MaterialTheme.typography.bodyMedium,
+      modifier = Modifier
+        .padding(bottom = 20.dp)
+        .padding(horizontal = 24.dp)
+    )
+
+    Surface(
+      modifier = Modifier.padding(horizontal = 16.dp),
+      shape = MaterialTheme.shapes.extraLarge.copy(
+        bottomEnd = CornerSize(0.dp),
+        bottomStart = CornerSize(0.dp)
+      )
     ) {
       LazyColumn(
-        state = listState,
         modifier = Modifier
-          .fillMaxWidth()
-          .padding(bottom = paddingValues.calculateBottomPadding())
-          .graphicsLayer { clip = true }
-          .drawWithContent {
-            val currentHeaderHeight = with(density) {
-              (expandedHeight + topPadding - (expandedHeight - collapsedHeight) * scrollProgress).toPx()
-            }
-            clipRect(top = currentHeaderHeight) {
-              this@drawWithContent.drawContent()
-            }
-          }
+          .padding(horizontal = 24.dp)
       ) {
-        item {
-          Spacer(modifier = Modifier.height(expandedHeight + topPadding))
-        }
-        item {
-          if (favoriteApps.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-              text = "Selected".uppercase(),
-              style = MaterialTheme.typography.labelLarge,
-              fontFamily = archivoBlackFamily,
-              modifier = Modifier
-                .animateItem()
-                .padding(horizontal = 46.dp)
-            )
-          }
-        }
-        items(
-          items = favoriteApps,
-          key = { it.app.packageName }
-        ) { appInfo ->
-          SelectableApp(
-            modifier = Modifier
-              .animateItem()
-              .padding(horizontal = 46.dp),
-            appInfo = appInfo
-          ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
-        }
-
-        if (suggestedApps.isNotEmpty()) {
-          item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-              text = "Suggestions".uppercase(),
-              style = MaterialTheme.typography.labelLarge,
-              fontFamily = archivoBlackFamily,
-              modifier = Modifier
-                .animateItem()
-                .padding(horizontal = 46.dp)
-            )
-          }
-          items(
-            items = suggestedApps,
-            key = { it.app.packageName }
-          ) { appInfo ->
+        if (favoriteApps.isNotEmpty()) {
+          item(key = "favoritesHeader") { SectionHeader("Favorites") }
+          itemsIndexed(
+            items = favoriteApps,
+            key = { _, appInfo -> appInfo.app.packageName }
+          ) { index, appInfo ->
             SelectableApp(
-              modifier = Modifier
-                .animateItem()
-                .padding(horizontal = 46.dp),
-              appInfo = appInfo
-            ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
+              modifier = Modifier.animateItem(),
+              appInfo = appInfo,
+              shape = verticalItemShape(index, favoriteApps.size)
+            ) {
+              onEvent(HomeEvent.ToggleFavorite(appInfo.app))
+            }
+          }
+        }
+        if (suggestedApps.isNotEmpty()) {
+          item(key = "suggestionsHeader") { SectionHeader("Suggestions") }
+          itemsIndexed(
+            items = suggestedApps,
+            key = { _, appInfo -> appInfo.app.packageName }
+          ) { index, appInfo ->
+            SelectableApp(
+              modifier = Modifier.animateItem(),
+              appInfo = appInfo,
+              shape = verticalItemShape(index, suggestedApps.size)
+            ) {
+              onEvent(HomeEvent.ToggleFavorite(appInfo.app))
+            }
           }
         }
 
         if (otherApps.isNotEmpty()) {
-          item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-              text = if (suggestedApps.isEmpty()) "Suggestions".uppercase() else "Other Apps".uppercase(),
-              style = MaterialTheme.typography.labelLarge,
-              fontFamily = archivoBlackFamily,
-              modifier = Modifier
-                .animateItem()
-                .padding(horizontal = 46.dp)
-            )
-          }
-          items(
+          item(key = "otherAppsHeader") { SectionHeader("Other apps") }
+          itemsIndexed(
             items = otherApps,
-            key = { it.app.packageName }
-          ) { appInfo ->
+            key = { _, appInfo -> appInfo.app.packageName }
+          ) { index, appInfo ->
             SelectableApp(
-              modifier = Modifier
-                .animateItem()
-                .padding(horizontal = 46.dp),
-              appInfo = appInfo
-            ) { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) }
+              modifier = Modifier.animateItem(),
+              appInfo = appInfo,
+              shape = verticalItemShape(index, otherApps.size)
+            ) {
+              onEvent(HomeEvent.ToggleFavorite(appInfo.app))
+            }
           }
         }
         item {
           Spacer(
-            Modifier
-              .navigationBarsPadding()
-              .padding(bottom = 16.dp)
-          )
-        }
-      }
-
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(expandedHeight + topPadding - (expandedHeight - collapsedHeight) * scrollProgress)
-          .graphicsLayer { clip = true }
-      ) {
-        Box(
-          modifier = Modifier
-            .matchParentSize()
-            .graphicsLayer {
-              alpha = scrollProgress
-              scaleX = scrollProgress * 5f
-              scaleY = scrollProgress * 5f
-              rotationZ = scrollProgress * 45f
-            }
-            .background(
-              color = MaterialTheme.colorScheme.surfaceContainerHigh,
-              shape = MaterialShapes.Cookie6Sided.toShape()
-            )
-        )
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = topPadding)
-        ) {
-          Spacer(modifier = Modifier.height(topSpacerHeight * (1 - scrollProgress)))
-          Text(
-            text = "Favorites",
-            style = MaterialTheme.typography.displayMedium,
-            fontFamily = archivoBlackFamily,
-            modifier = Modifier
-              .height(titleHeight)
-              .padding(horizontal = 46.dp)
-              .wrapContentHeight(Alignment.CenterVertically)
-          )
-          Column(
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(subtitleHeight * (1 - scrollProgress))
-              .graphicsLayer {
-                alpha = 1 - scrollProgress
-                scaleY = 1 - scrollProgress
-                transformOrigin = TransformOrigin(0.5f, 0f)
-              }
-          ) {
-            Text(
-              text = "Select your favorite apps to get started.",
-              style = MaterialTheme.typography.bodyLarge,
-              fontFamily = archivoFamily,
-              modifier = Modifier.padding(horizontal = 46.dp)
-            )
-          }
-          HorizontalDivider(
-            modifier = Modifier
-              .padding(top = dividerPadding * (1 - scrollProgress))
-              .padding(horizontal = (46 * (1 - scrollProgress)).dp),
-            color = MaterialTheme.colorScheme.onBackground
+            modifier = Modifier.navigationBarsPadding()
           )
         }
       }
@@ -427,24 +259,59 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
 }
 
 @Composable
-private fun SelectableApp(modifier: Modifier = Modifier, appInfo: AppInfo, onClick: () -> Unit) {
-  val icon = if (appInfo.favorite) Icons.Default.CheckBox else Icons.Default.CheckBoxOutlineBlank
+private fun SelectableApp(
+  modifier: Modifier = Modifier,
+  appInfo: AppInfo,
+  shape: Shape = RectangleShape,
+  onClick: () -> Unit
+) {
+  val icon = if (appInfo.favorite) Icons.Filled.Star else Icons.Filled.StarBorder
 
-  Row(
-    modifier = modifier
-      .clickable(onClick = { onClick() })
-      .padding(vertical = 4.dp),
-    verticalAlignment = Alignment.CenterVertically
+  Surface(
+    modifier = modifier.padding(vertical = 1.dp),
+    color = MaterialTheme.colorScheme.surfaceContainer,
+    shape = shape
   ) {
-    Icon(
-      imageVector = icon,
-      contentDescription = null
-    )
-    Text(
-      text = appInfo.app.displayTitle ?: appInfo.app.appTitle,
-      style = MaterialTheme.typography.bodyLargeEmphasized,
-      fontFamily = archivoFamily,
-      modifier = Modifier.padding(start = 16.dp)
-    )
+    Box(
+      modifier = Modifier
+        .clickable(onClick = { onClick() })
+        .fillMaxWidth()
+        .padding(vertical = 12.dp, horizontal = 8.dp),
+    ) {
+      Text(
+        text = appInfo.app.title,
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.align(Alignment.Center)
+      )
+      Icon(
+        imageVector = icon,
+        contentDescription = null,
+        modifier = Modifier
+          .align(Alignment.CenterEnd)
+          .padding(end = 8.dp)
+      )
+    }
+  }
+}
+
+@Composable
+private fun LazyItemScope.SectionHeader(title: String) {
+  Text(
+    text = title,
+    style = MaterialTheme.typography.labelLargeEmphasized,
+    color = MaterialTheme.colorScheme.primary,
+    modifier = Modifier
+      .animateItem()
+      .padding(top = 16.dp, bottom = 8.dp)
+  )
+}
+
+private fun verticalItemShape(index: Int, count: Int): Shape {
+  val radius = 16.dp
+  return when {
+    count == 1 -> RoundedCornerShape(radius)
+    index == 0 -> RoundedCornerShape(topStart = radius, topEnd = radius)
+    index == count - 1 -> RoundedCornerShape(bottomStart = radius, bottomEnd = radius)
+    else -> RoundedCornerShape(2.dp)
   }
 }
