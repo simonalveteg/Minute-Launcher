@@ -3,6 +3,7 @@ plugins {
     alias libs.plugins.jetbrains.kotlin.compose
     alias libs.plugins.google.ksp
     alias libs.plugins.google.dagger.hilt
+    alias(libs.plugins.jetbrains.kotlin.android)
 }
 
 def propsFile = file('signing/signing.properties')
@@ -63,12 +64,15 @@ android {
         }
     }
     namespace 'com.alveteg.simon.minutelauncher'
+    kotlinOptions {
+        jvmTarget = '17'
+    }
 }
 
 dependencies {
+    implementation libs.androidx.core.ktx
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.androidx.ktx)
     implementation platform(libs.androidx.compose.bom)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.material3)
