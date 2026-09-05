@@ -45,6 +45,7 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
+            isShrinkResources = true
             resValue("string", "app_name", "Minute Launcher")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -79,6 +80,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.tooling.preview)
+    debugImplementation(libs.androidx.tooling)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material.icons.extended)

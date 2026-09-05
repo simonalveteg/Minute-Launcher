@@ -1,139 +1,163 @@
 package com.alveteg.simon.minutelauncher.home.onboarding
 
+import android.app.admin.DevicePolicyManager
+import android.app.role.RoleManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFloatingActionButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
+import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.settings.PermissionCheckers
-import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
-import com.alveteg.simon.minutelauncher.theme.archivoFamily
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.alveteg.simon.minutelauncher.home.LocalSystemPermissions
+import com.alveteg.simon.minutelauncher.home.isDefaultLauncher
+import com.alveteg.simon.minutelauncher.home.isDeviceAdmin
+import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
 
 @OptIn(
-    ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class
+  ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class,
+  ExperimentalMaterial3ExpressiveApi::class
 )
 @Composable
 fun SharedTransitionScope.PermissionsScreen(
-    animatedVisibilityScope: AnimatedVisibilityScope,
-    onFinish: () -> Unit,
-    onEvent: (HomeEvent) -> Unit
+  animatedVisibilityScope: AnimatedVisibilityScope,
+  onFinish: () -> Unit,
+  onEvent: (HomeEvent) -> Unit
 ) {
-    var isExiting by remember { mutableStateOf(false) }
-    val exitScale = remember { Animatable(1f) }
 
-    val iconAlpha by animateFloatAsState(
-        targetValue = if (isExiting) 0f else 1f,
-        animationSpec = tween(durationMillis = 100), label = "icon_alpha"
+  val context = LocalContext.current
+  val adminExplanationString = stringResource(R.string.admin_access_explanation)
+  val roleRequestLauncher = rememberLauncherForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { }
+
+  val permissions = LocalSystemPermissions.current
+
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
+      .padding(horizontal = 24.dp),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.End
+  ) {
+    Text(
+      text = "Minute Launcher",
+      style = MaterialTheme.typography.displayLargeEmphasized,
+      modifier = Modifier.padding(bottom = 36.dp)
     )
+    Surface(
+      shape = MaterialTheme.shapes.extraLarge
+    ) {
+      Column(
+        modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp),
+      ) {
+        PermissionPrompt(
+          title = stringResource(R.string.label_set_default_launcher),
+          enabled = !permissions.isDefaultLauncher,
+          onClick = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+              val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
 
-    val fabColor by animateColorAsState(
-        targetValue = if (isExiting) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primaryContainer,
-        animationSpec = tween(durationMillis = 1000),
-        label = "fab_color"
-    )
-
-    LaunchedEffect(isExiting) {
-        if (isExiting) {
-            launch {
-                delay(400)
-                onFinish()
+              if (roleManager.isRoleAvailable(RoleManager.ROLE_HOME) &&
+                !roleManager.isRoleHeld(RoleManager.ROLE_HOME)
+              ) {
+                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
+                roleRequestLauncher.launch(intent)
+              } else {
+                // Already default, or role not available - open settings as fallback
+                val intent = Intent(Settings.ACTION_HOME_SETTINGS)
+                context.startActivity(intent)
+              }
+            } else {
+              // Fallback for older Android versions
+              val intent = Intent(Settings.ACTION_HOME_SETTINGS)
+              context.startActivity(intent)
             }
-            exitScale.animateTo(
-                targetValue = 50f,
-                animationSpec = tween(durationMillis = 600)
-            )
-        }
+          }
+        )
+        PermissionPrompt(
+          title = stringResource(R.string.label_grant_usage_access),
+          description = stringResource(R.string.description_usage_access),
+          enabled = !permissions.isUsageGranted,
+          onClick = {
+            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            context.startActivity(intent)
+          },
+        )
+        PermissionPrompt(
+          title = stringResource(R.string.label_grant_admin_access),
+          description = stringResource(R.string.description_admin_access),
+          enabled = !permissions.isDeviceAdmin,
+          onClick = {
+            val componentName = ComponentName(context, MinuteDeviceAdminReceiver::class.java)
+            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+              putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
+              putExtra(
+                DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                adminExplanationString
+              )
+            }
+            context.startActivity(intent)
+          },
+        )
+      }
     }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
-        floatingActionButton = {
-            MediumFloatingActionButton(
-                onClick = { isExiting = true },
-                containerColor = fabColor,
-                shape = MaterialShapes.Cookie6Sided.toShape(),
-                modifier = Modifier
-                    .sharedElement(
-                        rememberSharedContentState(key = "fab"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    )
-                    .graphicsLayer {
-                        scaleX = exitScale.value
-                        scaleY = exitScale.value
-                    }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Done,
-                    contentDescription = null,
-                    modifier = Modifier.graphicsLayer {
-                        alpha = iconAlpha
-                    }
-                )
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 46.dp)
-                .graphicsLayer {
-                    alpha = if (isExiting) 1f - (exitScale.value - 1f) / 5f else 1f
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "Permissions",
-                    style = MaterialTheme.typography.displayMedium,
-                    fontFamily = archivoBlackFamily,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "To provide the best experience, we need a few permissions.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontFamily = archivoFamily,
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-                PermissionCheckers(
-                    showDismissButton = false,
-                    onEvent = onEvent
-                )
-            }
-        }
+    FilledTonalButton(
+      onClick = onFinish,
+      colors = ButtonDefaults.filledTonalButtonColors(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary
+      ),
+      contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+    ) {
+      Icon(
+        imageVector = Icons.AutoMirrored.Default.ArrowForward,
+        contentDescription = null,
+        modifier = Modifier.size(ButtonDefaults.IconSize)
+      )
+      Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+      Text(
+        text = "Continue",
+        style = MaterialTheme.typography.bodyMediumEmphasized
+      )
     }
+  }
 }

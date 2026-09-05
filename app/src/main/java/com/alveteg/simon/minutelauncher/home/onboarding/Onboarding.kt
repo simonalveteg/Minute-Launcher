@@ -27,7 +27,7 @@ fun Onboarding(
   SharedTransitionLayout(modifier = modifier.fillMaxSize()) {
     NavHost(
       navController = navController,
-      startDestination = "app_selection",
+      startDestination = "permissions",
       modifier = Modifier.fillMaxSize(),
       enterTransition = { fadeIn(animationSpec = tween(600)) },
       exitTransition = { fadeOut(animationSpec = tween(600)) }

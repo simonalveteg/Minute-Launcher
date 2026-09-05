@@ -7,18 +7,20 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Context.APP_OPS_SERVICE
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
 import com.alveteg.simon.minutelauncher.data.PreferenceRepository
-import com.alveteg.simon.minutelauncher.home.onboarding.Onboarding
 import com.alveteg.simon.minutelauncher.settings.SettingsActivity
 import com.alveteg.simon.minutelauncher.theme.MinuteLauncherTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -38,20 +40,66 @@ class HomeActivity : ComponentActivity() {
       val appTheme by userPreferencesRepository.appTheme.collectAsState(initial = PreferenceRepository.Defaults.APP_THEME)
       val useDynamicColor by userPreferencesRepository.useDynamicColor.collectAsState(initial = PreferenceRepository.Defaults.USE_DYNAMIC_COLOR)
 
+      val isUsageGranted by produceState(initialValue = isUsageAccessGranted(this)) {
+        val observer = LifecycleEventObserver { _, event ->
+          if (event == Lifecycle.Event.ON_RESUME) {
+            value = isUsageAccessGranted(this@HomeActivity)
+          }
+        }
+        lifecycle.addObserver(observer)
+        awaitDispose { lifecycle.removeObserver(observer) }
+      }
+
+      val isDefaultLauncher by produceState(initialValue = isDefaultLauncher(this)) {
+        val observer = LifecycleEventObserver { _, event ->
+          if (event == Lifecycle.Event.ON_RESUME) {
+            value = isDefaultLauncher(this@HomeActivity)
+          }
+        }
+        lifecycle.addObserver(observer)
+        awaitDispose { lifecycle.removeObserver(observer) }
+      }
+
+      val isDeviceAdmin by produceState(initialValue = isDeviceAdmin(this)) {
+        val observer = LifecycleEventObserver { _, event ->
+          if (event == Lifecycle.Event.ON_RESUME) {
+            value = isDeviceAdmin(this@HomeActivity)
+          }
+        }
+        lifecycle.addObserver(observer)
+        awaitDispose { lifecycle.removeObserver(observer) }
+      }
+
+      val systemPermissions = SystemPermissions(
+        isUsageGranted = isUsageGranted,
+        isDefaultLauncher = isDefaultLauncher,
+        isDeviceAdmin = isDeviceAdmin
+      )
+
       MinuteLauncherTheme(
         themePreference = appTheme,
         dynamicColor = useDynamicColor
       ) {
-        HomeScreen(onNavigate = {
-          val intent = Intent(this, SettingsActivity::class.java)
-          intent.putExtra("screen", it.route)
-          intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-          startActivity(intent)
-        })
+        CompositionLocalProvider(LocalSystemPermissions provides systemPermissions) {
+          HomeScreen(onNavigate = {
+            val intent = Intent(this, SettingsActivity::class.java)
+            intent.putExtra("screen", it.route)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+          })
+        }
       }
     }
   }
 }
+
+data class SystemPermissions(
+  val isUsageGranted: Boolean = false,
+  val isDefaultLauncher: Boolean = false,
+  val isDeviceAdmin: Boolean = false
+)
+
+val LocalSystemPermissions = staticCompositionLocalOf { SystemPermissions() }
 
 fun isUsageAccessGranted(context: Context): Boolean {
   val appOps = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
