@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -196,7 +197,21 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
   Layout(
     contents = listOf(
       {
-        Column(modifier = Modifier.statusBarsPadding()) {
+        Column(
+          modifier = Modifier
+            .statusBarsPadding()
+            .graphicsLayer {
+              val progress =
+                if (headerHeightPx > 0f) (collapsedPx / headerHeightPx).coerceIn(0f, 1f) else 0f
+
+              val scale = 1f - (progress * 0.1f)
+
+              alpha = 1f - progress
+
+              translationY = -collapsedPx * 0.4f
+              scaleY = scale
+              scaleX = scale
+            }) {
           Text(
             text = "Favorites",
             style = MaterialTheme.typography.displayLargeEmphasized,
