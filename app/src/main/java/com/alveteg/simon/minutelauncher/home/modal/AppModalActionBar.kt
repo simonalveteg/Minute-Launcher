@@ -16,13 +16,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import com.alveteg.simon.minutelauncher.Event
-import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
 import com.alveteg.simon.minutelauncher.home.AnimatedFavoriteIcon
-import com.alveteg.simon.minutelauncher.home.dashboard.launchDigitalWellbeing
+import com.alveteg.simon.minutelauncher.home.HomeEvent
 
 
 @Composable
@@ -75,7 +74,6 @@ fun AppModalActionBar(
       }
     ),
     ActionBarAction(
-      imageVector = favoriteIcon,
       description = stringResource(favoriteText),
       action = { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) },
       icon = { AnimatedFavoriteIcon(favorite = appInfo.favorite) }

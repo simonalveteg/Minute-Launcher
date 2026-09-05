@@ -1,0 +1,106 @@
+import java.util.Properties
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.compose)
+    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.google.dagger.hilt)
+}
+
+val propsFile = file("signing/signing.properties")
+val keyFile = file("signing/minute_keystore.jks")
+val props = Properties()
+if (propsFile.exists()) {
+    props.load(propsFile.inputStream())
+}
+
+android {
+    namespace = "com.alveteg.simon.minutelauncher"
+    compileSdk = 37
+
+    signingConfigs {
+        create("release") {
+            storeFile = keyFile
+            storePassword = props.getProperty("storePassword")
+            keyAlias = props.getProperty("keyAlias")
+            keyPassword = props.getProperty("keyPassword")
+        }
+    }
+
+    defaultConfig {
+        applicationId = "com.alveteg.simon.minutelauncher"
+        minSdk = 29
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            resValue("string", "app_name", "Minute Launcher")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
+            applicationIdSuffix = ".debug"
+            resValue("string", "app_name", "Minute Debug")
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+}
+
+dependencies {
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.tooling.preview)
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.androidx.navigation.compose)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+    // Third party
+    implementation(libs.timber)
+    implementation(libs.reorderable)
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+}
