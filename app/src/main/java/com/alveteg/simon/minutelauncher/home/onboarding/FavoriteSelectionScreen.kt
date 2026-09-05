@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.graphicsLayer
@@ -214,14 +215,20 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
             }) {
           Text(
             text = "Favorites",
-            style = MaterialTheme.typography.displayLargeEmphasized,
+            style = MaterialTheme.typography.displayLargeEmphasized.copy(shadow = Shadow(
+              color = MaterialTheme.colorScheme.surface,
+              blurRadius = 14f
+            )),
             modifier = Modifier
               .padding(bottom = 4.dp)
               .padding(horizontal = 24.dp)
           )
           Text(
             text = "Select your most important apps to get started.",
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(shadow = Shadow(
+              color = MaterialTheme.colorScheme.surface,
+              blurRadius = 4f
+            )),
             modifier = Modifier
               .padding(bottom = 20.dp)
               .padding(horizontal = 24.dp)

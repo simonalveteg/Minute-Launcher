@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -81,15 +82,21 @@ fun SharedTransitionScope.PermissionsScreen(
   ) {
     Text(
       text = "Minute Launcher",
-      style = MaterialTheme.typography.displayLargeEmphasized,
+      style = MaterialTheme.typography.displayLargeEmphasized.copy(shadow = Shadow(
+        color = MaterialTheme.colorScheme.surface,
+        blurRadius = 14f
+      )),
       modifier = Modifier
-        .padding(bottom = 4.dp)
+        .padding(bottom = 4.dp, start = 8.dp)
     )
     Text(
       text = "Take back your time.",
-      style = MaterialTheme.typography.bodyMedium,
+      style = MaterialTheme.typography.bodyMedium.copy(shadow = Shadow(
+        color = MaterialTheme.colorScheme.surface,
+        blurRadius = 4f
+      )),
       modifier = Modifier
-        .padding(bottom = 20.dp)
+        .padding(bottom = 20.dp, start = 8.dp)
     )
     Surface(
       shape = MaterialTheme.shapes.extraLarge
