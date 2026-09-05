@@ -20,6 +20,9 @@ data class App(
   val category: AppCategory = AppCategory.UNDEFINED,
   val displayTitle: String? = null
 ) {
+  val title: String
+    get() = displayTitle ?: appTitle
+
   companion object {
     val EMPTY = App("", "")
   }

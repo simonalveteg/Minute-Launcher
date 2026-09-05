@@ -1,6 +1,5 @@
 package com.alveteg.simon.minutelauncher.home
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -91,10 +90,6 @@ fun HomeScreen(
   }
   var showGestureModal by remember { mutableStateOf(Gesture.NONE) }
 
-  LaunchedEffect(altBackgroundAlpha) {
-    Timber.d("Background transparency: $backgroundTransparency")
-    Timber.d("Alternative background transparency: $altBackgroundAlpha")
-  }
 
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {
@@ -124,7 +119,7 @@ fun HomeScreen(
 
         is UiEvent.TriggerGesture -> {
           if (event.appInfo != null) {
-            viewModel.onEvent(HomeEvent.OpenApplication(event.appInfo))
+            viewModel.onEvent(HomeEvent.ShowModal(event.appInfo))
           } else {
             showGestureModal = event.gesture
             Timber.d("Gesture triggered: $showGestureModal")
@@ -132,6 +127,7 @@ fun HomeScreen(
         }
 
         is UiEvent.ShowDashboard -> screenState = ScreenState.DASHBOARD
+        is UiEvent.ShowFavorites -> screenState = ScreenState.FAVORITES
         is UiEvent.Navigate -> onNavigate(event)
       }
     }
@@ -158,10 +154,10 @@ fun HomeScreen(
         gesture = showGestureModal,
         iconResource = showGestureModal.getIcon(),
         onEvent = viewModel::onEvent,
-        modifier = Modifier
-          .padding(horizontal = 16.dp)
-          .padding(top = 24.dp, bottom = 46.dp)
-      )
+        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 24.dp, bottom = 46.dp)
+      ) {
+        showGestureModal = Gesture.NONE
+      }
     }
   }
 
@@ -227,7 +223,7 @@ fun HomeScreen(
 
 fun setExpandNotificationDrawer(context: Context, expand: Boolean) {
   try {
-    val statusBarService = context.getSystemService("statusbar")
+    val statusBarService = context.getSystemService(Context.STATUS_BAR_SERVICE)
     val methodName = if (expand) "expandNotificationsPanel" else "collapsePanels"
     val statusBarManager = Class.forName("android.app.StatusBarManager")
     val method: Method = statusBarManager.getMethod(methodName)

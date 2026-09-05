@@ -23,13 +23,13 @@ class PreferenceRepository @Inject constructor(
   object Defaults {
     val APP_THEME = AppTheme.DARK
     const val USE_DYNAMIC_COLOR = true
-    const val TRANSPARENCY_AMOUNT = 0.8f
+    const val TRANSPARENCY_AMOUNT = 0.6f
     const val MINDFUL_DELAY_LENGTH = 5
     const val SHOW_DEFAULT_HOME_PROMPT = true
     const val SHOW_ADMIN_ACCESS_PROMPT = true
     const val SHOW_USAGE_ACCESS_PROMPT = true
     const val SKIP_APP_MODAL = false
-    const val SHOW_ONBOARDING = true
+    const val SHOW_ONBOARDING = false
 
     // Bounds for validation
     const val MIN_TRANSPARENCY = 0f

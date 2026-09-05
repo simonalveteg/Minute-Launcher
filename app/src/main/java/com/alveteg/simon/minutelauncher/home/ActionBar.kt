@@ -82,11 +82,8 @@ fun ActionBar(
             verticalAlignment = Alignment.CenterVertically
           ) {
             priorityActions.forEach {
-              IconButton(
-                onClick = it.action,
-                enabled = it.enabled
-              ) {
-                Icon(imageVector = it.imageVector, contentDescription = it.description)
+              IconButton(onClick = it.action, enabled = it.enabled) {
+                it.icon()
               }
             }
             IconButton(onClick = { actionBarState = actionBarState.toggle() }) {
@@ -103,7 +100,7 @@ fun ActionBar(
                 contentColor = LocalContentColor.current
               )
             ) {
-              Icon(imageVector = it.imageVector, contentDescription = it.description)
+              it.icon()
               Text(
                 text = it.description,
                 fontFamily = archivoFamily,
@@ -128,11 +125,20 @@ fun ActionBar(
 }
 
 data class ActionBarAction(
-  val imageVector: ImageVector,
   val description: String,
   val action: () -> Unit,
-  val enabled: Boolean = true
+  val enabled: Boolean = true,
+  val icon: @Composable () -> Unit
 )
+
+fun ActionBarAction(
+  imageVector: ImageVector,
+  description: String,
+  action: () -> Unit,
+  enabled: Boolean = true
+) = ActionBarAction(description, action, enabled) {
+  Icon(imageVector = imageVector, contentDescription = description)
+}
 
 private enum class ActionBarState {
   COLLAPSED, EXPANDED;

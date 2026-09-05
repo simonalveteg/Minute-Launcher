@@ -8,6 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.alveteg.simon.minutelauncher.utilities.Gesture
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -19,13 +22,17 @@ fun Modifier.verticalGestureHandler(
   onEvent: (HomeEvent) -> Unit
 ): Modifier {
   val coroutineScope = rememberCoroutineScope()
+  val hapticFeedback = LocalHapticFeedback.current
 
   return this.pointerInput(Unit) {
     var gesture = Gesture.NONE
+    var thresholdTriggered = false
+    val threshold = 50f
 
     val onDragEnd = {
+      thresholdTriggered = false
       coroutineScope.launch {
-        offsetY.animateTo(0f, spring(0.44f, 300f))
+        offsetY.animateTo(0f, spring(0.55f, 800f))
       }
     }
 
@@ -37,7 +44,6 @@ fun Modifier.verticalGestureHandler(
       },
     ) { _, dragAmount ->
       val originalY = offsetY.value
-      val threshold = 100f
       val weight = (abs(originalY) - threshold) / threshold
       val easingFactor = (1 - weight * 0.85f) * 0.10f
       val easedDragAmount = dragAmount * easingFactor
@@ -45,9 +51,24 @@ fun Modifier.verticalGestureHandler(
       coroutineScope.launch {
         offsetY.snapTo(originalY + easedDragAmount)
       }
-      gesture = if (easingFactor < 0.14) {
-        if (offsetY.value > 0) Gesture.DOWN else Gesture.UP
-      } else Gesture.NONE
+
+      val isPastThreshold = abs(offsetY.value) > threshold
+      if (isPastThreshold && !thresholdTriggered) {
+        thresholdTriggered = true
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+      } else if (!isPastThreshold && thresholdTriggered) {
+        thresholdTriggered = false
+      }
+
+      val draggingDown = dragAmount > 0
+      val offsetIsDown = offsetY.value > 0
+
+      gesture = when {
+        easingFactor >= 0.14 -> Gesture.NONE
+        draggingDown && offsetIsDown -> Gesture.DOWN
+        !draggingDown && !offsetIsDown && thresholdTriggered -> Gesture.UP
+        else -> Gesture.NONE
+      }
 
       onActiveGestureChange(gesture)
     }

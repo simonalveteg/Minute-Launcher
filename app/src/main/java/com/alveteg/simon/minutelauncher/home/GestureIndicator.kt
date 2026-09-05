@@ -30,6 +30,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.BuildConfig
@@ -45,8 +46,7 @@ fun BoxScope.GestureIndicator(
   modifier: Modifier = Modifier
 ) {
   val density = LocalDensity.current
-  val configuration = LocalConfiguration.current
-  val screenHeightDp = configuration.screenHeightDp.dp
+  val screenHeightDp = LocalWindowInfo.current.containerDpSize.height
   val verticalPadding = screenHeightDp.div(12)
   val defaultWidth = 30.dp
 
@@ -70,13 +70,13 @@ fun BoxScope.GestureIndicator(
   val animatedProgress = (baseWidth / 24.dp).coerceIn(0f, 1f)
 
   val indicatorColor by animateColorAsState(
-    targetValue = if (isTriggered) MaterialTheme.colorScheme.primary.copy(alpha = 1f)
-    else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 1f),
+    targetValue = if (isTriggered) MaterialTheme.colorScheme.surfaceContainerHighest
+    else MaterialTheme.colorScheme.surfaceContainerLow,
     label = "IndicatorColor"
   )
   val contentColor by animateColorAsState(
     targetValue = if (isTriggered) {
-      MaterialTheme.colorScheme.onPrimary
+      MaterialTheme.colorScheme.primary
     } else {
       Color.Transparent
     },

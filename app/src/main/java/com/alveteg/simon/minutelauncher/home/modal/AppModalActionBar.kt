@@ -21,6 +21,8 @@ import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.ActionBar
 import com.alveteg.simon.minutelauncher.home.ActionBarAction
+import com.alveteg.simon.minutelauncher.home.AnimatedFavoriteIcon
+import com.alveteg.simon.minutelauncher.home.dashboard.launchDigitalWellbeing
 
 
 @Composable
@@ -35,6 +37,7 @@ fun AppModalActionBar(
 
   val favoriteIcon = if (appInfo.favorite) Icons.Filled.Star else Icons.Filled.StarBorder
   val favoriteText = if (appInfo.favorite) R.string.description_remove_favorite else R.string.description_add_favorite
+  val wellbeingNotFound = stringResource(R.string.error_digital_wellbeing_not_found)
 
   val actions = listOf(
     ActionBarAction(
@@ -67,7 +70,7 @@ fun AppModalActionBar(
         try {
           mContext.startActivity(intent, null)
         } catch (e: Exception) {
-          onEvent(HomeEvent.ShowToast(mContext.getString(R.string.error_digital_wellbeing_not_found)))
+          onEvent(HomeEvent.ShowToast(wellbeingNotFound))
         }
       }
     ),
@@ -75,6 +78,7 @@ fun AppModalActionBar(
       imageVector = favoriteIcon,
       description = stringResource(favoriteText),
       action = { onEvent(HomeEvent.ToggleFavorite(appInfo.app)) },
+      icon = { AnimatedFavoriteIcon(favorite = appInfo.favorite) }
     ),
     ActionBarAction(
       imageVector = Icons.Outlined.Info,

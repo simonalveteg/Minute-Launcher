@@ -1,11 +1,9 @@
 package com.alveteg.simon.minutelauncher.home.modal
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,7 +56,7 @@ fun MinuteBottomSheet(
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(horizontal = 24.dp)
+        .padding(horizontal = 16.dp)
         .padding(top = 12.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {

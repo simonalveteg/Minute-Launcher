@@ -24,10 +24,11 @@ import com.alveteg.simon.minutelauncher.utilities.Gesture
 @Composable
 fun GestureInput(
   gesture: Gesture,
+  modifier: Modifier = Modifier,
   app: App? = null,
   iconResource: Int,
-  modifier: Modifier = Modifier,
-  onEvent: (SettingsEvent) -> Unit
+  onEvent: (SettingsEvent) -> Unit,
+  onDismiss: () -> Unit = {},
 ) {
   val appTitle = app?.appTitle ?: "No app selected"
   Row(
@@ -43,6 +44,7 @@ fun GestureInput(
     OutlinedButton(
       onClick = {
         onEvent(SettingsEvent.OpenGestureList(gesture))
+        onDismiss()
       },
       modifier = Modifier.weight(1f),
       shape = MaterialTheme.shapes.medium

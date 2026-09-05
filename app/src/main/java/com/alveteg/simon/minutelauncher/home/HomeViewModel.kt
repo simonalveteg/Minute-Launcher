@@ -242,6 +242,10 @@ class HomeViewModel @Inject constructor(
         sendUiEvent(UiEvent.VibrateLongPress)
       }
 
+      is HomeEvent.ShowModal -> {
+        sendUiEvent(UiEvent.ShowModal(event.appInfo))
+      }
+
       is HomeEvent.LaunchActivity -> {
         val appInfo = event.appInfo
         Timber.d("Launch Activity ${appInfo.app.appTitle}")
@@ -251,7 +255,7 @@ class HomeViewModel @Inject constructor(
             UiEvent.ShowToast(
               context.getString(
                 R.string.toast_app_usage,
-                appInfo.app.appTitle,
+                appInfo.app.title,
                 appInfo.usage.firstOrNull()?.usageDuration.toTimeUsed(context, false)
               )
             )
@@ -289,11 +293,13 @@ class HomeViewModel @Inject constructor(
           }
 
           else -> {
+            if (gesture == Gesture.NONE) return
             viewModelScope.launch(Dispatchers.IO) {
               val appInfo = roomRepository.getAppInfoForGesture(gesture)?.let {
                 getAppInfoForApp(it.app)
               }
               sendUiEvent(UiEvent.TriggerGesture(gesture, appInfo))
+              sendUiEvent(UiEvent.VibrateLongPress)
             }
           }
         }
@@ -360,6 +366,7 @@ class HomeViewModel @Inject constructor(
           preferenceRepository.updateShowOnboarding(false)
         }
       }
+      is HomeEvent.DismissDashboard -> sendUiEvent(UiEvent.ShowFavorites)
 
       is HomeEvent.ShowToast -> sendUiEvent(UiEvent.ShowToast(event.text))
 

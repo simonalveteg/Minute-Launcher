@@ -7,9 +7,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Context.APP_OPS_SERVICE
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
@@ -31,6 +33,7 @@ class HomeActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    window.isNavigationBarContrastEnforced = false
     setContent {
       val appTheme by userPreferencesRepository.appTheme.collectAsState(initial = PreferenceRepository.Defaults.APP_THEME)
       val useDynamicColor by userPreferencesRepository.useDynamicColor.collectAsState(initial = PreferenceRepository.Defaults.USE_DYNAMIC_COLOR)

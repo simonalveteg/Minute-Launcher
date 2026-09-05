@@ -53,7 +53,6 @@ import com.alveteg.simon.minutelauncher.settings.components.ToggleInput
 import com.alveteg.simon.minutelauncher.settings.components.settingsSection
 import com.alveteg.simon.minutelauncher.theme.AppTheme
 import com.alveteg.simon.minutelauncher.utilities.Gesture
-import kotlinx.coroutines.flow.map
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,8 +67,10 @@ fun SettingsScreen(
   val skipAppModal by viewModel.skipAppModal.collectAsStateWithLifecycle()
   val mindfulDelayLength by viewModel.mindfulDelayLength.collectAsStateWithLifecycle()
   val gestureApps by viewModel.gestureApps.collectAsState(initial = emptyMap())
-  val appsWithMindfulDelay by viewModel.appsWithMindfulDelay.map { it.sortedBy { it.app.appTitle.lowercase() } }
-    .collectAsState(initial = emptyList())
+  val appsWithMindfulDelay by viewModel.appsWithMindfulDelay.collectAsState(initial = emptyList())
+  val appsWithMindfulDelaySorted = remember {
+    appsWithMindfulDelay.sortedBy { it.app.title.lowercase() }
+  }
 
   var _transparencyAmount by remember(transparencyAmount) { mutableFloatStateOf(transparencyAmount) }
   val transparencyAmountLabel by remember(_transparencyAmount) {
@@ -169,7 +170,7 @@ fun SettingsScreen(
         }
 
         item {
-          if (appsWithMindfulDelay.isNotEmpty()) {
+          if (appsWithMindfulDelaySorted.isNotEmpty()) {
             GenericColumnInput(
               label = stringResource(R.string.label_apps_with_custom_delays),
               description = stringResource(R.string.description_apps_with_custom_delays),
@@ -178,12 +179,12 @@ fun SettingsScreen(
           }
         }
         items(
-          items = appsWithMindfulDelay,
+          items = appsWithMindfulDelaySorted,
           key = { it.app.packageName }
         ) { item ->
-          val index = appsWithMindfulDelay.indexOf(item)
+          val index = appsWithMindfulDelaySorted.indexOf(item)
           val isFirst = index == 0
-          val isLast = index == appsWithMindfulDelay.lastIndex
+          val isLast = index == appsWithMindfulDelaySorted.lastIndex
 
           val shape = when {
             isFirst && isLast -> MaterialTheme.shapes.medium

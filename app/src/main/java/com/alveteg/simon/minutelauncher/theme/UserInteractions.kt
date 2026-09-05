@@ -24,6 +24,7 @@ private class ScaleIndicationNode(
 
   var pressedAnimation: Job? = null
   var restingAnimation: Job? = null
+  private val pivotDampFactor = 0.5f
 
   private suspend fun animateToPressed(pressPosition: Offset) {
     restingAnimation?.cancel()
@@ -31,7 +32,7 @@ private class ScaleIndicationNode(
     pressedAnimation = coroutineScope.launch {
       currentPressPosition = pressPosition
       animatedScalePercent.snapTo(1f)
-      animatedScalePercent.animateTo(0.9f, spring())
+      animatedScalePercent.animateTo(0.95f, spring())
     }
   }
 
@@ -39,7 +40,7 @@ private class ScaleIndicationNode(
     restingAnimation = coroutineScope.launch {
       // Wait for the existing press animation to finish if it is still ongoing
       pressedAnimation?.join()
-      animatedScalePercent.animateTo(1f, tween(250))
+      animatedScalePercent.animateTo(1f, tween(300))
     }
   }
 
@@ -56,9 +57,12 @@ private class ScaleIndicationNode(
   }
 
   override fun ContentDrawScope.draw() {
+    val center = Offset(size.width / 2f, size.height / 2f)
+    val dampedPivot = center + (currentPressPosition - center) * pivotDampFactor
+
     scale(
       scale = animatedScalePercent.value,
-      pivot = currentPressPosition
+      pivot = dampedPivot
     ) {
       this@draw.drawContent()
     }
