@@ -72,8 +72,7 @@ fun HomeScreen(
   }
   val favorites by viewModel.favoriteApps.collectAsState()
 
-//  val showOnboarding by viewModel.showOnboarding.collectAsState(initial = false)
-  val showOnboarding = true
+  val showOnboarding by viewModel.showOnboarding.collectAsStateWithLifecycle()
   val showDefaultHomePrompt by viewModel.showDefaultHomePrompt.collectAsStateWithLifecycle()
   val showAdminAccessPrompt by viewModel.showAdminAccessPrompt.collectAsStateWithLifecycle()
   val showUsageAccessPrompt by viewModel.showUsageAccessPrompt.collectAsStateWithLifecycle()

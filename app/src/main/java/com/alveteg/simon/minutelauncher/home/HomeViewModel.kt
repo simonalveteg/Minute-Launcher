@@ -95,7 +95,7 @@ class HomeViewModel @Inject constructor(
     .stateIn(
       viewModelScope,
       SharingStarted.WhileSubscribed(5000),
-      PreferenceRepository.Defaults.SHOW_ONBOARDING
+      false
     )
 
   private val _searchTerm = MutableStateFlow("")

@@ -29,7 +29,7 @@ class PreferenceRepository @Inject constructor(
     const val SHOW_ADMIN_ACCESS_PROMPT = true
     const val SHOW_USAGE_ACCESS_PROMPT = true
     const val SKIP_APP_MODAL = false
-    const val SHOW_ONBOARDING = false
+    const val SHOW_ONBOARDING = true
 
     // Bounds for validation
     const val MIN_TRANSPARENCY = 0f
