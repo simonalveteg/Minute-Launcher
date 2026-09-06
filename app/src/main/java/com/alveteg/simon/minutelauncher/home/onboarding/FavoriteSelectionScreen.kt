@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -23,29 +22,41 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeFloatingActionButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toPath
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -53,13 +64,20 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.transform
+import androidx.graphics.shapes.Morph
+import androidx.graphics.shapes.RoundedPolygon
+import androidx.graphics.shapes.toPath
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppCategory
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.roundToInt
 
 @OptIn(
@@ -195,6 +213,33 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
     }
   }
 
+  val morphShapes = remember {
+    listOf(
+      MaterialShapes.Circle,
+      MaterialShapes.Clover4Leaf,
+      MaterialShapes.Pill,
+      MaterialShapes.Pentagon,
+      MaterialShapes.Puffy,
+      MaterialShapes.Flower,
+      MaterialShapes.Cookie6Sided,
+      MaterialShapes.VerySunny,
+    )
+  }
+  val morphProgress = remember { Animatable(0f) }
+  var prevShape by remember { mutableStateOf(morphShapes[0]) }
+  var nextShape by remember { mutableStateOf(morphShapes[0]) }
+
+  LaunchedEffect(favoriteApps.size) {
+    prevShape = nextShape
+    nextShape = (morphShapes - prevShape).random()
+    Timber.d("Prev: ${morphShapes.indexOf(prevShape)} Next: ${morphShapes.indexOf(nextShape)}")
+    morphProgress.snapTo(0f)
+    morphProgress.animateTo(
+      targetValue = 1f,
+      animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+    )
+  }
+
   Layout(
     contents = listOf(
       {
@@ -215,20 +260,24 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
             }) {
           Text(
             text = "Favorites",
-            style = MaterialTheme.typography.displayLargeEmphasized.copy(shadow = Shadow(
-              color = MaterialTheme.colorScheme.surface,
-              blurRadius = 14f
-            )),
+            style = MaterialTheme.typography.displayLargeEmphasized.copy(
+              shadow = Shadow(
+                color = MaterialTheme.colorScheme.surface,
+                blurRadius = 14f
+              )
+            ),
             modifier = Modifier
               .padding(bottom = 4.dp)
               .padding(horizontal = 24.dp)
           )
           Text(
             text = "Select your most important apps to get started.",
-            style = MaterialTheme.typography.bodyMedium.copy(shadow = Shadow(
-              color = MaterialTheme.colorScheme.surface,
-              blurRadius = 4f
-            )),
+            style = MaterialTheme.typography.bodyMedium.copy(
+              shadow = Shadow(
+                color = MaterialTheme.colorScheme.surface,
+                blurRadius = 4f
+              )
+            ),
             modifier = Modifier
               .padding(bottom = 20.dp)
               .padding(horizontal = 24.dp)
@@ -317,10 +366,18 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
             }
           }
         }
+      },
+      {
+        MorphingFab(
+          onClick = onNext,
+          prevShape = prevShape,
+          nextShape = nextShape,
+          morphProgress = morphProgress
+        )
       }
     ),
     modifier = Modifier.fillMaxSize()
-  ) { (headerMeasurables, surfaceMeasurables), constraints ->
+  ) { (headerMeasurables, surfaceMeasurables, fabMeasurables), constraints ->
     val headerPlaceable = headerMeasurables.first().measure(
       constraints.copy(minWidth = 0, minHeight = 0)
     )
@@ -330,10 +387,17 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
       Constraints(maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight)
     )
 
+    val fabPlaceable = fabMeasurables.first().measure(
+      Constraints(maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight)
+    )
+
     layout(constraints.maxWidth, constraints.maxHeight) {
       headerPlaceable.placeRelative(0, 0)
       val surfaceY = (headerPlaceable.height - collapsedPx).roundToInt().coerceAtLeast(0)
       surfacePlaceable.placeRelative(0, surfaceY)
+      val fabX = (constraints.maxWidth - fabPlaceable.width).coerceAtLeast(0)
+      val fabY = (constraints.maxHeight - fabPlaceable.height).coerceAtLeast(0)
+      fabPlaceable.placeRelative(fabX, fabY)
     }
   }
 }
@@ -393,5 +457,71 @@ private fun verticalItemShape(index: Int, count: Int): Shape {
     index == 0 -> RoundedCornerShape(topStart = radius, topEnd = radius)
     index == count - 1 -> RoundedCornerShape(bottomStart = radius, bottomEnd = radius)
     else -> RoundedCornerShape(2.dp)
+  }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun MorphingFab(
+  prevShape: RoundedPolygon,
+  nextShape: RoundedPolygon,
+  morphProgress: Animatable<Float, *>,
+  onClick: () -> Unit
+) {
+  val morph = remember(prevShape, nextShape) { Morph(prevShape, nextShape) }
+
+  val rotation = remember { Animatable(0f) }
+  val scope = rememberCoroutineScope()
+
+  val fabShape = remember(morph) {
+
+    scope.launch {
+      rotation.animateTo(rotation.value + 90f)
+    }
+
+    object : Shape {
+      private val path = Path()
+      private val matrix = Matrix()
+
+      override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+      ): Outline {
+        morph.toPath(progress = morphProgress.value, path = path)
+
+        val bounds = path.getBounds()
+        val boundsWidth = bounds.width.takeIf { it > 0f } ?: 1f
+        val boundsHeight = bounds.height.takeIf { it > 0f } ?: 1f
+
+        matrix.reset()
+        matrix.scale(size.width / boundsWidth, size.height / boundsHeight)
+        matrix.translate(-bounds.left, -bounds.top)
+        path.transform(matrix)
+
+        return Outline.Generic(path)
+      }
+    }
+  }
+
+  LargeFloatingActionButton(
+    onClick = onClick,
+    containerColor = MaterialTheme.colorScheme.primary,
+    contentColor = MaterialTheme.colorScheme.onPrimary,
+    modifier = Modifier
+      .navigationBarsPadding()
+      .padding(16.dp)
+      .graphicsLayer {
+        this.rotationZ = rotation.value
+        this.shape = fabShape
+        this.clip = true
+      }
+  ) {
+    Icon(
+      imageVector = Icons.Default.Done, contentDescription = "Done",
+      modifier = Modifier.graphicsLayer {
+        this.rotationZ = -rotation.value
+      }
+    )
   }
 }
