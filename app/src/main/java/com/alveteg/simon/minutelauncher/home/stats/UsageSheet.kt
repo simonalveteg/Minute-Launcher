@@ -22,17 +22,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alveteg.simon.minutelauncher.R
-import com.alveteg.simon.minutelauncher.data.App
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
-import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
+import com.alveteg.simon.minutelauncher.home.LocalSystemPermissions
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
@@ -97,7 +95,7 @@ fun UsageSheet(
           selectedDate = it
         }
       )
-      if (isUsageAccessGranted(LocalContext.current)) {
+      if (LocalSystemPermissions.current.isUsageGranted) {
         Column(
           modifier = Modifier
             .fillMaxWidth()

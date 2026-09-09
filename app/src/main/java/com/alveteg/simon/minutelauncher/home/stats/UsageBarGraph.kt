@@ -1,11 +1,16 @@
 package com.alveteg.simon.minutelauncher.home.stats
 
+import android.content.Intent
 import android.graphics.Typeface
+import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -26,7 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxOfOrNull
@@ -34,7 +39,7 @@ import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.data.UsageStatistics
 import com.alveteg.simon.minutelauncher.data.sumOf
 import com.alveteg.simon.minutelauncher.data.toTimeUsed
-import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
+import com.alveteg.simon.minutelauncher.home.LocalSystemPermissions
 import com.alveteg.simon.minutelauncher.theme.archivoBlackFamily
 import com.alveteg.simon.minutelauncher.theme.archivoFamily
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -83,9 +88,9 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun UsageBarGraph(
   usageStatistics: List<UsageStatistics>,
+  modifier: Modifier = Modifier,
   selectedDate: LocalDate? = null,
   onDateSelectionChange: (LocalDate?) -> Unit = {},
-  modifier: Modifier = Modifier,
 ) {
   val modelProducer = remember { CartesianChartModelProducer() }
   val maxDuration = remember(usageStatistics) {
@@ -158,7 +163,10 @@ fun UsageBarGraph(
             modifier = Modifier.alignByBaseline()
           )
           Text(
-            text = stringResource(R.string.label_daily_average, dailyAverage.toTimeUsed(expanded = true)),
+            text = stringResource(
+              R.string.label_daily_average,
+              dailyAverage.toTimeUsed(expanded = true)
+            ),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = archivoFamily,
@@ -230,7 +238,8 @@ fun UsageBarGraph(
               override fun onUpdated(
                 marker: CartesianMarker,
                 targets: List<CartesianMarker.Target>
-              ) {}
+              ) {
+              }
 
               override fun onHidden(marker: CartesianMarker) {
                 updateSelection(null)
@@ -247,18 +256,44 @@ fun UsageBarGraph(
         )
       }
     } else {
-      val usageAccess = isUsageAccessGranted(context)
-      Text(
-        text = if (usageAccess) stringResource(R.string.label_no_usage_found) else stringResource(R.string.label_usage_access_not_granted),
-        modifier = Modifier
-          .fillMaxWidth()
-          .wrapContentHeight()
-          .padding(bottom = 8.dp),
-        textAlign = TextAlign.Center,
-      )
+      val usageAccess = LocalSystemPermissions.current.isUsageGranted
+      Box {
+        if (usageAccess) {
+          Text(
+            text = stringResource(R.string.label_no_usage_found),
+            modifier = Modifier
+              .fillMaxWidth()
+              .wrapContentHeight()
+              .padding(bottom = 8.dp)
+              .align(Alignment.Center)
+          )
+        } else {
+          Column(
+            modifier = Modifier
+              .clickable(true) {
+                val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                context.startActivity(intent)
+              }
+              .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+          ) {
+            Text(
+              text = stringResource(R.string.label_grant_usage_access),
+              style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+              text = stringResource(R.string.description_usage_access),
+              style = MaterialTheme.typography.labelSmall,
+              modifier = Modifier.padding(top = 1.dp, bottom = 16.dp)
+            )
+          }
+        }
+      }
     }
   }
 }
+
 @Composable
 private fun rememberSelectionColumnProvider(
   selectedDate: LocalDate?,
@@ -314,6 +349,6 @@ private fun lerpArgb(from: Int, to: Int, fraction: Float): Int {
     ((f + (t - f) * fraction).roundToInt()).coerceIn(0, 255)
   return (channel((from ushr 24) and 0xFF, (to ushr 24) and 0xFF) shl 24) or
       (channel((from ushr 16) and 0xFF, (to ushr 16) and 0xFF) shl 16) or
-      (channel((from ushr 8)  and 0xFF, (to ushr 8)  and 0xFF) shl 8)  or
-      channel( from          and 0xFF,  to           and 0xFF)
+      (channel((from ushr 8) and 0xFF, (to ushr 8) and 0xFF) shl 8) or
+      channel(from and 0xFF, to and 0xFF)
 }

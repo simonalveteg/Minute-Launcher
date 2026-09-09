@@ -13,30 +13,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
 import com.alveteg.simon.minutelauncher.MinuteDeviceAdminReceiver
 import com.alveteg.simon.minutelauncher.R
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.home.isDefaultLauncher
-import com.alveteg.simon.minutelauncher.home.isDeviceAdmin
-import com.alveteg.simon.minutelauncher.home.isUsageAccessGranted
+import com.alveteg.simon.minutelauncher.home.LocalSystemPermissions
 import com.alveteg.simon.minutelauncher.settings.components.ButtonInput
 
 @Composable
@@ -51,21 +40,13 @@ fun PermissionCheckers(
 ) {
 
   val context = LocalContext.current
-  val lifecycleOwner = LocalLifecycleOwner.current
+  val permissions = LocalSystemPermissions.current
   val roleRequestLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.StartActivityForResult()
   ) { }
-  var isAdminActive by remember { mutableStateOf(isDeviceAdmin(context)) }
-  var hasUsageAccess by remember { mutableStateOf(isUsageAccessGranted(context)) }
-  var isDefaultLauncher by remember { mutableStateOf(isDefaultLauncher(context)) }
-
-  LaunchedEffect(lifecycleOwner.lifecycle) {
-    lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-      isDefaultLauncher = isDefaultLauncher(context)
-      isAdminActive = isDeviceAdmin(context)
-      hasUsageAccess = isUsageAccessGranted(context)
-    }
-  }
+  val isAdminActive = permissions.isDeviceAdmin
+  val hasUsageAccess = permissions.isUsageGranted
+  val isDefaultLauncher = permissions.isDefaultLauncher
 
   Column(
     modifier = modifier.fillMaxWidth(),
