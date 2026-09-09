@@ -47,7 +47,6 @@ fun AppModalBottomSheet(
       sheetState = sheetState,
       title = appInfo.app.displayTitle ?: appInfo.app.appTitle
     ) {
-      BackHandler(true) { onDismiss() }
       AppModal(
         appInfo = appInfo,
         onEvent = onEvent,

@@ -2,17 +2,14 @@ package com.alveteg.simon.minutelauncher.home
 
 import android.content.Context
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,6 +49,7 @@ import com.alveteg.simon.minutelauncher.utilities.Gesture
 import timber.log.Timber
 import java.lang.reflect.Method
 import java.time.LocalDate
+import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +88,6 @@ fun HomeScreen(
   }
   var showGestureModal by remember { mutableStateOf(Gesture.NONE) }
 
-
   val backgroundColor by animateColorAsState(
     targetValue = when (screenState) {
       ScreenState.FAVORITES -> MaterialTheme.colorScheme.surface.copy(alpha = backgroundAlpha)
@@ -99,6 +96,8 @@ fun HomeScreen(
     },
     label = ""
   )
+  val offsetY = remember { Animatable(0f) }
+  val dashboardOffsetY = remember { Animatable(0f) }
 
   LaunchedEffect(key1 = true) {
     Timber.d("launched effect")
@@ -133,10 +132,6 @@ fun HomeScreen(
     }
   }
 
-  BackHandler(true) {
-    screenState = ScreenState.FAVORITES
-  }
-
   AppModalBottomSheet(
     appInfo = currentAppModal,
     defaultMindfulDelayLength = defaultMindfulDelayLength,
@@ -154,7 +149,9 @@ fun HomeScreen(
         gesture = showGestureModal,
         iconResource = showGestureModal.getIcon(),
         onEvent = viewModel::onEvent,
-        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 24.dp, bottom = 46.dp)
+        modifier = Modifier
+          .padding(horizontal = 16.dp)
+          .padding(top = 24.dp, bottom = 46.dp)
       ) {
         showGestureModal = Gesture.NONE
       }
@@ -181,7 +178,6 @@ fun HomeScreen(
           modifier = Modifier
             .fillMaxSize()
         ) {
-          val offsetY = remember { Animatable(0f) }
           val keyboardController = LocalSoftwareKeyboardController.current
           val appListSelectionAction: (AppInfo) -> Unit = {
             Timber.d("App selected: $it")

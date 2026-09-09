@@ -1,6 +1,7 @@
 package com.alveteg.simon.minutelauncher.home.dashboard
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
@@ -33,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -46,6 +48,7 @@ import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import com.alveteg.simon.minutelauncher.home.ScreenState
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -68,7 +71,48 @@ fun Dashboard(
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val dashboardOffset = remember { Animatable(0f) }
+    val sheetOffset = remember { Animatable(0f) }
     val hapticFeedback = LocalHapticFeedback.current
+
+    val density = LocalDensity.current
+    val peekHeight = remember { Animatable(0f) }
+    val navbarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    LaunchedEffect(navbarHeight) {
+      peekHeight.animateTo(navbarHeight.value + 80f, spring(0.74f, 550f))
+    }
+    DisposableEffect(Unit) {
+      onDispose {
+        onEvent(HomeEvent.UpdateSearch(""))
+      }
+    }
+    var searchHeight by remember { mutableStateOf(0.dp) }
+    val scaffoldState = rememberBottomSheetScaffoldState()
+
+    PredictiveBackHandler(enabled = screenState != ScreenState.FAVORITES && scaffoldState.bottomSheetState.targetValue != SheetValue.Expanded) { progress ->
+      try {
+        progress.collect { backEvent ->
+          dashboardOffset.snapTo(backEvent.progress * -100f)
+        }
+        onEvent(HomeEvent.DismissDashboard)
+      } catch (e: CancellationException) {
+      } finally {
+        dashboardOffset.animateDecay(-600f, exponentialDecay(3f))
+      }
+    }
+
+    PredictiveBackHandler(enabled = scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) { progress ->
+      val maxOffset = with(density) { 100.dp.toPx() }
+      try {
+        progress.collect { backEvent ->
+          sheetOffset.snapTo(backEvent.progress * maxOffset)
+        }
+        coroutineScope.launch {
+          sheetOffset.animateTo(0f)
+        }
+        scaffoldState.bottomSheetState.partialExpand()
+      } catch (e: CancellationException) {
+      }
+    }
 
     val nestedScrollConnection = remember {
       object : NestedScrollConnection {
@@ -142,28 +186,15 @@ fun Dashboard(
       }
     }
 
-    val density = LocalDensity.current
-    val peekHeight = remember { Animatable(0f) }
-    val navbarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    LaunchedEffect(navbarHeight) {
-      peekHeight.animateTo(navbarHeight.value + 80f, spring(0.74f, 550f))
-    }
-    DisposableEffect(Unit) {
-      onDispose {
-        onEvent(HomeEvent.UpdateSearch(""))
-      }
-    }
-    var searchHeight by remember { mutableStateOf(0.dp) }
-    val scaffoldState = rememberBottomSheetScaffoldState()
-
-    BackHandler(enabled = scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {
-      coroutineScope.launch {
-        scaffoldState.bottomSheetState.partialExpand()
-      }
-    }
-
     BottomSheetScaffold(
       scaffoldState = scaffoldState,
+      modifier = Modifier.graphicsLayer {
+        translationY = if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded ||
+          scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded
+        ) {
+          sheetOffset.value
+        } else 0f
+      },
       sheetPeekHeight = (peekHeight.value + dashboardOffset.value).dp.coerceAtLeast(0.dp),
       sheetDragHandle = {},
       sheetContent = {
@@ -191,7 +222,7 @@ fun Dashboard(
       ) {
         AppList(
           apps = apps,
-          offset = (offsetY.value + dashboardOffset.value).dp,
+          offset = (offsetY.value + dashboardOffset.value).dp - with(density) { sheetOffset.value.toDp() },
           onAppClick = onAppClick,
           listState = listState,
           searchHeight = searchHeight
