@@ -114,8 +114,8 @@ fun FavoriteList(
         showUsageAccessPrompt = showUsageAccessPrompt,
         showDefaultHomePrompt = showDefaultHomePrompt,
         modifier = Modifier.fillMaxWidth(0.8f),
-        buttonColors = ButtonDefaults.outlinedButtonColors(
-          containerColor = MaterialTheme.colorScheme.surfaceVariant
+        buttonColors = ButtonDefaults.filledTonalButtonColors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
         onEvent = onEvent
       )

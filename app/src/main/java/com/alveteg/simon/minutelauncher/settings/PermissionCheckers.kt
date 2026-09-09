@@ -11,6 +11,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
@@ -70,6 +75,7 @@ fun PermissionCheckers(
       ButtonInput(
         label = stringResource(R.string.label_set_default_launcher),
         colors = buttonColors,
+        imageVector = Icons.Default.Home,
         onClick = {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
@@ -98,6 +104,7 @@ fun PermissionCheckers(
       val adminExplanationString = stringResource(R.string.admin_access_explanation)
       ButtonInput(
         label = stringResource(R.string.label_grant_admin_access),
+        imageVector = Icons.Default.AdminPanelSettings,
         description = stringResource(R.string.description_admin_access),
         colors = buttonColors,
         onClick = {
@@ -119,6 +126,7 @@ fun PermissionCheckers(
       ButtonInput(
         label = stringResource(R.string.label_grant_usage_access),
         description = stringResource(R.string.description_usage_access),
+        imageVector = Icons.Default.QueryStats,
         colors = buttonColors,
         onClick = {
           val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
