@@ -77,7 +77,6 @@ fun AppList(
     item {
       Spacer(
         modifier = Modifier
-          .navigationBarsPadding()
           .height(searchHeight + 16.dp)
       )
     }

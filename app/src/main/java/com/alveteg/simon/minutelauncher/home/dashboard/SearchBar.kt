@@ -47,7 +47,6 @@ fun SearchBar(
     shape = MaterialTheme.shapes.large,
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
     modifier = Modifier
-      .navigationBarsPadding()
       .onGloballyPositioned {
         onGloballyPositioned(
           it.size.height

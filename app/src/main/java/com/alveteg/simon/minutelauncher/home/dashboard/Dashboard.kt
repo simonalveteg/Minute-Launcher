@@ -16,7 +16,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.material3.BottomSheetScaffold
@@ -75,17 +79,18 @@ fun Dashboard(
     val hapticFeedback = LocalHapticFeedback.current
 
     val density = LocalDensity.current
-    val peekHeight = remember { Animatable(0f) }
-    val navbarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    LaunchedEffect(navbarHeight) {
-      peekHeight.animateTo(navbarHeight.value + 80f, spring(0.74f, 550f))
+    val peekHeight = remember { Animatable(80f) }
+    var searchHeight by remember { mutableStateOf(0.dp) }
+    LaunchedEffect(searchHeight) {
+      if (searchHeight > 0.dp) {
+        peekHeight.animateTo(searchHeight.value + 16f, spring(0.74f, 550f))
+      }
     }
     DisposableEffect(Unit) {
       onDispose {
         onEvent(HomeEvent.UpdateSearch(""))
       }
     }
-    var searchHeight by remember { mutableStateOf(0.dp) }
     val scaffoldState = rememberBottomSheetScaffoldState()
 
     PredictiveBackHandler(enabled = screenState != ScreenState.FAVORITES && scaffoldState.bottomSheetState.targetValue != SheetValue.Expanded) { progress ->
@@ -188,13 +193,15 @@ fun Dashboard(
 
     BottomSheetScaffold(
       scaffoldState = scaffoldState,
-      modifier = Modifier.graphicsLayer {
-        translationY = if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded ||
-          scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded
-        ) {
-          sheetOffset.value
-        } else 0f
-      },
+      modifier = Modifier
+        .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
+        .graphicsLayer {
+          translationY = if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded ||
+            scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded
+          ) {
+            sheetOffset.value
+          } else 0f
+        },
       sheetPeekHeight = (peekHeight.value + dashboardOffset.value).dp.coerceAtLeast(0.dp),
       sheetDragHandle = {},
       sheetContent = {
