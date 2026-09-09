@@ -1,8 +1,6 @@
 package com.alveteg.simon.minutelauncher.home.onboarding
 
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -75,9 +73,8 @@ import kotlin.math.roundToInt
   ExperimentalSharedTransitionApi::class
 )
 @Composable
-fun SharedTransitionScope.FavoriteSelectionScreen(
+fun FavoriteSelectionScreen(
   apps: List<AppInfo>,
-  animatedVisibilityScope: AnimatedVisibilityScope,
   onNext: () -> Unit,
   onEvent: (Event) -> Unit
 ) {

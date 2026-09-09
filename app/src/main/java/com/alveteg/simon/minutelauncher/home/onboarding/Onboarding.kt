@@ -1,69 +1,48 @@
 package com.alveteg.simon.minutelauncher.home.onboarding
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.rememberCoroutineScope
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
-import com.alveteg.simon.minutelauncher.home.onboarding.PermissionsScreen
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun Onboarding(
   apps: List<AppInfo>,
   onEvent: (Event) -> Unit,
-  modifier: Modifier = Modifier
 ) {
-  val navController = rememberNavController()
+  val coroutineScope = rememberCoroutineScope()
+  val pagerState = rememberPagerState(pageCount = { 2 })
 
-  SharedTransitionLayout(modifier = modifier.fillMaxSize()) {
-    NavHost(
-      navController = navController,
-      startDestination = "permissions",
-      modifier = Modifier
-        .fillMaxSize()
-        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)),
-      enterTransition = {
-        fadeIn() + slideInHorizontally { it / 2 }
-      },
-      exitTransition = {
-        fadeOut() + slideOutHorizontally { it / 2 }
-      },
-      popEnterTransition = {
-        fadeIn() + slideInHorizontally()
-      },
-      popExitTransition = {
-        fadeOut() + slideOutHorizontally()
-      }
-    ) {
-      composable("app_selection") {
-        FavoriteSelectionScreen(
-          apps = apps,
-          animatedVisibilityScope = this,
-          onNext = { onEvent(HomeEvent.HideOnboarding) },
-          onEvent = onEvent
-        )
-      }
-      composable("permissions") {
-        PermissionsScreen(
-          animatedVisibilityScope = this,
-          onFinish = { navController.navigate("app_selection") },
-        )
-      }
+  BackHandler(enabled = pagerState.currentPage > 0) {
+    coroutineScope.launch {
+      pagerState.animateScrollToPage(pagerState.currentPage - 1)
+    }
+  }
+
+  HorizontalPager(
+    state = pagerState,
+  ) { page ->
+    when (page) {
+      0 -> PermissionsScreen(
+        onFinish = {
+          coroutineScope.launch {
+            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+          }
+        }
+      )
+
+      1 -> FavoriteSelectionScreen(
+        apps = apps,
+        onNext = { onEvent(HomeEvent.HideOnboarding) },
+        onEvent = onEvent
+      )
     }
   }
 }
