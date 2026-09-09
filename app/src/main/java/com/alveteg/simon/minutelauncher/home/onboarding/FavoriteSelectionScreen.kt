@@ -4,7 +4,12 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -25,38 +30,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.toPath
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -64,20 +61,13 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.transform
-import androidx.graphics.shapes.Morph
-import androidx.graphics.shapes.RoundedPolygon
-import androidx.graphics.shapes.toPath
 import com.alveteg.simon.minutelauncher.Event
 import com.alveteg.simon.minutelauncher.data.AppCategory
 import com.alveteg.simon.minutelauncher.data.AppInfo
 import com.alveteg.simon.minutelauncher.home.HomeEvent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.math.roundToInt
 
 @OptIn(
@@ -184,6 +174,29 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
       scale.animateTo(0f)
     }
   }
+  val infiniteTransition = rememberInfiniteTransition(label = "fabRotation")
+  val continuousFabRotation by infiniteTransition.animateFloat(
+    initialValue = 0f,
+    targetValue = 360f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(durationMillis = 18000, easing = LinearEasing),
+      repeatMode = RepeatMode.Restart
+    ),
+    label = "continuousRotation"
+  )
+  val fabRotation = remember { Animatable(0f) }
+  var isFirstComposition by remember { mutableStateOf(true) }
+
+  LaunchedEffect(favoriteApps) {
+    if (isFirstComposition) {
+      isFirstComposition = false
+    } else {
+      fabRotation.animateTo(
+        targetValue = fabRotation.value + 30f,
+        animationSpec = tween(durationMillis = 400)
+      )
+    }
+  }
 
   val listState = rememberLazyListState()
   var headerHeightPx by remember { mutableFloatStateOf(0f) }
@@ -211,33 +224,6 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
         return Offset(0f, consume)
       }
     }
-  }
-
-  val morphShapes = remember {
-    listOf(
-      MaterialShapes.Circle,
-      MaterialShapes.Clover4Leaf,
-      MaterialShapes.Pill,
-      MaterialShapes.Pentagon,
-      MaterialShapes.Puffy,
-      MaterialShapes.Flower,
-      MaterialShapes.Cookie6Sided,
-      MaterialShapes.VerySunny,
-    )
-  }
-  val morphProgress = remember { Animatable(0f) }
-  var prevShape by remember { mutableStateOf(morphShapes[0]) }
-  var nextShape by remember { mutableStateOf(morphShapes[0]) }
-
-  LaunchedEffect(favoriteApps.size) {
-    prevShape = nextShape
-    nextShape = (morphShapes - prevShape).random()
-    Timber.d("Prev: ${morphShapes.indexOf(prevShape)} Next: ${morphShapes.indexOf(nextShape)}")
-    morphProgress.snapTo(0f)
-    morphProgress.animateTo(
-      targetValue = 1f,
-      animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-    )
   }
 
   Layout(
@@ -368,12 +354,23 @@ fun SharedTransitionScope.FavoriteSelectionScreen(
         }
       },
       {
-        MorphingFab(
+        LargeFloatingActionButton(
           onClick = onNext,
-          prevShape = prevShape,
-          nextShape = nextShape,
-          morphProgress = morphProgress
-        )
+          shape = MaterialShapes.Cookie9Sided.toShape(),
+          containerColor = MaterialTheme.colorScheme.primary,
+          contentColor = MaterialTheme.colorScheme.onPrimary,
+          modifier = Modifier
+            .navigationBarsPadding()
+            .padding(16.dp)
+            .graphicsLayer { rotationZ = continuousFabRotation + fabRotation.value }
+        ) {
+          Icon(
+            imageVector = Icons.Default.Done, contentDescription = "Done",
+            modifier = Modifier.graphicsLayer {
+              rotationZ = -(continuousFabRotation + fabRotation.value)
+            }
+          )
+        }
       }
     ),
     modifier = Modifier.fillMaxSize()
@@ -457,71 +454,5 @@ private fun verticalItemShape(index: Int, count: Int): Shape {
     index == 0 -> RoundedCornerShape(topStart = radius, topEnd = radius)
     index == count - 1 -> RoundedCornerShape(bottomStart = radius, bottomEnd = radius)
     else -> RoundedCornerShape(2.dp)
-  }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun MorphingFab(
-  prevShape: RoundedPolygon,
-  nextShape: RoundedPolygon,
-  morphProgress: Animatable<Float, *>,
-  onClick: () -> Unit
-) {
-  val morph = remember(prevShape, nextShape) { Morph(prevShape, nextShape) }
-
-  val rotation = remember { Animatable(0f) }
-  val scope = rememberCoroutineScope()
-
-  val fabShape = remember(morph) {
-
-    scope.launch {
-      rotation.animateTo(rotation.value + 90f)
-    }
-
-    object : Shape {
-      private val path = Path()
-      private val matrix = Matrix()
-
-      override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
-      ): Outline {
-        morph.toPath(progress = morphProgress.value, path = path)
-
-        val bounds = path.getBounds()
-        val boundsWidth = bounds.width.takeIf { it > 0f } ?: 1f
-        val boundsHeight = bounds.height.takeIf { it > 0f } ?: 1f
-
-        matrix.reset()
-        matrix.scale(size.width / boundsWidth, size.height / boundsHeight)
-        matrix.translate(-bounds.left, -bounds.top)
-        path.transform(matrix)
-
-        return Outline.Generic(path)
-      }
-    }
-  }
-
-  LargeFloatingActionButton(
-    onClick = onClick,
-    containerColor = MaterialTheme.colorScheme.primary,
-    contentColor = MaterialTheme.colorScheme.onPrimary,
-    modifier = Modifier
-      .navigationBarsPadding()
-      .padding(16.dp)
-      .graphicsLayer {
-        this.rotationZ = rotation.value
-        this.shape = fabShape
-        this.clip = true
-      }
-  ) {
-    Icon(
-      imageVector = Icons.Default.Done, contentDescription = "Done",
-      modifier = Modifier.graphicsLayer {
-        this.rotationZ = -rotation.value
-      }
-    )
   }
 }
