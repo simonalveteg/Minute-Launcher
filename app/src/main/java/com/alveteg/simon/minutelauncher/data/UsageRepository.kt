@@ -111,53 +111,52 @@ class UsageRepository @Inject constructor(
     val start = startDate.toInstant().toEpochMilli()
     val end = startDate.plusDays(1).toInstant().toEpochMilli()
 
-    // This will keep a map of all of the events per package name
-    val sortedEvents = mutableMapOf<String, MutableList<UsageEvents.Event>>()
-
-    // Query the list of events that has happened within that time frame
+    val events = mutableListOf<UsageEvents.Event>()
     val systemEvents = usageStatsManager.queryEvents(start, end)
     while (systemEvents.hasNextEvent()) {
       val event = UsageEvents.Event()
       systemEvents.getNextEvent(event)
-
-      // Get the list of events for the package name, create one if it doesn't exist
-      val packageEvents = sortedEvents[event.packageName] ?: mutableListOf()
-      packageEvents.add(event)
-      sortedEvents[event.packageName] = packageEvents
+      events.add(event)
     }
 
-    val stats = mutableListOf<UsageStatistics>()
-
-    sortedEvents.forEach { (packageName, events) ->
-      var startTime = 0L
-      var endTime = 0L
-      var totalTime = 0L
-      events.forEach {
-
-        if (it.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
-          if (startTime == 0L) startTime = it.timeStamp
-        } else if (it.eventType == UsageEvents.Event.ACTIVITY_PAUSED) {
-          // if activity paused without startTime, it must mean that the app was started before midnight
-          if (startTime > 0L) endTime = it.timeStamp
-        }
-
-        // If both start and end are defined, we have a session
-        if (startTime != 0L && endTime != 0L) {
-          // Add the session time to the total time
-          totalTime += endTime - startTime
-          // Reset the start/end times to 0
-          startTime = 0L
-          endTime = 0L
+    val firstScreenEvent = events.firstOrNull {
+      it.eventType == UsageEvents.Event.SCREEN_INTERACTIVE ||
+        it.eventType == UsageEvents.Event.SCREEN_NON_INTERACTIVE
+    }
+    var initiallyInteractive = firstScreenEvent?.eventType != UsageEvents.Event.SCREEN_INTERACTIVE
+    if (firstScreenEvent == null) {
+      val previousEvents = usageStatsManager.queryEvents(start - TimeUnit.DAYS.toMillis(7), start)
+      while (previousEvents.hasNextEvent()) {
+        val event = UsageEvents.Event()
+        previousEvents.getNextEvent(event)
+        when (event.eventType) {
+          UsageEvents.Event.SCREEN_INTERACTIVE -> initiallyInteractive = true
+          UsageEvents.Event.SCREEN_NON_INTERACTIVE,
+          UsageEvents.Event.DEVICE_SHUTDOWN,
+          UsageEvents.Event.DEVICE_STARTUP -> initiallyInteractive = false
         }
       }
-      stats.add(
-        UsageStatistics(
-          packageName = packageName,
-          usageDate = date,
-          usageDuration = totalTime.milliseconds
-        )
+    }
+    val calculator = UsageSessionCalculator(initiallyInteractive)
+    events.forEach { event ->
+      when (event.eventType) {
+        UsageEvents.Event.ACTIVITY_RESUMED ->
+          calculator.resume(event.packageName, event.className, event.timeStamp)
+        UsageEvents.Event.ACTIVITY_PAUSED ->
+          calculator.pause(event.packageName, event.className, event.timeStamp)
+        UsageEvents.Event.SCREEN_INTERACTIVE -> calculator.screenInteractive()
+        UsageEvents.Event.SCREEN_NON_INTERACTIVE -> calculator.screenNonInteractive(event.timeStamp)
+        UsageEvents.Event.DEVICE_SHUTDOWN -> calculator.shutdown(event.timeStamp)
+        UsageEvents.Event.DEVICE_STARTUP -> calculator.startup()
+      }
+    }
+    val totals = calculator.totals()
+    return events.map { it.packageName }.distinct().map { packageName ->
+      UsageStatistics(
+        packageName = packageName,
+        usageDate = date,
+        usageDuration = (totals[packageName] ?: 0L).milliseconds
       )
     }
-    return stats
   }
 }
