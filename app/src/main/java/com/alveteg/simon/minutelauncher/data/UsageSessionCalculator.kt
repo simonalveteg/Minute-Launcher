@@ -43,6 +43,7 @@ internal class UsageSessionCalculator(private var screenInteractive: Boolean) {
       it.activities.clear()
       it.startedAt = null
     }
+    screenInteractive = false
   }
 
   fun totals(): Map<String, Long> = sessions.mapValues { it.value.totalTime }

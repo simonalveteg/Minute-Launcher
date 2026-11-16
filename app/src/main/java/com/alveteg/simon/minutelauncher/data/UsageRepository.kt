@@ -123,9 +123,21 @@ class UsageRepository @Inject constructor(
       it.eventType == UsageEvents.Event.SCREEN_INTERACTIVE ||
         it.eventType == UsageEvents.Event.SCREEN_NON_INTERACTIVE
     }
-    val calculator = UsageSessionCalculator(
-      firstScreenEvent?.eventType != UsageEvents.Event.SCREEN_INTERACTIVE
-    )
+    var initiallyInteractive = firstScreenEvent?.eventType != UsageEvents.Event.SCREEN_INTERACTIVE
+    if (firstScreenEvent == null) {
+      val previousEvents = usageStatsManager.queryEvents(start - TimeUnit.DAYS.toMillis(7), start)
+      while (previousEvents.hasNextEvent()) {
+        val event = UsageEvents.Event()
+        previousEvents.getNextEvent(event)
+        when (event.eventType) {
+          UsageEvents.Event.SCREEN_INTERACTIVE -> initiallyInteractive = true
+          UsageEvents.Event.SCREEN_NON_INTERACTIVE,
+          UsageEvents.Event.DEVICE_SHUTDOWN,
+          UsageEvents.Event.DEVICE_STARTUP -> initiallyInteractive = false
+        }
+      }
+    }
+    val calculator = UsageSessionCalculator(initiallyInteractive)
     events.forEach { event ->
       when (event.eventType) {
         UsageEvents.Event.ACTIVITY_RESUMED ->
@@ -138,11 +150,12 @@ class UsageRepository @Inject constructor(
         UsageEvents.Event.DEVICE_STARTUP -> calculator.startup()
       }
     }
-    return calculator.totals().map { (packageName, totalTime) ->
+    val totals = calculator.totals()
+    return events.map { it.packageName }.distinct().map { packageName ->
       UsageStatistics(
         packageName = packageName,
         usageDate = date,
-        usageDuration = totalTime.milliseconds
+        usageDuration = (totals[packageName] ?: 0L).milliseconds
       )
     }
   }

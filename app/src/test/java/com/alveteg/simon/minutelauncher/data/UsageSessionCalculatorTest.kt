@@ -62,6 +62,8 @@ class UsageSessionCalculatorTest {
     calculator.pause("maps", "MapActivity", 1000)
     calculator.resume("other", "Activity", 1010)
     calculator.startup()
+    calculator.resume("other", "Activity", 1020)
+    calculator.screenInteractive()
     calculator.pause("other", "Activity", 2000)
 
     assertEquals(10L, calculator.totals()["maps"])
